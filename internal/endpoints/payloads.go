@@ -1,8 +1,13 @@
 package endpoints
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
+
+	"github.com/redhatinsights/payload-tracker-go/internal/db_methods"
+	l "github.com/redhatinsights/payload-tracker-go/internal/logging"
+	"github.com/redhatinsights/payload-tracker-go/internal/models"
 )
 
 var (
@@ -67,6 +72,12 @@ type DurationsRetrieve struct {
 	TimeDelta string `json:"timedelta"`
 }
 
+type PayloadsData struct {
+	Count   int               `json:"count"`
+	Elapsed float64           `json:"elapsed"`
+	Data    []models.Payloads `json:"data"`
+}
+
 // initQuery intializes the query with default values
 func initQuery(r *http.Request) Query {
 
@@ -125,10 +136,21 @@ func Payloads(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: do some database stuff
+	payloads := db_methods.RetrievePayloads(q.Page, q.PageSize)
+
+	payloadsData := PayloadsData{len(payloads), 0.763294877, payloads}
+
+	dataJson, err := json.Marshal(payloadsData)
+	if err != nil {
+		l.Log.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Internal Server Issue"))
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Boop"))
+	w.Write([]byte(string(dataJson)))
 }
 
 // SinglePayload returns a resposne for /payloads/{request_id}

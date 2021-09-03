@@ -20,12 +20,12 @@ type PayloadStatuses struct {
 }
 
 type Payloads struct {
-	Id          uint      `gorm:"primaryKey;not null;autoIncrement"`
+	Id          uint      `json:"id" gorm:"primaryKey;not null;autoIncrement"`
 	RequestId   string    `json:"request_id" gorm:"not null;type:varchar"`
 	Account     string    `json:"account" gorm:"type:varchar"`
 	InventoryId string    `json:"inventory_id" gorm:"type:varchar"`
 	SystemId    string    `json:"system_id" gorm:"type:varchar"`
-	CreatedAt   time.Time `gorm:"not null"`
+	CreatedAt   time.Time `json:"created_at" gorm:"not null"`
 }
 
 type Services struct {
