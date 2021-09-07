@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
+	"fmt"
 
 	"github.com/redhatinsights/payload-tracker-go/internal/db_methods"
 	l "github.com/redhatinsights/payload-tracker-go/internal/logging"
-	"github.com/redhatinsights/payload-tracker-go/internal/models"
+	"github.com/redhatinsights/payload-tracker-go/internal/structs"
 )
 
 var (
@@ -16,22 +19,6 @@ var (
 	validIDSortBy  = []string{"service", "source", "status_msg", "date", "created_at"}
 	validSortDir   = []string{"asc", "desc"}
 )
-
-// Query is a struct for holding query params
-type Query struct {
-	Page         int
-	PageSize     int
-	RequestID    string
-	SortBy       string
-	SortDir      string
-	Account      string
-	InventoryID  string
-	SystemID     string
-	CreatedAtLT  string
-	CreatedAtLTE string
-	CreatedAtGT  string
-	CreatedAtGTE string
-}
 
 // ReturnData is the response for the endpoint
 type ReturnData struct {
@@ -72,16 +59,10 @@ type DurationsRetrieve struct {
 	TimeDelta string `json:"timedelta"`
 }
 
-type PayloadsData struct {
-	Count   int               `json:"count"`
-	Elapsed float64           `json:"elapsed"`
-	Data    []models.Payloads `json:"data"`
-}
-
 // initQuery intializes the query with default values
-func initQuery(r *http.Request) Query {
+func initQuery(r *http.Request) structs.Query {
 
-	q := Query{
+	q := structs.Query{
 		Page:         0,
 		PageSize:     10,
 		SortBy:       "created_at",
@@ -124,21 +105,61 @@ func stringInSlice(a string, list []string) bool {
 	return false
 }
 
+// Check timestamp format
+func validTimestamps(q structs.Query) bool {
+	timestampQueries := []string{q.CreatedAtLT, q.CreatedAtGT, q.CreatedAtLTE, q.CreatedAtGTE}
+	
+	for _, ts := range timestampQueries {
+		if ts != ""{
+			_, err := time.Parse(time.RFC3339, ts)
+			if err != nil {
+				fmt.Println(err)
+				return false
+			}
+		}
+	}
+	return true
+}
+
 // Payloads returns responses for the /payloads endpoint
 func Payloads(w http.ResponseWriter, r *http.Request) {
 
 	// init query with defaults and passed params
+	start := time.Now()
+
 	q := initQuery(r)
 	sortBy := r.URL.Query().Get("sort_by")
 
-	if q.SortBy != sortBy && stringInSlice(sortBy, validAllSortBy) {
+	if !stringInSlice(sortBy, validAllSortBy) {
+		w.WriteHeader(http.StatusBadRequest)
+		message := "sort_by must be one of "+strings.Join(validAllSortBy, ", ")
+		w.Write([]byte(message))
+		return
+	}
+	if !stringInSlice(q.SortDir, validSortDir) {
+		w.WriteHeader(http.StatusBadRequest)
+		message := "sort_dir must be one of "+strings.Join(validSortDir, ", ")
+		w.Write([]byte(message))
+		return
+	}
+
+	if !validTimestamps(q) {
+		w.WriteHeader(http.StatusBadRequest)
+		message := "invalid timestamp format provided"
+		w.Write([]byte(message))
+		return
+	}
+
+
+	if q.SortBy != sortBy {
 		q.SortBy = sortBy
 	}
 
 	// TODO: do some database stuff
-	payloads := db_methods.RetrievePayloads(q.Page, q.PageSize)
+	payloads := db_methods.RetrievePayloads(q.Page, q.PageSize, q)
+	duration := time.Since(start).Seconds()
 
-	payloadsData := PayloadsData{len(payloads), 0.763294877, payloads}
+	payloadsData := structs.PayloadsData{len(payloads), duration, payloads}
 
 	dataJson, err := json.Marshal(payloadsData)
 	if err != nil {
