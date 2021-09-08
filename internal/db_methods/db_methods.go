@@ -24,10 +24,21 @@ func RetrievePayloads(page int, pageSize int, apiQuery structs.Query) []models.P
 		dbQuery = dbQuery.Where("system_id = ?", apiQuery.SystemID)
 	}
 
+	if apiQuery.CreatedAtLT != "" {
+		dbQuery = dbQuery.Where("created_at < ?", apiQuery.CreatedAtLT)
+	}
+	if apiQuery.CreatedAtLTE != "" {
+		dbQuery = dbQuery.Where("created_at <= ?", apiQuery.CreatedAtLTE)
+	}
+	if apiQuery.CreatedAtGT != "" {
+		dbQuery = dbQuery.Where("created_at > ?", apiQuery.CreatedAtGT)
+	}
+	if apiQuery.CreatedAtGTE != "" {
+		dbQuery = dbQuery.Where("created_at >= ?", apiQuery.CreatedAtGTE)
+	}
+
 	orderString := fmt.Sprintf("%s %s", apiQuery.SortBy, apiQuery.SortDir)
 	dbQuery.Order(orderString).Limit(pageSize).Offset(pageSize * page).Find(&payloads)
-
-	fmt.Println("inventory_id", apiQuery.InventoryID)
 
 	return payloads
 }

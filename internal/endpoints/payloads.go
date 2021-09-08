@@ -60,7 +60,7 @@ type DurationsRetrieve struct {
 }
 
 // initQuery intializes the query with default values
-func initQuery(r *http.Request) structs.Query {
+func initQuery(r *http.Request) (structs.Query, error) {
 
 	q := structs.Query{
 		Page:         0,
@@ -76,6 +76,8 @@ func initQuery(r *http.Request) structs.Query {
 		Account:      r.URL.Query().Get("account"),
 	}
 
+	var err error
+
 	if r.URL.Query().Get("sort_by") != "" || stringInSlice(r.URL.Query().Get("sort_by"), validSortBy) {
 		q.SortBy = r.URL.Query().Get("sort_by")
 	}
@@ -85,14 +87,25 @@ func initQuery(r *http.Request) structs.Query {
 	}
 
 	if r.URL.Query().Get("page") != "" {
-		q.Page, _ = strconv.Atoi(r.URL.Query().Get("page"))
+		q.Page, err = strconv.Atoi(r.URL.Query().Get("page"))
 	}
 
 	if r.URL.Query().Get("page_size") != "" {
-		q.PageSize, _ = strconv.Atoi(r.URL.Query().Get("page_size"))
+		q.PageSize, err = strconv.Atoi(r.URL.Query().Get("page_size"))
 	}
 
-	return q
+	return q, err
+}
+
+func getErrorBody(message string, status int) string {
+	errBody := structs.ErrorResponse{
+		Title: http.StatusText(status),
+		Message: message,
+		Status: status,
+	}
+
+	errBodyJson, _ := json.Marshal(errBody)
+	return string(errBodyJson)
 }
 
 // Check for value in a slice
@@ -127,26 +140,33 @@ func Payloads(w http.ResponseWriter, r *http.Request) {
 	// init query with defaults and passed params
 	start := time.Now()
 
-	q := initQuery(r)
+	q, err := initQuery(r)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(getErrorBody(fmt.Sprintf("%v",err), http.StatusBadRequest)))
+		return
+	}
+
 	sortBy := r.URL.Query().Get("sort_by")
 
 	if !stringInSlice(sortBy, validAllSortBy) {
 		w.WriteHeader(http.StatusBadRequest)
 		message := "sort_by must be one of "+strings.Join(validAllSortBy, ", ")
-		w.Write([]byte(message))
+		w.Write([]byte(getErrorBody(message, http.StatusBadRequest)))
 		return
 	}
 	if !stringInSlice(q.SortDir, validSortDir) {
 		w.WriteHeader(http.StatusBadRequest)
 		message := "sort_dir must be one of "+strings.Join(validSortDir, ", ")
-		w.Write([]byte(message))
+		w.Write([]byte(getErrorBody(message, http.StatusBadRequest)))
 		return
 	}
 
 	if !validTimestamps(q) {
 		w.WriteHeader(http.StatusBadRequest)
 		message := "invalid timestamp format provided"
-		w.Write([]byte(message))
+		w.Write([]byte(getErrorBody(message, http.StatusBadRequest)))
 		return
 	}
 
@@ -165,7 +185,7 @@ func Payloads(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		l.Log.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Internal Server Issue"))
+		w.Write([]byte(getErrorBody("Internal Server Issue", http.StatusInternalServerError)))
 		return
 	}
 
@@ -180,7 +200,7 @@ func SinglePayload(w http.ResponseWriter, r *http.Request) {
 	reqID := r.URL.Query().Get("request_id")
 	sortBy := r.URL.Query().Get("sort_by")
 
-	q := initQuery(r)
+	q, _ := initQuery(r)
 
 	// there is a different default for sortby when searching for single payloads
 	// we first check that the sortby param is valid, then set to either that value or the default

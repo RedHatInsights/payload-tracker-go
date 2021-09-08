@@ -25,3 +25,9 @@ type PayloadsData struct {
 	Elapsed float64           `json:"elapsed"`
 	Data    []models.Payloads `json:"data"`
 }
+
+type ErrorResponse struct {
+	Title	string		`json:"title"`
+	Message	string		`json:"message"`
+	Status	int			`json:"status"`
+}
