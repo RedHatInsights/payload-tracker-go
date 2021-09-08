@@ -8,7 +8,7 @@ import (
 	"github.com/redhatinsights/payload-tracker-go/internal/structs"
 )
 
-func RetrievePayloads(page int, pageSize int, apiQuery structs.Query) []models.Payloads {
+func RetrievePayloads(page int, pageSize int, apiQuery structs.Query) (int64, []models.Payloads) {
 	var payloads []models.Payloads
 
 	dbQuery := db.DB
@@ -37,8 +37,11 @@ func RetrievePayloads(page int, pageSize int, apiQuery structs.Query) []models.P
 		dbQuery = dbQuery.Where("created_at >= ?", apiQuery.CreatedAtGTE)
 	}
 
-	orderString := fmt.Sprintf("%s %s", apiQuery.SortBy, apiQuery.SortDir)
-	dbQuery.Order(orderString).Limit(pageSize).Offset(pageSize * page).Find(&payloads)
+	var count int64
 
-	return payloads
+	orderString := fmt.Sprintf("%s %s", apiQuery.SortBy, apiQuery.SortDir)
+
+	dbQuery.Order(orderString).Limit(pageSize).Offset(pageSize * page).Find(&payloads).Count(&count)
+
+	return count, payloads
 }

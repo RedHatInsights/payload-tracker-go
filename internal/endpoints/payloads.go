@@ -2,11 +2,11 @@ package endpoints
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
-	"fmt"
 
 	"github.com/redhatinsights/payload-tracker-go/internal/db_methods"
 	l "github.com/redhatinsights/payload-tracker-go/internal/logging"
@@ -99,9 +99,9 @@ func initQuery(r *http.Request) (structs.Query, error) {
 
 func getErrorBody(message string, status int) string {
 	errBody := structs.ErrorResponse{
-		Title: http.StatusText(status),
+		Title:   http.StatusText(status),
 		Message: message,
-		Status: status,
+		Status:  status,
 	}
 
 	errBodyJson, _ := json.Marshal(errBody)
@@ -121,9 +121,9 @@ func stringInSlice(a string, list []string) bool {
 // Check timestamp format
 func validTimestamps(q structs.Query) bool {
 	timestampQueries := []string{q.CreatedAtLT, q.CreatedAtGT, q.CreatedAtLTE, q.CreatedAtGTE}
-	
+
 	for _, ts := range timestampQueries {
-		if ts != ""{
+		if ts != "" {
 			_, err := time.Parse(time.RFC3339, ts)
 			if err != nil {
 				fmt.Println(err)
@@ -143,47 +143,45 @@ func Payloads(w http.ResponseWriter, r *http.Request) {
 	q, err := initQuery(r)
 
 	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(getErrorBody(fmt.Sprintf("%v",err), http.StatusBadRequest)))
+		w.Write([]byte(getErrorBody(fmt.Sprintf("%v", err), http.StatusBadRequest)))
 		return
 	}
 
-	sortBy := r.URL.Query().Get("sort_by")
-
-	if !stringInSlice(sortBy, validAllSortBy) {
+	if !stringInSlice(q.SortBy, validAllSortBy) {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		message := "sort_by must be one of "+strings.Join(validAllSortBy, ", ")
+		message := "sort_by must be one of " + strings.Join(validAllSortBy, ", ")
 		w.Write([]byte(getErrorBody(message, http.StatusBadRequest)))
 		return
 	}
 	if !stringInSlice(q.SortDir, validSortDir) {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		message := "sort_dir must be one of "+strings.Join(validSortDir, ", ")
+		message := "sort_dir must be one of " + strings.Join(validSortDir, ", ")
 		w.Write([]byte(getErrorBody(message, http.StatusBadRequest)))
 		return
 	}
 
 	if !validTimestamps(q) {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		message := "invalid timestamp format provided"
 		w.Write([]byte(getErrorBody(message, http.StatusBadRequest)))
 		return
 	}
 
-
-	if q.SortBy != sortBy {
-		q.SortBy = sortBy
-	}
-
 	// TODO: do some database stuff
-	payloads := db_methods.RetrievePayloads(q.Page, q.PageSize, q)
+	count, payloads := db_methods.RetrievePayloads(q.Page, q.PageSize, q)
 	duration := time.Since(start).Seconds()
 
-	payloadsData := structs.PayloadsData{len(payloads), duration, payloads}
+	payloadsData := structs.PayloadsData{count, duration, payloads}
 
 	dataJson, err := json.Marshal(payloadsData)
 	if err != nil {
 		l.Log.Error(err)
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(getErrorBody("Internal Server Issue", http.StatusInternalServerError)))
 		return
