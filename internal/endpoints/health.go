@@ -18,7 +18,7 @@ func HealthCheckHandler(db *gorm.DB, cfg config.TrackerConfig) http.HandlerFunc 
 		if err = d.Ping(); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
-		}	
+		}
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	}

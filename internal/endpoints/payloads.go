@@ -20,45 +20,6 @@ var (
 	validSortDir   = []string{"asc", "desc"}
 )
 
-// ReturnData is the response for the endpoint
-type ReturnData struct {
-	Count               int                   `json:"count"`
-	Elapsed             string                `json:"elapsed"`
-	PayloadRetrieve     []PayloadRetrieve     `json:"data"`
-	PayloadRetrievebyID []PayloadRetrievebyID `json:"data"`
-	StatusRetrieve      []StatusRetrieve      `json:"data"`
-}
-
-// PayloadRetrieve is the data for all payloads
-type PayloadRetrieve struct {
-	RequestID   string `json:"request_id"`
-	Account     string `json:"account"`
-	InventoryID string `json:"inventory_id,omitempty"`
-	SystemID    string `json:"system_id,omitempty"`
-	CreatedAt   string `json:"created_at,omitempty"`
-}
-
-// PayloadRetrievebyID is the data for a single payload
-type PayloadRetrievebyID struct {
-	ID          string `json:"id,omitempty"`
-	Service     string `json:"service,omitempty"`
-	Source      string `json:"source,omitempty"`
-	Account     string `json:"account"`
-	RequestID   string `json:"request_id"`
-	InventoryID string `json:"inventory_id,omitempty"`
-	SystemID    string `json:"system_id,omitempty"`
-	CreatedAt   string `json:"created_at,omitempty"`
-	Status      string `json:"status,omitempty"`
-	StatusMsg   string `json:"status_msg,omitempty"`
-	Date        string `json:"date,omitempty"`
-}
-
-// DurationsRetrieve hold the time spend in a given service
-type DurationsRetrieve struct {
-	Service   string `json:"service"`
-	TimeDelta string `json:"timedelta"`
-}
-
 // initQuery intializes the query with default values
 func initQuery(r *http.Request) (structs.Query, error) {
 

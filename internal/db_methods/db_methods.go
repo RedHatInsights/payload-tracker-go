@@ -45,3 +45,8 @@ func RetrievePayloads(page int, pageSize int, apiQuery structs.Query) (int64, []
 
 	return count, payloads
 }
+
+func RetrieveSinglePayload() string {
+
+	return ""
+}
