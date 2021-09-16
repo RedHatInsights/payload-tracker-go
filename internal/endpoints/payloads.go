@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"github.com/go-chi/chi/v5"
 
 	"github.com/redhatinsights/payload-tracker-go/internal/db_methods"
 	l "github.com/redhatinsights/payload-tracker-go/internal/logging"
@@ -156,20 +157,48 @@ func Payloads(w http.ResponseWriter, r *http.Request) {
 // SinglePayload returns a resposne for /payloads/{request_id}
 func SinglePayload(w http.ResponseWriter, r *http.Request) {
 
-	reqID := r.URL.Query().Get("request_id")
-	sortBy := r.URL.Query().Get("sort_by")
+	reqID := chi.URLParam(r,"request_id")
+	// sortBy := r.URL.Query().Get("sort_by")
 
-	q, _ := initQuery(r)
+	q, err := initQuery(r)
+
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(getErrorBody(fmt.Sprintf("%v", err), http.StatusBadRequest)))
+		return
+	}
+
+	if !stringInSlice(q.SortBy, validIDSortBy) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		message := "sort_by must be one of " + strings.Join(validIDSortBy, ", ")
+		w.Write([]byte(getErrorBody(message, http.StatusBadRequest)))
+		return
+	}
 
 	// there is a different default for sortby when searching for single payloads
 	// we first check that the sortby param is valid, then set to either that value or the default
-	if q.SortBy != sortBy && stringInSlice(sortBy, validIDSortBy) {
-		q.SortBy = sortBy
-	} else {
-		q.SortBy = "date"
+	// if q.SortBy != sortBy && stringInSlice(sortBy, validIDSortBy) {
+	// 	q.SortBy = sortBy
+	// } else {
+	// 	q.SortBy = "date"
+	// }
+
+	payloads := db_methods.RetrieveSinglePayload(reqID, q.SortBy, q.SortDir)
+
+	payloadsData := structs.PayloadRetrievebyID{Data: payloads}
+
+	dataJson, err := json.Marshal(payloadsData)
+	if err != nil {
+		l.Log.Error(err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(getErrorBody("Internal Server Issue", http.StatusInternalServerError)))
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(reqID))
+	w.Write([]byte(string(dataJson)))
 }

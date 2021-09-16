@@ -35,6 +35,7 @@ type PayloadRetrievebyID struct {
 	Durations map[string]string   `json:"duration"`
 }
 
+// Error response struct for endpoints
 type ErrorResponse struct {
 	Title   string `json:"title"`
 	Message string `json:"message"`
