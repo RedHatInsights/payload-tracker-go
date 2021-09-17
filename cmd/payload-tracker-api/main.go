@@ -46,7 +46,7 @@ func main() {
 
 	sub.Get("/", lubdub)
 	sub.Get("/payloads", endpoints.Payloads)
-	sub.Get("/payloads/{request_id}", endpoints.SinglePayload)
+	sub.Get("/payloads/{request_id}", endpoints.RequestIdPayloads)
 	sub.Get("/statuses", endpoints.Statuses)
 
 	srv := http.Server{

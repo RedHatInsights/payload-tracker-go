@@ -3,11 +3,11 @@ package endpoints
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/go-chi/chi/v5"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
-	"github.com/go-chi/chi/v5"
 
 	"github.com/redhatinsights/payload-tracker-go/internal/db_methods"
 	l "github.com/redhatinsights/payload-tracker-go/internal/logging"
@@ -155,9 +155,9 @@ func Payloads(w http.ResponseWriter, r *http.Request) {
 }
 
 // SinglePayload returns a resposne for /payloads/{request_id}
-func SinglePayload(w http.ResponseWriter, r *http.Request) {
+func RequestIdPayloads(w http.ResponseWriter, r *http.Request) {
 
-	reqID := chi.URLParam(r,"request_id")
+	reqID := chi.URLParam(r, "request_id")
 	// sortBy := r.URL.Query().Get("sort_by")
 
 	q, err := initQuery(r)
@@ -185,9 +185,10 @@ func SinglePayload(w http.ResponseWriter, r *http.Request) {
 	// 	q.SortBy = "date"
 	// }
 
-	payloads := db_methods.RetrieveSinglePayload(reqID, q.SortBy, q.SortDir)
+	payloads := db_methods.RetrieveRequestIdPayloads(reqID, q.SortBy, q.SortDir)
+	durations := db_methods.CalculateDurations(payloads)
 
-	payloadsData := structs.PayloadRetrievebyID{Data: payloads}
+	payloadsData := structs.PayloadRetrievebyID{Data: payloads, Durations: durations}
 
 	dataJson, err := json.Marshal(payloadsData)
 	if err != nil {
