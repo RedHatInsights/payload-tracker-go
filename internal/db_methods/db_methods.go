@@ -5,7 +5,7 @@ import (
 	// "encoding/json"
 	"math"
 	"strings"
-	// "time"
+	"time"
 
 	"github.com/redhatinsights/payload-tracker-go/internal/db"
 	"github.com/redhatinsights/payload-tracker-go/internal/models"
@@ -18,19 +18,28 @@ var (
 	otherFields           = []string{"services.name as service", "sources.name as source", "statuses.name as status"}
 )
 
-func arrayMinMax(numArr []int64) (int64, int64) {
-	min := int64(math.MaxInt64)
-	max := int64(math.MinInt64)
+func interpretDuration(duration int64) string {
+	rem := duration
 
-	for _, v := range numArr {
-		if v < min {
-			min = v
-		}
-		if v > max {
-			max = v
-		}
+	h := duration / int64(time.Hour)
+	rem = rem - h*int64(time.Hour)
+
+	m := rem / int64(time.Minute)
+	rem = rem - m*int64(time.Minute)
+
+	s := float64(rem) / float64(time.Second)
+
+	strTest := fmt.Sprintf("%02d:%02d:%09.6f", h, m, s)
+	return strTest
+}
+
+func updateMinMax(unixTime int64, store [2]int64) [2]int64 {
+	if unixTime < store[0] {
+		store[0] = unixTime
+	} else if unixTime > store[1] {
+		store[1] = unixTime
 	}
-	return min, max
+	return store
 }
 
 func RetrievePayloads(page int, pageSize int, apiQuery structs.Query) (int64, []models.Payloads) {
@@ -82,14 +91,14 @@ func RetrieveRequestIdPayloads(reqID string, sortBy string, sortDir string) []st
 	orderString := fmt.Sprintf("%s %s", sortBy, sortDir)
 
 	dbQuery.Where("payloads.request_id = ?", reqID).Order(orderString).Scan(&payloads)
-	fmt.Println("Request_id", reqID, orderString)
+
 	return payloads
 }
 
 func CalculateDurations(payloadData []structs.SinglePayloadData) map[string]string {
 	//service:source
 
-	mapTimeArray := make(map[string][]int64)
+	mapTimeArray := make(map[string][2]int64)
 	mapTimeString := make(map[string]string)
 
 	serviceSource := ""
@@ -97,7 +106,7 @@ func CalculateDurations(payloadData []structs.SinglePayloadData) map[string]stri
 	source := "undefined"
 
 	for _, v := range payloadData {
-		seconds := v.Date.Unix()
+		nanoSeconds := v.Date.UnixNano()
 
 		service = v.Service
 		if v.Source != "" {
@@ -107,19 +116,16 @@ func CalculateDurations(payloadData []structs.SinglePayloadData) map[string]stri
 		serviceSource = fmt.Sprintf("%s:%s", service, source)
 
 		if array, ok := mapTimeArray[serviceSource]; !ok {
-			mapTimeArray[serviceSource] = []int64{seconds}
+			mapTimeArray[serviceSource] = [2]int64{nanoSeconds, nanoSeconds}
 		} else {
-			mapTimeArray[serviceSource] = append(array, seconds)
+			mapTimeArray[serviceSource] = updateMinMax(nanoSeconds, array)
 		}
-
-		fmt.Println(mapTimeArray)
 	}
 
 	for key, timeArray := range mapTimeArray {
-		min, max := arrayMinMax(timeArray)
-		// duration := max.Sub(min)
+		min, max := timeArray[0], timeArray[1]
 		duration := max - min
-		fmt.Println(key, duration)
+		mapTimeString[key] = interpretDuration(duration)
 	}
 
 	return mapTimeString
