@@ -88,12 +88,18 @@ func validTimestamps(q structs.Query) bool {
 		if ts != "" {
 			_, err := time.Parse(time.RFC3339, ts)
 			if err != nil {
-				fmt.Println(err)
 				return false
 			}
 		}
 	}
 	return true
+}
+
+// Write HTTP Response
+func writeResponse(w http.ResponseWriter, status int, message string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	w.Write([]byte(message))
 }
 
 // Payloads returns responses for the /payloads endpoint
@@ -105,32 +111,24 @@ func Payloads(w http.ResponseWriter, r *http.Request) {
 	q, err := initQuery(r)
 
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(getErrorBody(fmt.Sprintf("%v", err), http.StatusBadRequest)))
+		writeResponse(w, http.StatusBadRequest, getErrorBody(fmt.Sprintf("%v", err), http.StatusBadRequest))
 		return
 	}
 
 	if !stringInSlice(q.SortBy, validAllSortBy) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
 		message := "sort_by must be one of " + strings.Join(validAllSortBy, ", ")
-		w.Write([]byte(getErrorBody(message, http.StatusBadRequest)))
+		writeResponse(w, http.StatusBadRequest, getErrorBody(message, http.StatusBadRequest))
 		return
 	}
 	if !stringInSlice(q.SortDir, validSortDir) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
 		message := "sort_dir must be one of " + strings.Join(validSortDir, ", ")
-		w.Write([]byte(getErrorBody(message, http.StatusBadRequest)))
+		writeResponse(w, http.StatusBadRequest, getErrorBody(message, http.StatusBadRequest))
 		return
 	}
 
 	if !validTimestamps(q) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
 		message := "invalid timestamp format provided"
-		w.Write([]byte(getErrorBody(message, http.StatusBadRequest)))
+		writeResponse(w, http.StatusBadRequest, getErrorBody(message, http.StatusBadRequest))
 		return
 	}
 
@@ -143,47 +141,41 @@ func Payloads(w http.ResponseWriter, r *http.Request) {
 	dataJson, err := json.Marshal(payloadsData)
 	if err != nil {
 		l.Log.Error(err)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(getErrorBody("Internal Server Issue", http.StatusInternalServerError)))
+		writeResponse(w, http.StatusInternalServerError, getErrorBody("Internal Server Issue", http.StatusInternalServerError))
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(string(dataJson)))
+	writeResponse(w, http.StatusOK, string(dataJson))
 }
 
 // SinglePayload returns a resposne for /payloads/{request_id}
 func RequestIdPayloads(w http.ResponseWriter, r *http.Request) {
 
 	reqID := chi.URLParam(r, "request_id")
-	// sortBy := r.URL.Query().Get("sort_by")
+	sortBy := r.URL.Query().Get("sort_by")
 
 	q, err := initQuery(r)
 
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(getErrorBody(fmt.Sprintf("%v", err), http.StatusBadRequest)))
+		writeResponse(w, http.StatusBadRequest, getErrorBody(fmt.Sprintf("%v", err), http.StatusBadRequest))
 		return
 	}
 
 	if !stringInSlice(q.SortBy, validIDSortBy) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
 		message := "sort_by must be one of " + strings.Join(validIDSortBy, ", ")
-		w.Write([]byte(getErrorBody(message, http.StatusBadRequest)))
+		writeResponse(w, http.StatusBadRequest, getErrorBody(message, http.StatusBadRequest))
+		return
+	}
+	if !stringInSlice(q.SortDir, validSortDir) {
+		message := "sort_dir must be one of " + strings.Join(validSortDir, ", ")
+		writeResponse(w, http.StatusBadRequest, getErrorBody(message, http.StatusBadRequest))
 		return
 	}
 
 	// there is a different default for sortby when searching for single payloads
-	// we first check that the sortby param is valid, then set to either that value or the default
-	// if q.SortBy != sortBy && stringInSlice(sortBy, validIDSortBy) {
-	// 	q.SortBy = sortBy
-	// } else {
-	// 	q.SortBy = "date"
-	// }
+	if sortBy == "" {
+		q.SortBy = "date"
+	}
 
 	payloads := db_methods.RetrieveRequestIdPayloads(reqID, q.SortBy, q.SortDir)
 	durations := db_methods.CalculateDurations(payloads)
@@ -193,13 +185,9 @@ func RequestIdPayloads(w http.ResponseWriter, r *http.Request) {
 	dataJson, err := json.Marshal(payloadsData)
 	if err != nil {
 		l.Log.Error(err)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(getErrorBody("Internal Server Issue", http.StatusInternalServerError)))
+		writeResponse(w, http.StatusInternalServerError, getErrorBody("Internal Server Issue", http.StatusInternalServerError))
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(string(dataJson)))
+	writeResponse(w, http.StatusOK, string(dataJson))
 }

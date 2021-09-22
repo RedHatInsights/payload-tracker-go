@@ -2,8 +2,6 @@ package db_methods
 
 import (
 	"fmt"
-	// "encoding/json"
-	"math"
 	"strings"
 	"time"
 
