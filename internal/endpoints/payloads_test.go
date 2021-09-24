@@ -87,22 +87,16 @@ var _ = Describe("Payloads", func() {
 				req, err := makeTestRequest("/api/payloads/v1", query)
 				Expect(err).To(BeNil())
 
-				payloadId := uint(1)
-				requestId := getUUID()
-				inventoryId := getUUID()
-				systemId := getUUID()
-				createdAt := time.Now().Round(0)
-
-				singlePayloadInfo := models.Payloads{
-					Id:          payloadId,
-					RequestId:   requestId,
-					InventoryId: inventoryId,
-					SystemId:    systemId,
-					CreatedAt:   createdAt,
+				payloadData := models.Payloads{
+					Id:          1,
+					RequestId:   getUUID(),
+					InventoryId: getUUID(),
+					SystemId:    getUUID(),
+					CreatedAt:   time.Now().Round(0),
 				}
 
 				payloadReturnCount = 1
-				payloadReturnData = []models.Payloads{singlePayloadInfo}
+				payloadReturnData = []models.Payloads{payloadData}
 
 				handler.ServeHTTP(rr, req)
 				Expect(rr.Code).To(Equal(200))
@@ -113,11 +107,11 @@ var _ = Describe("Payloads", func() {
 				readBody, _ := ioutil.ReadAll(rr.Body)
 				json.Unmarshal(readBody, &respData)
 
-				Expect(respData.Data[0].Id).To(Equal(payloadId))
-				Expect(respData.Data[0].RequestId).To(Equal(requestId))
-				Expect(respData.Data[0].InventoryId).To(Equal(inventoryId))
-				Expect(respData.Data[0].SystemId).To(Equal(systemId))
-				Expect(respData.Data[0].CreatedAt).To(Equal(createdAt))
+				Expect(respData.Data[0].Id).To(Equal(payloadData.Id))
+				Expect(respData.Data[0].RequestId).To(Equal(payloadData.RequestId))
+				Expect(respData.Data[0].InventoryId).To(Equal(payloadData.InventoryId))
+				Expect(respData.Data[0].SystemId).To(Equal(payloadData.SystemId))
+				Expect(respData.Data[0].CreatedAt).To(Equal(payloadData.CreatedAt))
 			})
 		})
 
@@ -142,6 +136,26 @@ var _ = Describe("Payloads", func() {
 				handler.ServeHTTP(rr, req)
 				Expect(rr.Code).To(Equal(400))
 				Expect(rr.Body).ToNot(BeNil())
+			})
+		})
+
+		validTimestamps := map[string]string{
+			"created_at_lt":  "2021-08-04T17:53:29.724476-04:00",
+			"created_at_lte": "2021-08-04T17:53:29.724476-04:00",
+			"created_at_gt":  "2021-08-04T17:46:22.078999-04:00",
+			"created_at_gte": "2021-08-04T17:46:22.078999-04:00",
+		}
+		Context("With valid timestamps query parameter", func() {
+			It("should return HTTP 200", func() {
+				for k, v := range validTimestamps {
+					query := make(map[string]interface{})
+					query[k] = v
+					req, err := makeTestRequest("/api/payloads/v1", query)
+					Expect(err).To(BeNil())
+					handler.ServeHTTP(rr, req)
+					Expect(rr.Code).To(Equal(200))
+					Expect(rr.Body).ToNot(BeNil())
+				}
 			})
 		})
 
