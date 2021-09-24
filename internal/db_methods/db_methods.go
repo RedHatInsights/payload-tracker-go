@@ -40,7 +40,7 @@ func updateMinMax(unixTime int64, store [2]int64) [2]int64 {
 	return store
 }
 
-func RetrievePayloads(page int, pageSize int, apiQuery structs.Query) (int64, []models.Payloads) {
+var RetrievePayloads = func (page int, pageSize int, apiQuery structs.Query) (int64, []models.Payloads) {
 	var count int64
 	var payloads []models.Payloads
 

@@ -21,6 +21,10 @@ var (
 	validSortDir   = []string{"asc", "desc"}
 )
 
+var (
+	RetrievePayloads = db_methods.RetrievePayloads
+)
+
 // initQuery intializes the query with default values
 func initQuery(r *http.Request) (structs.Query, error) {
 
@@ -133,7 +137,7 @@ func Payloads(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: do some database stuff
-	count, payloads := db_methods.RetrievePayloads(q.Page, q.PageSize, q)
+	count, payloads := RetrievePayloads(q.Page, q.PageSize, q)
 	duration := time.Since(start).Seconds()
 
 	payloadsData := structs.PayloadsData{count, duration, payloads}

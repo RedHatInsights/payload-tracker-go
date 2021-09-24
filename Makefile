@@ -15,6 +15,9 @@ lint:
 	gofmt -l .
 	gofmt -s -w .
 
+test:
+	go test -p 1 -v ./...
+
 run-seed:
 	go build -o pt-seeder tools/db-seeder/main.go
 	./pt-seeder

@@ -7,6 +7,8 @@ require (
 	github.com/confluentinc/confluent-kafka-go v1.7.0
 	github.com/go-chi/chi/v5 v5.0.3
 	github.com/google/uuid v1.1.2
+	github.com/onsi/ginkgo v1.16.4
+	github.com/onsi/gomega v1.16.0
 	github.com/prometheus/client_golang v1.11.0
 	github.com/qri-io/jsonschema v0.2.1
 	github.com/redhatinsights/app-common-go v1.5.1
