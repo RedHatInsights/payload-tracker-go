@@ -77,7 +77,7 @@ var RetrievePayloads = func(page int, pageSize int, apiQuery structs.Query) (int
 	return count, payloads
 }
 
-func RetrieveRequestIdPayloads(reqID string, sortBy string, sortDir string) []structs.SinglePayloadData {
+var RetrieveRequestIdPayloads = func(reqID string, sortBy string, sortDir string) []structs.SinglePayloadData {
 	var payloads []structs.SinglePayloadData
 
 	dbQuery := db.DB
@@ -99,11 +99,11 @@ func CalculateDurations(payloadData []structs.SinglePayloadData) map[string]stri
 	mapTimeArray := make(map[string][2]int64)
 	mapTimeString := make(map[string]string)
 
-	serviceSource := ""
-	service := ""
-	source := "undefined"
-
 	for _, v := range payloadData {
+		serviceSource := ""
+		service := ""
+		source := "undefined"
+
 		nanoSeconds := v.Date.UnixNano()
 
 		service = v.Service

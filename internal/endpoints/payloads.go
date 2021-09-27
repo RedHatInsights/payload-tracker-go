@@ -22,7 +22,8 @@ var (
 )
 
 var (
-	RetrievePayloads = db_methods.RetrievePayloads
+	RetrievePayloads          = db_methods.RetrievePayloads
+	RetrieveRequestIdPayloads = db_methods.RetrieveRequestIdPayloads
 )
 
 // initQuery intializes the query with default values
@@ -181,7 +182,7 @@ func RequestIdPayloads(w http.ResponseWriter, r *http.Request) {
 		q.SortBy = "date"
 	}
 
-	payloads := db_methods.RetrieveRequestIdPayloads(reqID, q.SortBy, q.SortDir)
+	payloads := RetrieveRequestIdPayloads(reqID, q.SortBy, q.SortDir)
 	durations := db_methods.CalculateDurations(payloads)
 
 	payloadsData := structs.PayloadRetrievebyID{Data: payloads, Durations: durations}
