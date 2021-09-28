@@ -5,13 +5,16 @@ import (
 	"strings"
 	"time"
 
+	"gorm.io/gorm"
+
 	"github.com/redhatinsights/payload-tracker-go/internal/db"
 	"github.com/redhatinsights/payload-tracker-go/internal/models"
 	"github.com/redhatinsights/payload-tracker-go/internal/structs"
 )
 
 var (
-	payloadsFields        = []string{"payloads.id", "payloads.request_id", "payloads.account", "payloads.request_id", "payloads.system_id"}
+	payloadFields         = []string{"payloads.id", "payloads.request_id"}
+	extraPayloadFields    = []string{"payloads.account", "payloads.system_id"}
 	payloadStatusesFields = []string{"payload_statuses.status_msg", "payload_statuses.date", "payload_statuses.created_at"}
 	otherFields           = []string{"services.name as service", "sources.name as source", "statuses.name as status"}
 )
@@ -40,6 +43,37 @@ func updateMinMax(unixTime int64, store [2]int64) [2]int64 {
 	return store
 }
 
+func chainTimeConditions(dbColumn string, apiQuery structs.Query, dbQuery *gorm.DB) *gorm.DB {
+	timeFields := map[string]string{
+		"lt":  apiQuery.CreatedAtLT,
+		"lte": apiQuery.CreatedAtLTE,
+		"gt":  apiQuery.CreatedAtGT,
+		"gte": apiQuery.CreatedAtGTE,
+	}
+	if dbColumn == "date" {
+		timeFields = map[string]string{
+			"lt":  apiQuery.DateLT,
+			"lte": apiQuery.DateLTE,
+			"gt":  apiQuery.DateGT,
+			"gte": apiQuery.DateGTE,
+		}
+	}
+
+	if timeFields["lt"] != "" {
+		dbQuery = dbQuery.Where(fmt.Sprintf("%s < ?", dbColumn), timeFields["lt"])
+	}
+	if timeFields["lte"] != "" {
+		dbQuery = dbQuery.Where(fmt.Sprintf("%s <= ?", dbColumn), timeFields["lte"])
+	}
+	if timeFields["gt"] != "" {
+		dbQuery = dbQuery.Where(fmt.Sprintf("%s > ?", dbColumn), timeFields["gt"])
+	}
+	if timeFields["gte"] != "" {
+		dbQuery = dbQuery.Where(fmt.Sprintf("%s >= ?", dbColumn), timeFields["gte"])
+	}
+	return dbQuery
+}
+
 var RetrievePayloads = func(page int, pageSize int, apiQuery structs.Query) (int64, []models.Payloads) {
 	var count int64
 	var payloads []models.Payloads
@@ -57,18 +91,7 @@ var RetrievePayloads = func(page int, pageSize int, apiQuery structs.Query) (int
 		dbQuery = dbQuery.Where("system_id = ?", apiQuery.SystemID)
 	}
 
-	if apiQuery.CreatedAtLT != "" {
-		dbQuery = dbQuery.Where("created_at < ?", apiQuery.CreatedAtLT)
-	}
-	if apiQuery.CreatedAtLTE != "" {
-		dbQuery = dbQuery.Where("created_at <= ?", apiQuery.CreatedAtLTE)
-	}
-	if apiQuery.CreatedAtGT != "" {
-		dbQuery = dbQuery.Where("created_at > ?", apiQuery.CreatedAtGT)
-	}
-	if apiQuery.CreatedAtGTE != "" {
-		dbQuery = dbQuery.Where("created_at >= ?", apiQuery.CreatedAtGTE)
-	}
+	dbQuery = chainTimeConditions("created_at", apiQuery, dbQuery)
 
 	orderString := fmt.Sprintf("%s %s", apiQuery.SortBy, apiQuery.SortDir)
 
@@ -82,7 +105,7 @@ var RetrieveRequestIdPayloads = func(reqID string, sortBy string, sortDir string
 
 	dbQuery := db.DB
 
-	fields := strings.Join(payloadsFields, ",") + "," + strings.Join(payloadStatusesFields, ",") + "," + strings.Join(otherFields, ",")
+	fields := fmt.Sprintf("%s,%s,%s,%s", strings.Join(payloadFields, ","), strings.Join(extraPayloadFields, ","), strings.Join(payloadStatusesFields, ","), strings.Join(otherFields, ","))
 	dbQuery = dbQuery.Table("payload_statuses").Select(fields).Joins("JOIN payloads on payload_statuses.payload_id = payloads.id")
 	dbQuery = dbQuery.Joins("JOIN services on payload_statuses.service_id = services.id").Joins("JOIN sources on payload_statuses.source_id = sources.id").Joins("JOIN statuses on payload_statuses.status_id = statuses.id")
 
@@ -91,6 +114,41 @@ var RetrieveRequestIdPayloads = func(reqID string, sortBy string, sortDir string
 	dbQuery.Where("payloads.request_id = ?", reqID).Order(orderString).Scan(&payloads)
 
 	return payloads
+}
+
+var RetrieveStatuses = func(apiQuery structs.Query) (int64, []structs.StatusRetrieve) {
+	var count int64
+	var payloads []structs.StatusRetrieve
+
+	page := apiQuery.Page
+	pageSize := apiQuery.PageSize
+
+	dbQuery := db.DB
+
+	fields := fmt.Sprintf("%s,%s,%s", strings.Join(payloadFields, ","), strings.Join(payloadStatusesFields, ","), strings.Join(otherFields, ","))
+	dbQuery = dbQuery.Table("payload_statuses").Select(fields).Joins("JOIN payloads on payload_statuses.payload_id = payloads.id")
+	dbQuery = dbQuery.Joins("JOIN services on payload_statuses.service_id = services.id").Joins("JOIN sources on payload_statuses.source_id = sources.id").Joins("JOIN statuses on payload_statuses.status_id = statuses.id")
+
+	// query chaining
+	if apiQuery.Service != "" {
+		dbQuery = dbQuery.Where("service = ?", apiQuery.Service)
+	}
+	if apiQuery.Source != "" {
+		dbQuery = dbQuery.Where("source = ?", apiQuery.Source)
+	}
+	if apiQuery.Status != "" {
+		dbQuery = dbQuery.Where("status = ?", apiQuery.Status)
+	}
+	if apiQuery.StatusMsg != "" {
+		dbQuery = dbQuery.Where("status_msg = ?", apiQuery.StatusMsg)
+	}
+	dbQuery = chainTimeConditions("date", apiQuery, dbQuery)
+	dbQuery = chainTimeConditions("created_at", apiQuery, dbQuery)
+
+	orderString := fmt.Sprintf("%s %s", apiQuery.SortBy, apiQuery.SortDir)
+	dbQuery.Order(orderString).Limit(pageSize).Offset(pageSize * page).Scan(&payloads).Count(&count)
+
+	return count, payloads
 }
 
 func CalculateDurations(payloadData []structs.SinglePayloadData) map[string]string {
