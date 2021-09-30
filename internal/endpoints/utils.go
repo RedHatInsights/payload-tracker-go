@@ -9,13 +9,21 @@ import (
 	"github.com/redhatinsights/payload-tracker-go/internal/structs"
 )
 
+var (
+	validSortBy         = []string{"created_at", "account", "system_id", "inventory_id", "service", "source", "status_msg", "date", "request_id", "status"}
+	validAllSortBy      = []string{"account", "inventory_id", "system_id", "created_at"}
+	validIDSortBy       = []string{"service", "source", "status_msg", "date", "created_at"}
+	validStatusesSortBy = []string{"service", "source", "request_id", "status", "status_msg", "date", "created_at"}
+	validSortDir        = []string{"asc", "desc"}
+)
+
 // initQuery intializes the query with default values
 func initQuery(r *http.Request) (structs.Query, error) {
 
 	q := structs.Query{
 		Page:         0,
 		PageSize:     10,
-		SortBy:       "created_at",
+		SortBy:       "date",
 		SortDir:      "desc",
 		InventoryID:  r.URL.Query().Get("inventory_id"),
 		SystemID:     r.URL.Query().Get("system_id"),
@@ -24,6 +32,15 @@ func initQuery(r *http.Request) (structs.Query, error) {
 		CreatedAtLTE: r.URL.Query().Get("created_at_lte"),
 		CreatedAtGTE: r.URL.Query().Get("created_at_gte"),
 		Account:      r.URL.Query().Get("account"),
+
+		Service:   r.URL.Query().Get("service"),
+		Source:    r.URL.Query().Get("source"),
+		Status:    r.URL.Query().Get("status"),
+		StatusMsg: r.URL.Query().Get("status_msg"),
+		DateLT:    r.URL.Query().Get("date_lt"),
+		DateLTE:   r.URL.Query().Get("date_lte"),
+		DateGT:    r.URL.Query().Get("date_gt"),
+		DateGTE:   r.URL.Query().Get("date_gte"),
 	}
 
 	var err error
@@ -69,8 +86,12 @@ func stringInSlice(a string, list []string) bool {
 }
 
 // Check timestamp format
-func validTimestamps(q structs.Query) bool {
-	timestampQueries := []string{q.CreatedAtLT, q.CreatedAtGT, q.CreatedAtLTE, q.CreatedAtGTE}
+func validTimestamps(q structs.Query, all bool) bool {
+	timestampQueries := []string{q.CreatedAtLT, q.CreatedAtGT, q.CreatedAtLTE, q.CreatedAtGTE, q.DateLT, q.DateGT, q.DateLTE, q.DateGTE}
+
+	if !all {
+		timestampQueries = []string{q.CreatedAtLT, q.CreatedAtGT, q.CreatedAtLTE, q.CreatedAtGTE}
+	}
 
 	for _, ts := range timestampQueries {
 		if ts != "" {

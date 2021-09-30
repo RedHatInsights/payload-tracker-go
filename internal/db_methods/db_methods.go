@@ -131,16 +131,16 @@ var RetrieveStatuses = func(apiQuery structs.Query) (int64, []structs.StatusRetr
 
 	// query chaining
 	if apiQuery.Service != "" {
-		dbQuery = dbQuery.Where("service = ?", apiQuery.Service)
+		dbQuery = dbQuery.Where("services.name = ?", apiQuery.Service)
 	}
 	if apiQuery.Source != "" {
-		dbQuery = dbQuery.Where("source = ?", apiQuery.Source)
+		dbQuery = dbQuery.Where("sources.name = ?", apiQuery.Source)
 	}
 	if apiQuery.Status != "" {
-		dbQuery = dbQuery.Where("status = ?", apiQuery.Status)
+		dbQuery = dbQuery.Where("statuses.name = ?", apiQuery.Status)
 	}
 	if apiQuery.StatusMsg != "" {
-		dbQuery = dbQuery.Where("status_msg = ?", apiQuery.StatusMsg)
+		dbQuery = dbQuery.Where("payload_statuses.status_msg = ?", apiQuery.StatusMsg)
 	}
 	dbQuery = chainTimeConditions("date", apiQuery, dbQuery)
 	dbQuery = chainTimeConditions("created_at", apiQuery, dbQuery)

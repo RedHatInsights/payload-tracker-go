@@ -14,13 +14,6 @@ import (
 )
 
 var (
-	validSortBy    = []string{"created_at", "account", "system_id", "inventory_id", "service", "source", "status_msg", "date"}
-	validAllSortBy = []string{"account", "inventory_id", "system_id", "created_at"}
-	validIDSortBy  = []string{"service", "source", "status_msg", "date", "created_at"}
-	validSortDir   = []string{"asc", "desc"}
-)
-
-var (
 	RetrievePayloads          = db_methods.RetrievePayloads
 	RetrieveRequestIdPayloads = db_methods.RetrieveRequestIdPayloads
 )
@@ -31,11 +24,17 @@ func Payloads(w http.ResponseWriter, r *http.Request) {
 	// init query with defaults and passed params
 	start := time.Now()
 
+	sortBy := r.URL.Query().Get("sort_by")
 	q, err := initQuery(r)
 
 	if err != nil {
 		writeResponse(w, http.StatusBadRequest, getErrorBody(fmt.Sprintf("%v", err), http.StatusBadRequest))
 		return
+	}
+
+	// there is a different default for sortby when searching for payloads
+	if sortBy == "" {
+		q.SortBy = "created_at"
 	}
 
 	if !stringInSlice(q.SortBy, validAllSortBy) {
@@ -49,13 +48,12 @@ func Payloads(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !validTimestamps(q) {
+	if !validTimestamps(q, false) {
 		message := "invalid timestamp format provided"
 		writeResponse(w, http.StatusBadRequest, getErrorBody(message, http.StatusBadRequest))
 		return
 	}
 
-	// TODO: do some database stuff
 	count, payloads := RetrievePayloads(q.Page, q.PageSize, q)
 	duration := time.Since(start).Seconds()
 
@@ -75,7 +73,6 @@ func Payloads(w http.ResponseWriter, r *http.Request) {
 func RequestIdPayloads(w http.ResponseWriter, r *http.Request) {
 
 	reqID := chi.URLParam(r, "request_id")
-	sortBy := r.URL.Query().Get("sort_by")
 
 	q, err := initQuery(r)
 
@@ -93,11 +90,6 @@ func RequestIdPayloads(w http.ResponseWriter, r *http.Request) {
 		message := "sort_dir must be one of " + strings.Join(validSortDir, ", ")
 		writeResponse(w, http.StatusBadRequest, getErrorBody(message, http.StatusBadRequest))
 		return
-	}
-
-	// there is a different default for sortby when searching for single payloads
-	if sortBy == "" {
-		q.SortBy = "date"
 	}
 
 	payloads := RetrieveRequestIdPayloads(reqID, q.SortBy, q.SortDir)

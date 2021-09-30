@@ -44,6 +44,12 @@ type PayloadRetrievebyID struct {
 	Durations map[string]string   `json:"duration"`
 }
 
+type StatusesData struct {
+	Count   int64            `json:"count"`
+	Elapsed float64          `json:"elapsed"`
+	Data    []StatusRetrieve `json:"data"`
+}
+
 // Error response struct for endpoints
 type ErrorResponse struct {
 	Title   string `json:"title"`
@@ -68,12 +74,12 @@ type SinglePayloadData struct {
 
 // StatusRetrieve returns a response for /payloads/statuses
 type StatusRetrieve struct {
-	RequestID string `json:"request_id"`
-	Status    string `json:"status"`
-	ID        string `json:"id"`
-	Service   string `json:"service"`
-	Source    string `json:"source"`
-	StatusMsg string `json:"status_msg"`
-	Date      string `json:"date"`
-	CreatedAt string `json:"created_at"`
+	RequestID string `json:"request_id,omitempty"`
+	Status    string `json:"status,omitempty"`
+	ID        string `json:"id,omitempty"`
+	Service   string `json:"service,omitempty"`
+	Source    string `json:"source,omitempty"`
+	StatusMsg string `json:"status_msg,omitempty"`
+	Date      string `json:"date,omitempty"`
+	CreatedAt string `json:"created_at,omitempty"`
 }

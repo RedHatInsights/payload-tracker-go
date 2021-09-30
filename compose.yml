@@ -1,16 +1,16 @@
 version: '3.1'
 services:
     # comment out payload-tracker-api stanza to disable it
-    # payload-tracker-api:
-    #     image: payload-tracker-go
-    #     ports:
-    #         - "8080:8080"
-    #     environment:
-    #         DB_HOST: "localhost"
-    #     command:
-    #         - /pt-api
-    #     depends_on:
-    #         - payload-tracker-db
+    payload-tracker-api:
+        image: payload-tracker-go
+        ports:
+            - "8080:8080"
+        environment:
+            DB_HOST: "localhost"
+        command:
+            - /pt-api
+        depends_on:
+            - payload-tracker-db
     payload-tracker-db:
         image: postgres
         restart: always
