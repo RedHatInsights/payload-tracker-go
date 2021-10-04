@@ -14,10 +14,25 @@ import (
 
 var (
 	payloadFields         = []string{"payloads.id", "payloads.request_id"}
-	extraPayloadFields    = []string{"payloads.account", "payloads.system_id"}
+	extraPayloadFields    = []string{"payloads.account", "payloads.system_id", "payloads.inventory_id"}
 	payloadStatusesFields = []string{"payload_statuses.status_msg", "payload_statuses.date", "payload_statuses.created_at"}
 	otherFields           = []string{"services.name as service", "sources.name as source", "statuses.name as status"}
 )
+
+func defineVerbosity(verbosity string) string {
+	switch verbosity {
+	case "1":
+		queryFields := []string{otherFields[0], otherFields[2], extraPayloadFields[2], payloadStatusesFields[1], payloadStatusesFields[0]}
+		return strings.Join(queryFields, ",")
+	case "2":
+		queryFields := fmt.Sprintf("%s,%s,%s,%s", strings.Join(payloadFields, ","), strings.Join(extraPayloadFields, ","), strings.Join(payloadStatusesFields, ","), strings.Join(otherFields, ","))
+		return queryFields
+	default:
+		// default to verbosity 0
+		queryFields := []string{otherFields[0], otherFields[2], payloadStatusesFields[1]}
+		return strings.Join(queryFields, ",")
+	}
+}
 
 func interpretDuration(duration int64) string {
 	rem := duration
@@ -100,12 +115,13 @@ var RetrievePayloads = func(page int, pageSize int, apiQuery structs.Query) (int
 	return count, payloads
 }
 
-var RetrieveRequestIdPayloads = func(reqID string, sortBy string, sortDir string) []structs.SinglePayloadData {
+var RetrieveRequestIdPayloads = func(reqID string, sortBy string, sortDir string, verbosity string) []structs.SinglePayloadData {
 	var payloads []structs.SinglePayloadData
 
 	dbQuery := db.DB
 
-	fields := fmt.Sprintf("%s,%s,%s,%s", strings.Join(payloadFields, ","), strings.Join(extraPayloadFields, ","), strings.Join(payloadStatusesFields, ","), strings.Join(otherFields, ","))
+	fields := defineVerbosity(verbosity)
+
 	dbQuery = dbQuery.Table("payload_statuses").Select(fields).Joins("JOIN payloads on payload_statuses.payload_id = payloads.id")
 	dbQuery = dbQuery.Joins("JOIN services on payload_statuses.service_id = services.id").Joins("JOIN sources on payload_statuses.source_id = sources.id").Joins("JOIN statuses on payload_statuses.status_id = statuses.id")
 

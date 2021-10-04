@@ -62,8 +62,8 @@ type SinglePayloadData struct {
 	ID          uint      `json:"id,omitempty"`
 	Service     string    `json:"service,omitempty"`
 	Source      string    `json:"source,omitempty"`
-	Account     string    `json:"account"`
-	RequestID   string    `json:"request_id"`
+	Account     string    `json:"account,omitempty"`
+	RequestID   string    `json:"request_id,omitempty"`
 	InventoryID string    `json:"inventory_id,omitempty"`
 	SystemID    string    `json:"system_id,omitempty"`
 	CreatedAt   time.Time `json:"created_at,omitempty"`

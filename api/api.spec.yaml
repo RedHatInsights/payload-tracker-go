@@ -141,6 +141,13 @@ paths:
         type: string
         default: asc
         enum: [asc, desc]
+      - name: verbosity
+        type: integer
+        default: 0
+        enum: [0, 1, 2]
+        description: Parameter to control verbosity of returned data object
+        required: false
+
   /statuses:
     get:
       description: 'Get individual payload statuses for payloads.'

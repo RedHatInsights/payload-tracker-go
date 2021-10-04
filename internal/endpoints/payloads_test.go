@@ -30,20 +30,41 @@ func formattedQuery(params map[string]interface{}) string {
 	return formatted[1:]
 }
 
-func getFourReqIdPayloads(requestId string) []structs.SinglePayloadData {
-	d1, _ := time.Parse(time.RFC3339, "2021-08-04T07:45:26.371Z")
-	p1 := structs.SinglePayloadData{
-		ID:          1,
-		Service:     "puptoo",
-		Account:     "test",
-		RequestID:   requestId,
-		InventoryID: getUUID(),
-		SystemID:    getUUID(),
-		CreatedAt:   time.Now().Round(0),
-		Status:      "received",
-		StatusMsg:   "generating reports",
-		Date:        d1,
+func dataPerVerbosity(requestId string, verbosity string, d1 time.Time) structs.SinglePayloadData {
+	switch verbosity {
+	case "2":
+		return structs.SinglePayloadData{
+			ID:          1,
+			Service:     "puptoo",
+			Account:     "test",
+			RequestID:   requestId,
+			InventoryID: getUUID(),
+			SystemID:    getUUID(),
+			CreatedAt:   time.Now().Round(0),
+			Status:      "received",
+			StatusMsg:   "generating reports",
+			Date:        d1,
+		}
+	case "1":
+		return structs.SinglePayloadData{
+			Service:     "puptoo",
+			Status:      "recieved",
+			InventoryID: getUUID(),
+			Date:        d1,
+			StatusMsg:   "generating reports",
+		}
+	default:
+		return structs.SinglePayloadData{
+			Service: "puptoo",
+			Status:  "recieved",
+			Date:    d1,
+		}
 	}
+}
+
+func getFourReqIdPayloads(requestId string, verbosity string) []structs.SinglePayloadData {
+	d1, _ := time.Parse(time.RFC3339, "2021-08-04T07:45:26.371Z")
+	p1 := dataPerVerbosity(requestId, verbosity, d1)
 
 	p2 := p1
 	p2.Status = "processing"
@@ -90,7 +111,7 @@ func mockedRetrievePayloads(_ int, _ int, _ structs.Query) (int64, []models.Payl
 	return payloadReturnCount, payloadReturnData
 }
 
-func mockedRequestIdPayloads(_ string, _ string, _ string) []structs.SinglePayloadData {
+func mockedRequestIdPayloads(_ string, _ string, _ string, _ string) []structs.SinglePayloadData {
 	return reqIdPayloadData
 }
 
@@ -269,7 +290,7 @@ var _ = Describe("RequestIdPayloads", func() {
 			})
 		})
 
-		reqIdPayloads := getFourReqIdPayloads(requestId)
+		reqIdPayloads := getFourReqIdPayloads(requestId, "2")
 		Context("With valid data from DB", func() {
 			It("should pass the data forward", func() {
 				req, err := makeTestRequest(fmt.Sprintf("/api/v1/payloads/%s", requestId), query)
@@ -313,6 +334,59 @@ var _ = Describe("RequestIdPayloads", func() {
 
 				Expect(respData.Durations["puptoo:inventory"]).To(Equal("00:00:05.625000"))
 				Expect(respData.Durations["puptoo:undefined"]).To(Equal("00:00:09.970000"))
+			})
+		})
+
+		reqIdPayloads = getFourReqIdPayloads(requestId, "1")
+		Context("Get to /payloads/{request_id} Verbosity 1", func() {
+			It("should pass the data forward", func() {
+				req, err := makeTestRequest(fmt.Sprintf("/api/v1/payloads/%s", requestId), query)
+				Expect(err).To(BeNil())
+
+				reqIdPayloadData = reqIdPayloads
+				handler.ServeHTTP(rr, req)
+				Expect(rr.Code).To(Equal(200))
+				Expect(rr.Body).ToNot(BeNil())
+
+				var respData structs.PayloadRetrievebyID
+
+				readBody, _ := ioutil.ReadAll(rr.Body)
+				json.Unmarshal(readBody, &respData)
+
+				Expect(respData.Data[0].SystemID).To(BeEmpty())
+				Expect(respData.Data[0].RequestID).To(BeEmpty())
+				Expect(respData.Data[0].Service).To(Equal(reqIdPayloads[0].Service))
+				Expect(respData.Data[0].InventoryID).To(Equal(reqIdPayloads[0].InventoryID))
+				Expect(respData.Data[0].CreatedAt.String()).To(Equal(reqIdPayloads[0].CreatedAt.String()))
+				Expect(respData.Data[0].Status).To(Equal(reqIdPayloads[0].Status))
+				Expect(respData.Data[0].StatusMsg).To(Equal(reqIdPayloads[0].StatusMsg))
+				Expect(respData.Data[0].Date.String()).To(Equal(reqIdPayloads[0].Date.String()))
+			})
+		})
+
+		reqIdPayloads = getFourReqIdPayloads(requestId, "0")
+		Context("Get to /payloads/{request_id} Verbosity 0", func() {
+			It("should pass the data forward", func() {
+				req, err := makeTestRequest(fmt.Sprintf("/api/v1/payloads/%s", requestId), query)
+				Expect(err).To(BeNil())
+
+				reqIdPayloadData = reqIdPayloads
+				handler.ServeHTTP(rr, req)
+				Expect(rr.Code).To(Equal(200))
+				Expect(rr.Body).ToNot(BeNil())
+
+				var respData structs.PayloadRetrievebyID
+
+				readBody, _ := ioutil.ReadAll(rr.Body)
+				json.Unmarshal(readBody, &respData)
+
+				Expect(respData.Data[0].SystemID).To(BeEmpty())
+				Expect(respData.Data[0].RequestID).To(BeEmpty())
+				Expect(respData.Data[0].StatusMsg).To(BeEmpty())
+				Expect(respData.Data[0].Service).To(Equal(reqIdPayloads[0].Service))
+				Expect(respData.Data[0].CreatedAt.String()).To(Equal(reqIdPayloads[0].CreatedAt.String()))
+				Expect(respData.Data[0].Status).To(Equal(reqIdPayloads[0].Status))
+				Expect(respData.Data[0].Date.String()).To(Equal(reqIdPayloads[0].Date.String()))
 			})
 		})
 	})

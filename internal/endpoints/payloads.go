@@ -3,10 +3,11 @@ package endpoints
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-chi/chi/v5"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/go-chi/chi/v5"
 
 	"github.com/redhatinsights/payload-tracker-go/internal/db_methods"
 	l "github.com/redhatinsights/payload-tracker-go/internal/logging"
@@ -18,13 +19,20 @@ var (
 	RetrieveRequestIdPayloads = db_methods.RetrieveRequestIdPayloads
 )
 
+var (
+	verbosity string = "0"
+)
+
 // Payloads returns responses for the /payloads endpoint
 func Payloads(w http.ResponseWriter, r *http.Request) {
+
 
 	// init query with defaults and passed params
 	start := time.Now()
 
 	sortBy := r.URL.Query().Get("sort_by")
+	incRequests()
+
 	q, err := initQuery(r)
 
 	if err != nil {
@@ -56,6 +64,7 @@ func Payloads(w http.ResponseWriter, r *http.Request) {
 
 	count, payloads := RetrievePayloads(q.Page, q.PageSize, q)
 	duration := time.Since(start).Seconds()
+	observeDBTime(time.Since(start))
 
 	payloadsData := structs.PayloadsData{count, duration, payloads}
 
@@ -73,6 +82,7 @@ func Payloads(w http.ResponseWriter, r *http.Request) {
 func RequestIdPayloads(w http.ResponseWriter, r *http.Request) {
 
 	reqID := chi.URLParam(r, "request_id")
+	verbosity = r.URL.Query().Get("verbosity")
 
 	q, err := initQuery(r)
 
@@ -92,7 +102,7 @@ func RequestIdPayloads(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	payloads := RetrieveRequestIdPayloads(reqID, q.SortBy, q.SortDir)
+	payloads := RetrieveRequestIdPayloads(reqID, q.SortBy, q.SortDir, verbosity)
 	durations := db_methods.CalculateDurations(payloads)
 
 	payloadsData := structs.PayloadRetrievebyID{Data: payloads, Durations: durations}
