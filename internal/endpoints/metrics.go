@@ -57,7 +57,7 @@ func (m *metricTrackingResponseWriter) Write(b []byte) (int, error) {
 func ResponseMetricsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ww := &metricTrackingResponseWriter{
- 			Wrapped:   w,
+			Wrapped: w,
 		}
 		next.ServeHTTP(ww, r)
 	})

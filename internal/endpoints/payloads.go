@@ -26,7 +26,6 @@ var (
 // Payloads returns responses for the /payloads endpoint
 func Payloads(w http.ResponseWriter, r *http.Request) {
 
-
 	// init query with defaults and passed params
 	start := time.Now()
 
