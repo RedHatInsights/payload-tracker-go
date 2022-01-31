@@ -9,8 +9,6 @@ objects:
   metadata:
     name: payload-tracker
   spec:
-    testing:
-      iqePlugin: payload-tracker
     envName: ${ENV_NAME}
     database:
       name: payloadtracker
