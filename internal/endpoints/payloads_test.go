@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"time"
 
+	"gorm.io/gorm"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -118,11 +119,11 @@ var (
 	reqIdPayloadData []structs.SinglePayloadData
 )
 
-func mockedRetrievePayloads(_ int, _ int, _ structs.Query) (int64, []models.Payloads) {
+func mockedRetrievePayloads(_ *gorm.DB, _ int, _ int, _ structs.Query) (int64, []models.Payloads) {
 	return payloadReturnCount, payloadReturnData
 }
 
-func mockedRequestIdPayloads(_ string, _ string, _ string, _ string) []structs.SinglePayloadData {
+func mockedRequestIdPayloads(_ *gorm.DB, _ string, _ string, _ string, _ string) []structs.SinglePayloadData {
 	return reqIdPayloadData
 }
 

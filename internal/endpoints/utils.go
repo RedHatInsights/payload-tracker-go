@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/redhatinsights/payload-tracker-go/internal/db"
 	"github.com/redhatinsights/payload-tracker-go/internal/structs"
 )
 
@@ -16,6 +17,8 @@ var (
 	validStatusesSortBy = []string{"service", "source", "request_id", "status", "status_msg", "date", "created_at"}
 	validSortDir        = []string{"asc", "desc"}
 )
+
+var dbObj = db.DB
 
 // initQuery intializes the query with default values
 func initQuery(r *http.Request) (structs.Query, error) {

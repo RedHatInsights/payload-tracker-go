@@ -1,4 +1,4 @@
-package db_methods
+package queries
 
 import (
 	"fmt"
@@ -7,7 +7,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/redhatinsights/payload-tracker-go/internal/db"
 	"github.com/redhatinsights/payload-tracker-go/internal/models"
 	"github.com/redhatinsights/payload-tracker-go/internal/structs"
 )
@@ -89,11 +88,9 @@ func chainTimeConditions(dbColumn string, apiQuery structs.Query, dbQuery *gorm.
 	return dbQuery
 }
 
-var RetrievePayloads = func(page int, pageSize int, apiQuery structs.Query) (int64, []models.Payloads) {
+var RetrievePayloads = func(dbQuery *gorm.DB, page int, pageSize int, apiQuery structs.Query) (int64, []models.Payloads) {
 	var count int64
 	var payloads []models.Payloads
-
-	dbQuery := db.DB
 
 	// query chaining
 	if apiQuery.Account != "" {
@@ -119,10 +116,8 @@ var RetrievePayloads = func(page int, pageSize int, apiQuery structs.Query) (int
 	return count, payloads
 }
 
-var RetrieveRequestIdPayloads = func(reqID string, sortBy string, sortDir string, verbosity string) []structs.SinglePayloadData {
+var RetrieveRequestIdPayloads = func(dbQuery *gorm.DB, reqID string, sortBy string, sortDir string, verbosity string) []structs.SinglePayloadData {
 	var payloads []structs.SinglePayloadData
-
-	dbQuery := db.DB
 
 	fields := defineVerbosity(verbosity)
 
@@ -136,14 +131,12 @@ var RetrieveRequestIdPayloads = func(reqID string, sortBy string, sortDir string
 	return payloads
 }
 
-var RetrieveStatuses = func(apiQuery structs.Query) (int64, []structs.StatusRetrieve) {
+var RetrieveStatuses = func(dbQuery *gorm.DB, apiQuery structs.Query) (int64, []structs.StatusRetrieve) {
 	var count int64
 	var payloads []structs.StatusRetrieve
 
 	page := apiQuery.Page
 	pageSize := apiQuery.PageSize
-
-	dbQuery := db.DB
 
 	fields := fmt.Sprintf("%s,%s,%s", strings.Join(payloadFields, ","), strings.Join(payloadStatusesFields, ","), strings.Join(otherFields, ","))
 	dbQuery = dbQuery.Table("payload_statuses").Select(fields).Joins("JOIN payloads on payload_statuses.payload_id = payloads.id")

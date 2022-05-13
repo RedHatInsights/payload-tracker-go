@@ -9,14 +9,14 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/redhatinsights/payload-tracker-go/internal/db_methods"
+	"github.com/redhatinsights/payload-tracker-go/internal/queries"
 	l "github.com/redhatinsights/payload-tracker-go/internal/logging"
 	"github.com/redhatinsights/payload-tracker-go/internal/structs"
 )
 
 var (
-	RetrievePayloads          = db_methods.RetrievePayloads
-	RetrieveRequestIdPayloads = db_methods.RetrieveRequestIdPayloads
+	RetrievePayloads          = queries.RetrievePayloads
+	RetrieveRequestIdPayloads = queries.RetrieveRequestIdPayloads
 )
 
 var (
@@ -61,7 +61,7 @@ func Payloads(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	count, payloads := RetrievePayloads(q.Page, q.PageSize, q)
+	count, payloads := RetrievePayloads(dbObj, q.Page, q.PageSize, q)
 	duration := time.Since(start).Seconds()
 	observeDBTime(time.Since(start))
 
@@ -101,14 +101,14 @@ func RequestIdPayloads(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	payloads := RetrieveRequestIdPayloads(reqID, q.SortBy, q.SortDir, verbosity)
+	payloads := RetrieveRequestIdPayloads(dbObj, reqID, q.SortBy, q.SortDir, verbosity)
 
 	if payloads == nil || len(payloads) == 0 {
 		writeResponse(w, http.StatusNotFound, getErrorBody("payload with id: "+reqID+" not found", http.StatusNotFound))
 		return
 	}
 
-	durations := db_methods.CalculateDurations(payloads)
+	durations := queries.CalculateDurations(payloads)
 
 	payloadsData := structs.PayloadRetrievebyID{Data: payloads, Durations: durations}
 

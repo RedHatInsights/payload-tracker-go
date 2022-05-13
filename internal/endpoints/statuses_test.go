@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"gorm.io/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -18,7 +19,7 @@ var (
 	statusesPayloadData []structs.StatusRetrieve
 )
 
-func mockedRetrieveStatuses(_ structs.Query) (int64, []structs.StatusRetrieve) {
+func mockedRetrieveStatuses(_ *gorm.DB, _ structs.Query) (int64, []structs.StatusRetrieve) {
 	return statusPayloadCount, statusesPayloadData
 }
 
