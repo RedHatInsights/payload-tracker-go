@@ -42,7 +42,7 @@ func Statuses(w http.ResponseWriter, r *http.Request) {
 		writeResponse(w, http.StatusBadRequest, getErrorBody(message, http.StatusBadRequest))
 		return
 	}
-	count, payloads := RetrieveStatuses(dbObj, q)
+	count, payloads := RetrieveStatuses(getDb(), q)
 	duration := time.Since(start).Seconds()
 
 	statusesData := structs.StatusesData{count, duration, payloads}
