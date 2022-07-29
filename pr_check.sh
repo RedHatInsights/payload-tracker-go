@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Adding comment for test mr.
 # --------------------------------------------
 # Options that must be configured by app owner
 # --------------------------------------------
