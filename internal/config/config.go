@@ -23,6 +23,7 @@ type TrackerConfig struct {
 	DatabaseConfig              DatabaseCfg
 	RequestConfig               RequestCfg
 	KibanaConfig                KibanaCfg
+	DebugConfig                 DebugCfg
 }
 
 type KafkaCfg struct {
@@ -70,6 +71,10 @@ type KibanaCfg struct {
 	ServiceField string
 }
 
+type DebugCfg struct {
+	LogRawStatusEvent bool
+}
+
 // Get sets each config option with its defaults
 func Get() *TrackerConfig {
 	options := viper.New()
@@ -110,6 +115,9 @@ func Get() *TrackerConfig {
 	options.SetDefault("kibana.url", "https://kibana.apps.crcs02ue1.urby.p1.openshiftapps.com/app/kibana#/discover")
 	options.SetDefault("kibana.index", "43c5fed0-d5ce-11ea-b58c-a7c95afd7a5d") // the index grabbed from the kibana url
 	options.SetDefault("kibana.service.field", "app")
+
+	// debug config
+	options.SetDefault("debug.logRawStatusEvent", false)
 
 	if clowder.IsClowderEnabled() {
 		cfg := clowder.LoadedConfig
@@ -197,6 +205,9 @@ func Get() *TrackerConfig {
 			DashboardURL: options.GetString("kibana.url"),
 			Index:        options.GetString("kibana.index"),
 			ServiceField: options.GetString("kibana.service.field"),
+		},
+		DebugConfig: DebugCfg{
+			LogRawStatusEvent: options.GetBool("debug.logRawStatusEvent"),
 		},
 	}
 
