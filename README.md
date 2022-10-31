@@ -38,9 +38,9 @@ Simply send a message on the ‘platform.payload-status’ for your given Kafka 
     'source': 'This is indicative of a third party rule hit analysis. (not Insights Client)',
     'account': 'The RH associated account',
     'org_id': 'The RH associated org id',
-    'request_id': 'The ID of the payload',
-    'inventory_id': 'The ID of the entity in terms of the inventory',
-    'system_id': 'The ID of the entity in terms of the actual system',
+    'request_id': 'The ID of the payload (This should be a UUID)',
+    'inventory_id': 'The ID of the entity in terms of the inventory (This should be a UUID)',
+    'system_id': 'The ID of the entity in terms of the actual system (This should be a UUID)',
     'status': 'received|processing|success|error|etc',
     'status_msg': 'Information relating to the above status, should more verbiage be needed (in the event of an error)',
     'date': 'Timestamp for the message relating to the status above. (This should be in RFC3339 UTC format: "2022-03-17T16:56:10Z")'
