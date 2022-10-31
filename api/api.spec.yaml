@@ -54,10 +54,12 @@ paths:
           required: false
           description: filter for inventory_id
           type: string
+          format: uuid
         - name: system_id
           in: query
           required: false
           type: string
+          format: uuid
         - name: created_at_lt
           in: query
           required: false
@@ -132,6 +134,7 @@ paths:
         description: A unique value identifying this payload.
         required: true
         type: string
+        format: uuid
       - name: sort_by
         in: query
         description: Attribute to sort results by
@@ -162,6 +165,7 @@ paths:
           description: A unique value identifying this payload.
           required: true
           type: string
+          format: uuid
       responses:
         '200':
           description: ''
@@ -196,6 +200,7 @@ paths:
           description: A unique value identifying this payload.
           required: true
           type: string
+          format: uuid
         - name: service
           in: query
           description: Service to get archive link for
@@ -455,12 +460,15 @@ definitions:
         title: Request ID
         type: string
         minLength: 1
+        format: uuid
       inventory_id:
         title: Inventory ID
         type: string
+        format: uuid
       system_id:
         title: System ID
         type: string
+        format: uuid
       status:
         title: Status
         type: string
@@ -487,6 +495,7 @@ definitions:
         title: Request ID
         type: string
         minLength: 1
+        format: uuid
       account:
         title: Account
         type: string
@@ -496,9 +505,11 @@ definitions:
       inventory_id:
         title: Inventory ID
         type: string
+        format: uuid
       system_id:
         title: System ID
         type: string
+        format: uuid
       created_at:
         title: Created at
         type: string
@@ -520,6 +531,7 @@ definitions:
         title: Request ID
         type: string
         minLength: 1
+        format: uuid
       status:
         title: Status
         type: string
