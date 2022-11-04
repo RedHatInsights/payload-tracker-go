@@ -74,6 +74,8 @@ objects:
             value: ${KIBANA_INDEX}
           - name: KIBANA_SERVICE_FIELD
             value: ${KIBANA_SERVICE_FIELD}
+          - name: DEBUG_LOG_STATUS_JSON
+            value: ${DEBUG_LOG_STATUS_JSON}
     - name: consumer
       minReplicas: ${{CONSUMER_REPLICAS}}
       podSpec:  
@@ -182,3 +184,5 @@ parameters:
   value: 4b37e920-1ade-11ec-b3d0-a39435352faa
 - name: KIBANA_SERVICE_FIELD
   value: app
+- name: DEBUG_LOG_STATUS_JSON
+  value: 'false'

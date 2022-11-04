@@ -36,7 +36,7 @@ func (this *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *con
 
 	if err := json.Unmarshal(msg.Value, payloadStatus); err != nil {
 		// PROBE: Add probe here for error unmarshaling JSON
-		if cfg.DebugConfig.LogRawStatusEvent {
+		if cfg.DebugConfig.LogStatusJson {
 			l.Log.Error("ERROR: Unmarshaling Payload Status Event: ", err, " Raw Message: ", string(msg.Value))
 		} else {
 			l.Log.Error("ERROR: Unmarshaling Payload Status Event: ", err)

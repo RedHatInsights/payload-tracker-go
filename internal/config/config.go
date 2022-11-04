@@ -72,7 +72,7 @@ type KibanaCfg struct {
 }
 
 type DebugCfg struct {
-	LogRawStatusEvent bool
+	LogStatusJson bool
 }
 
 // Get sets each config option with its defaults
@@ -117,7 +117,7 @@ func Get() *TrackerConfig {
 	options.SetDefault("kibana.service.field", "app")
 
 	// debug config
-	options.SetDefault("debug.logRawStatusEvent", false)
+	options.SetDefault("debug.log.status.json", false)
 
 	if clowder.IsClowderEnabled() {
 		cfg := clowder.LoadedConfig
@@ -207,7 +207,7 @@ func Get() *TrackerConfig {
 			ServiceField: options.GetString("kibana.service.field"),
 		},
 		DebugConfig: DebugCfg{
-			LogRawStatusEvent: options.GetBool("debug.logRawStatusEvent"),
+			LogStatusJson: options.GetBool("debug.log.status.json"),
 		},
 	}
 
