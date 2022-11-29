@@ -86,7 +86,7 @@ objects:
           failureThreshold: 3
           httpGet:
             path: /live
-            port: 8001
+            port: 9000
             scheme: HTTP
           periodSeconds: 10
           successThreshold: 1
@@ -95,7 +95,7 @@ objects:
           failureThreshold: 3
           httpGet:
             path: /ready
-            port: 8001
+            port: 9000
             scheme: HTTP
           periodSeconds: 10
           successThreshold: 1
