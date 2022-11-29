@@ -9,6 +9,7 @@ import (
 
 	"github.com/redhatinsights/payload-tracker-go/internal/config"
 	"github.com/redhatinsights/payload-tracker-go/internal/db"
+	"github.com/redhatinsights/payload-tracker-go/internal/endpoints"
 	"github.com/redhatinsights/payload-tracker-go/internal/kafka"
 	"github.com/redhatinsights/payload-tracker-go/internal/logging"
 )
@@ -28,6 +29,11 @@ func main() {
 	logging.Log.Info("Setting up DB")
 	db.DbConnect(cfg)
 
+	healthHandler := endpoints.HealthCheckHandler(
+		db.DB,
+		*cfg,
+	)
+
 	logging.Log.Info("Starting a new kafka consumer...")
 
 	// Webserver is created only for metrics collection
@@ -35,6 +41,8 @@ func main() {
 
 	// Mount the metrics handler on /metrics
 	r.Get("/", lubdub)
+	r.Get("/live", healthHandler)
+	r.Get("/ready", healthHandler)
 	r.Handle("/metrics", promhttp.Handler())
 
 	msrv := http.Server{

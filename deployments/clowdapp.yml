@@ -82,6 +82,24 @@ objects:
         image: ${IMAGE}:${IMAGE_TAG}
         command: 
           - ./pt-consumer
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /live
+            port: 8001
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /ready
+            port: 8001
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
         resources:
           limits:
             cpu: ${CONSUMER_CPU_LIMIT}
