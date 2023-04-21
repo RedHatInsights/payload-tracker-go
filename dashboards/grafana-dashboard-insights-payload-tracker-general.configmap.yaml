@@ -86,6 +86,7 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": {
+            "type": "prometheus",
             "uid": "$datasource"
           },
           "fieldConfig": {
@@ -1470,8 +1471,8 @@ data:
         ]
       },
       "time": {
-        "from": "2023-04-21T00:24:12.174Z",
-        "to": "2023-04-21T01:24:12.174Z"
+        "from": "now-1h",
+        "to": "now"
       },
       "timepicker": {
         "refresh_intervals": [
@@ -1501,7 +1502,7 @@ data:
       "timezone": "",
       "title": "Payload Tracker",
       "uid": "eGSUe-SZk",
-      "version": 1,
+      "version": 3,
       "weekStart": ""
     }
 kind: ConfigMap
