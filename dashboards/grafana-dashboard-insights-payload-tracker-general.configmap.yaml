@@ -27,7 +27,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1659636049665,
+      "id": 50363,
       "links": [
         {
           "icon": "external link",
@@ -86,7 +86,6 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": {
-            "type": "prometheus",
             "uid": "$datasource"
           },
           "fieldConfig": {
@@ -125,7 +124,7 @@ data:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "9.0.3",
+          "pluginVersion": "9.3.8",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -159,13 +158,11 @@ data:
           },
           "yaxes": [
             {
-              "$$hashKey": "object:343",
               "format": "short",
               "logBase": 1,
               "show": true
             },
             {
-              "$$hashKey": "object:344",
               "format": "short",
               "logBase": 1,
               "show": true
@@ -192,104 +189,12 @@ data:
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
-            "h": 10,
+            "h": 12,
             "w": 24,
             "x": 0,
             "y": 10
           },
           "hiddenSeries": false,
-          "id": 14,
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": true,
-            "max": true,
-            "min": true,
-            "rightSide": true,
-            "show": true,
-            "sort": "total",
-            "sortDesc": true,
-            "total": true,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "9.0.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "datasource": {
-                "uid": "$datasource"
-              },
-              "expr": "sum(increase(payload_tracker_service_status_counter_total[1m])) by (service_name, status, source_name)",
-              "legendFormat": "{{service_name}} (source: {{source_name}}) - {{status}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeRegions": [],
-          "title": "Service Status Count",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": true
-            },
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": {
-            "uid": "$datasource"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "links": []
-            },
-            "overrides": []
-          },
-          "fill": 1,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 12,
-            "w": 24,
-            "x": 0,
-            "y": 20
-          },
-          "hiddenSeries": false,
           "id": 10,
           "legend": {
             "alignAsTable": true,
@@ -310,108 +215,7 @@ data:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "9.0.3",
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "datasource": {
-                "uid": "$datasource"
-              },
-              "expr": "sum(rate(payload_tracker_upload_time_elapsed_sum[1m]) / rate(payload_tracker_upload_time_elapsed_count[1m]))",
-              "legendFormat": "Total",
-              "refId": "A"
-            },
-            {
-              "datasource": {
-                "uid": "$datasource"
-              },
-              "expr": "sum(rate(payload_tracker_upload_time_by_service_elapsed_sum[1m]) / rate(payload_tracker_upload_time_by_service_elapsed_count[1m])) by (service_name, source_name)",
-              "legendFormat": "{{service_name}} (source: {{source_name}})",
-              "refId": "B"
-            }
-          ],
-          "thresholds": [],
-          "timeRegions": [],
-          "title": "Platform Upload Times",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:264",
-              "format": "s",
-              "logBase": 1,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:265",
-              "format": "short",
-              "logBase": 1,
-              "show": false
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": {
-            "uid": "$datasource"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "links": []
-            },
-            "overrides": []
-          },
-          "fill": 1,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 12,
-            "w": 24,
-            "x": 0,
-            "y": 32
-          },
-          "hiddenSeries": false,
-          "id": 10,
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": true,
-            "max": true,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "total": true,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "9.0.3",
+          "pluginVersion": "9.3.8",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -487,7 +291,7 @@ data:
             "h": 11,
             "w": 6,
             "x": 0,
-            "y": 44
+            "y": 22
           },
           "hiddenSeries": false,
           "id": 12,
@@ -509,7 +313,7 @@ data:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "9.0.3",
+          "pluginVersion": "9.3.8",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -575,7 +379,7 @@ data:
             "h": 11,
             "w": 9,
             "x": 6,
-            "y": 44
+            "y": 22
           },
           "hiddenSeries": false,
           "id": 32,
@@ -597,7 +401,7 @@ data:
             "alertThreshold": false
           },
           "percentage": false,
-          "pluginVersion": "9.0.3",
+          "pluginVersion": "9.3.8",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -660,7 +464,7 @@ data:
             "h": 11,
             "w": 9,
             "x": 15,
-            "y": 44
+            "y": 22
           },
           "hiddenSeries": false,
           "id": 34,
@@ -680,7 +484,7 @@ data:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "9.0.3",
+          "pluginVersion": "9.3.8",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -729,311 +533,6 @@ data:
           "yaxis": {
             "align": false
           }
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "$datasource"
-          },
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "max": 1,
-              "min": 0,
-              "thresholds": {
-                "mode": "percentage",
-                "steps": [
-                  {
-                    "color": "red",
-                    "value": null
-                  },
-                  {
-                    "color": "green",
-                    "value": 98
-                  }
-                ]
-              },
-              "unit": "percentunit"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 5,
-            "w": 6,
-            "x": 0,
-            "y": 55
-          },
-          "id": 45,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "pluginVersion": "9.0.3",
-          "targets": [
-            {
-              "datasource": {
-                "uid": "$datasource"
-              },
-              "exemplar": true,
-              "expr": "sum(increase(payload_tracker_api_invalid_request_IDs[$__range]))",
-              "interval": "",
-              "legendFormat": "{{pod}}",
-              "refId": "A"
-            }
-          ],
-          "title": "Invalid API Request Count",
-          "type": "stat"
-        },
-        {
-          "aliasColors": {},
-          "bars": true,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": {
-            "uid": "$datasource"
-          },
-          "fill": 1,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 11,
-            "w": 9,
-            "x": 6,
-            "y": 55
-          },
-          "hiddenSeries": false,
-          "id": 32,
-          "legend": {
-            "alignAsTable": false,
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "rightSide": false,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": false,
-          "linewidth": 1,
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": false
-          },
-          "percentage": false,
-          "pluginVersion": "9.0.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "datasource": {
-                "uid": "$datasource"
-              },
-              "expr": "sum(rate(kafka_server_brokertopicmetrics_messagesin_total{topic=\"platform.payload-status\"}[1m])) by (topic)",
-              "interval": "",
-              "legendFormat": "{{topic}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeRegions": [],
-          "title": "platform.payload-status Kafka Messages",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": true
-            },
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": true,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": {
-            "uid": "$datasource"
-          },
-          "fill": 1,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 11,
-            "w": 9,
-            "x": 15,
-            "y": 55
-          },
-          "hiddenSeries": false,
-          "id": 34,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": false,
-          "linewidth": 1,
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "9.0.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "datasource": {
-                "uid": "$datasource"
-              },
-              "expr": "kafka_consumergroup_group_topic_sum_lag{topic=\"platform.payload-status\"}",
-              "format": "time_series",
-              "interval": "",
-              "legendFormat": "{{topic}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeRegions": [],
-          "title": "Kafka Topic Lag",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": true
-            },
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "$datasource"
-          },
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "max": 1,
-              "min": 0,
-              "thresholds": {
-                "mode": "percentage",
-                "steps": [
-                  {
-                    "color": "red",
-                    "value": null
-                  },
-                  {
-                    "color": "green",
-                    "value": 98
-                  }
-                ]
-              },
-              "unit": "percentunit"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 6,
-            "w": 6,
-            "x": 0,
-            "y": 60
-          },
-          "id": 46,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "pluginVersion": "9.0.3",
-          "targets": [
-            {
-              "datasource": {
-                "uid": "$datasource"
-              },
-              "exemplar": true,
-              "expr": "sum(increase(payload_tracker_consumer_invalid_request_IDs[$__range]))",
-              "interval": "",
-              "legendFormat": "{{pod}}",
-              "refId": "A"
-            }
-          ],
-          "title": "Invalid Consumer Request Count",
-          "type": "stat"
         },
         {
           "aliasColors": {},
@@ -1046,10 +545,10 @@ data:
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
-            "h": 16,
+            "h": 13,
             "w": 10,
             "x": 0,
-            "y": 66
+            "y": 33
           },
           "hiddenSeries": false,
           "id": 16,
@@ -1071,7 +570,7 @@ data:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "9.0.3",
+          "pluginVersion": "9.3.8",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1165,10 +664,10 @@ data:
             ]
           },
           "gridPos": {
-            "h": 16,
+            "h": 18,
             "w": 6,
             "x": 10,
-            "y": 66
+            "y": 33
           },
           "id": 18,
           "options": {
@@ -1186,7 +685,7 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.3",
+          "pluginVersion": "9.3.8",
           "targets": [
             {
               "datasource": {
@@ -1232,7 +731,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 16,
-            "y": 66
+            "y": 33
           },
           "id": 22,
           "options": {
@@ -1248,7 +747,7 @@ data:
             "showThresholdMarkers": true,
             "text": {}
           },
-          "pluginVersion": "9.0.3",
+          "pluginVersion": "9.3.8",
           "targets": [
             {
               "datasource": {
@@ -1294,7 +793,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 20,
-            "y": 66
+            "y": 33
           },
           "id": 41,
           "options": {
@@ -1310,7 +809,7 @@ data:
             "showThresholdMarkers": true,
             "text": {}
           },
-          "pluginVersion": "9.0.3",
+          "pluginVersion": "9.3.8",
           "targets": [
             {
               "datasource": {
@@ -1354,7 +853,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 16,
-            "y": 70
+            "y": 37
           },
           "id": 36,
           "options": {
@@ -1372,7 +871,7 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.3",
+          "pluginVersion": "9.3.8",
           "targets": [
             {
               "datasource": {
@@ -1418,7 +917,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 20,
-            "y": 70
+            "y": 37
           },
           "id": 43,
           "options": {
@@ -1436,7 +935,7 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.3",
+          "pluginVersion": "9.3.8",
           "targets": [
             {
               "datasource": {
@@ -1481,10 +980,10 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 4,
+            "h": 5,
             "w": 8,
             "x": 16,
-            "y": 74
+            "y": 41
           },
           "id": 20,
           "options": {
@@ -1500,7 +999,7 @@ data:
             "showThresholdMarkers": true,
             "text": {}
           },
-          "pluginVersion": "9.0.3",
+          "pluginVersion": "9.3.8",
           "targets": [
             {
               "datasource": {
@@ -1517,6 +1016,142 @@ data:
           ],
           "title": "Consumption Errors (5%)",
           "type": "gauge"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "max": 1,
+              "min": 0,
+              "thresholds": {
+                "mode": "percentage",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 98
+                  }
+                ]
+              },
+              "unit": "percentunit"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 5,
+            "x": 0,
+            "y": 46
+          },
+          "id": 45,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "9.3.8",
+          "targets": [
+            {
+              "datasource": {
+                "uid": "$datasource"
+              },
+              "exemplar": true,
+              "expr": "sum(increase(payload_tracker_api_invalid_request_IDs[$__range]))",
+              "interval": "",
+              "legendFormat": "{{pod}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Invalid API Request Count",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "max": 1,
+              "min": 0,
+              "thresholds": {
+                "mode": "percentage",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 98
+                  }
+                ]
+              },
+              "unit": "percentunit"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 5,
+            "x": 5,
+            "y": 46
+          },
+          "id": 46,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "9.3.8",
+          "targets": [
+            {
+              "datasource": {
+                "uid": "$datasource"
+              },
+              "exemplar": true,
+              "expr": "sum(increase(payload_tracker_consumer_invalid_request_IDs[$__range]))",
+              "interval": "",
+              "legendFormat": "{{pod}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Invalid Consumer Request Count",
+          "type": "stat"
         },
         {
           "datasource": {
@@ -1545,10 +1180,10 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 4,
+            "h": 5,
             "w": 8,
             "x": 16,
-            "y": 78
+            "y": 46
           },
           "id": 24,
           "options": {
@@ -1564,7 +1199,7 @@ data:
             "showThresholdMarkers": true,
             "text": {}
           },
-          "pluginVersion": "9.0.3",
+          "pluginVersion": "9.3.8",
           "targets": [
             {
               "datasource": {
@@ -1594,11 +1229,26 @@ data:
             "uid": "${datasource}"
           },
           "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "scaleDistribution": {
+                  "type": "linear"
+                }
+              }
+            },
+            "overrides": []
+          },
           "gridPos": {
             "h": 9,
             "w": 24,
             "x": 0,
-            "y": 82
+            "y": 51
           },
           "heatmap": {},
           "hideZeroBuckets": true,
@@ -1607,6 +1257,45 @@ data:
           "legend": {
             "show": false
           },
+          "options": {
+            "calculate": false,
+            "calculation": {},
+            "cellGap": 2,
+            "cellValues": {},
+            "color": {
+              "exponent": 0.5,
+              "fill": "#b4ff00",
+              "mode": "opacity",
+              "reverse": false,
+              "scale": "exponential",
+              "scheme": "Oranges",
+              "steps": 128
+            },
+            "exemplars": {
+              "color": "rgba(255,0,255,0.7)"
+            },
+            "filterValues": {
+              "le": 1e-9
+            },
+            "legend": {
+              "show": false
+            },
+            "rowsFrame": {
+              "layout": "auto"
+            },
+            "showValue": "never",
+            "tooltip": {
+              "show": true,
+              "yHistogram": true
+            },
+            "yAxis": {
+              "axisPlacement": "left",
+              "decimals": 0,
+              "reverse": false,
+              "unit": "dtdurations"
+            }
+          },
+          "pluginVersion": "9.3.8",
           "reverseYBuckets": false,
           "targets": [
             {
@@ -1653,11 +1342,26 @@ data:
             "uid": "${datasource}"
           },
           "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "scaleDistribution": {
+                  "type": "linear"
+                }
+              }
+            },
+            "overrides": []
+          },
           "gridPos": {
             "h": 9,
             "w": 24,
             "x": 0,
-            "y": 91
+            "y": 60
           },
           "heatmap": {},
           "hideZeroBuckets": true,
@@ -1666,6 +1370,45 @@ data:
           "legend": {
             "show": false
           },
+          "options": {
+            "calculate": false,
+            "calculation": {},
+            "cellGap": 2,
+            "cellValues": {},
+            "color": {
+              "exponent": 0.5,
+              "fill": "#b4ff00",
+              "mode": "opacity",
+              "reverse": false,
+              "scale": "exponential",
+              "scheme": "Oranges",
+              "steps": 128
+            },
+            "exemplars": {
+              "color": "rgba(255,0,255,0.7)"
+            },
+            "filterValues": {
+              "le": 1e-9
+            },
+            "legend": {
+              "show": false
+            },
+            "rowsFrame": {
+              "layout": "auto"
+            },
+            "showValue": "never",
+            "tooltip": {
+              "show": true,
+              "yHistogram": true
+            },
+            "yAxis": {
+              "axisPlacement": "left",
+              "decimals": 0,
+              "reverse": false,
+              "unit": "dtdurations"
+            }
+          },
+          "pluginVersion": "9.3.8",
           "reverseYBuckets": false,
           "targets": [
             {
@@ -1699,8 +1442,8 @@ data:
           "yBucketBound": "auto"
         }
       ],
-      "refresh": "1m",
-      "schemaVersion": 36,
+      "refresh": false,
+      "schemaVersion": 37,
       "style": "dark",
       "tags": [],
       "templating": {
@@ -1727,8 +1470,8 @@ data:
         ]
       },
       "time": {
-        "from": "now-1h",
-        "to": "now"
+        "from": "2023-04-21T00:24:12.174Z",
+        "to": "2023-04-21T01:24:12.174Z"
       },
       "timepicker": {
         "refresh_intervals": [
@@ -1758,7 +1501,7 @@ data:
       "timezone": "",
       "title": "Payload Tracker",
       "uid": "eGSUe-SZk",
-      "version": 2,
+      "version": 1,
       "weekStart": ""
     }
 kind: ConfigMap
