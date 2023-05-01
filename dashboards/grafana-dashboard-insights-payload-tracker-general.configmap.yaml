@@ -27,7 +27,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "id": 50363,
+      "id": 108490,
       "links": [
         {
           "icon": "external link",
@@ -86,198 +86,6 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": {
-            "type": "prometheus",
-            "uid": "$datasource"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "links": []
-            },
-            "overrides": []
-          },
-          "fill": 1,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 10,
-            "w": 24,
-            "x": 0,
-            "y": 0
-          },
-          "hiddenSeries": false,
-          "id": 14,
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": true,
-            "max": true,
-            "min": true,
-            "rightSide": true,
-            "show": true,
-            "sort": "total",
-            "sortDesc": true,
-            "total": true,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "9.3.8",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "datasource": {
-                "uid": "$datasource"
-              },
-              "expr": "sum(increase(payload_tracker_service_status_counter_total[1m])) by (service_name, status, source_name)",
-              "legendFormat": "{{service_name}} (source: {{source_name}}) - {{status}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeRegions": [],
-          "title": "Service Status Count",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": true
-            },
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": {
-            "uid": "$datasource"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "links": []
-            },
-            "overrides": []
-          },
-          "fill": 1,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 12,
-            "w": 24,
-            "x": 0,
-            "y": 10
-          },
-          "hiddenSeries": false,
-          "id": 10,
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": true,
-            "max": true,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "total": true,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "9.3.8",
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "datasource": {
-                "uid": "$datasource"
-              },
-              "expr": "sum(rate(payload_tracker_upload_time_elapsed_sum[1m]) / rate(payload_tracker_upload_time_elapsed_count[1m]))",
-              "legendFormat": "Total",
-              "refId": "A"
-            },
-            {
-              "datasource": {
-                "uid": "$datasource"
-              },
-              "expr": "sum(rate(payload_tracker_upload_time_by_service_elapsed_sum[1m]) / rate(payload_tracker_upload_time_by_service_elapsed_count[1m])) by (service_name, source_name)",
-              "legendFormat": "{{service_name}} (source: {{source_name}})",
-              "refId": "B"
-            }
-          ],
-          "thresholds": [],
-          "timeRegions": [],
-          "title": "Platform Upload Times",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "s",
-              "logBase": 1,
-              "show": true
-            },
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": false
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": {
             "uid": "$datasource"
           },
           "fieldConfig": {
@@ -292,7 +100,7 @@ data:
             "h": 11,
             "w": 6,
             "x": 0,
-            "y": 22
+            "y": 0
           },
           "hiddenSeries": false,
           "id": 12,
@@ -380,7 +188,7 @@ data:
             "h": 11,
             "w": 9,
             "x": 6,
-            "y": 22
+            "y": 0
           },
           "hiddenSeries": false,
           "id": 32,
@@ -465,7 +273,7 @@ data:
             "h": 11,
             "w": 9,
             "x": 15,
-            "y": 22
+            "y": 0
           },
           "hiddenSeries": false,
           "id": 34,
@@ -549,7 +357,7 @@ data:
             "h": 13,
             "w": 10,
             "x": 0,
-            "y": 33
+            "y": 11
           },
           "hiddenSeries": false,
           "id": 16,
@@ -668,7 +476,7 @@ data:
             "h": 18,
             "w": 6,
             "x": 10,
-            "y": 33
+            "y": 11
           },
           "id": 18,
           "options": {
@@ -732,7 +540,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 16,
-            "y": 33
+            "y": 11
           },
           "id": 22,
           "options": {
@@ -794,7 +602,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 20,
-            "y": 33
+            "y": 11
           },
           "id": 41,
           "options": {
@@ -854,7 +662,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 16,
-            "y": 37
+            "y": 15
           },
           "id": 36,
           "options": {
@@ -918,7 +726,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 20,
-            "y": 37
+            "y": 15
           },
           "id": 43,
           "options": {
@@ -956,6 +764,7 @@ data:
         },
         {
           "datasource": {
+            "type": "prometheus",
             "uid": "$datasource"
           },
           "fieldConfig": {
@@ -984,7 +793,7 @@ data:
             "h": 5,
             "w": 8,
             "x": 16,
-            "y": 41
+            "y": 19
           },
           "id": 20,
           "options": {
@@ -1006,8 +815,9 @@ data:
               "datasource": {
                 "uid": "$datasource"
               },
+              "editorMode": "code",
               "exemplar": true,
-              "expr": "sum(increase(payload_tracker_consumed_messages[$__range])) / sum(increase(payload_tracker_consume_errors[$__range])) * 100",
+              "expr": "sum(increase(payload_tracker_consumed_messages[$__range])) / sum(increase(payload_tracker_consume_errors[$__range]))",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -1045,83 +855,15 @@ data:
                   }
                 ]
               },
-              "unit": "percentunit"
+              "unit": "none"
             },
             "overrides": []
           },
           "gridPos": {
             "h": 5,
-            "w": 5,
+            "w": 10,
             "x": 0,
-            "y": 46
-          },
-          "id": 45,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "pluginVersion": "9.3.8",
-          "targets": [
-            {
-              "datasource": {
-                "uid": "$datasource"
-              },
-              "exemplar": true,
-              "expr": "sum(increase(payload_tracker_api_invalid_request_IDs[$__range]))",
-              "interval": "",
-              "legendFormat": "{{pod}}",
-              "refId": "A"
-            }
-          ],
-          "title": "Invalid API Request Count",
-          "type": "stat"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "$datasource"
-          },
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "max": 1,
-              "min": 0,
-              "thresholds": {
-                "mode": "percentage",
-                "steps": [
-                  {
-                    "color": "red",
-                    "value": null
-                  },
-                  {
-                    "color": "green",
-                    "value": 98
-                  }
-                ]
-              },
-              "unit": "percentunit"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 5,
-            "w": 5,
-            "x": 5,
-            "y": 46
+            "y": 24
           },
           "id": 46,
           "options": {
@@ -1184,7 +926,7 @@ data:
             "h": 5,
             "w": 8,
             "x": 16,
-            "y": 46
+            "y": 24
           },
           "id": 24,
           "options": {
@@ -1249,7 +991,7 @@ data:
             "h": 9,
             "w": 24,
             "x": 0,
-            "y": 51
+            "y": 29
           },
           "heatmap": {},
           "hideZeroBuckets": true,
@@ -1362,7 +1104,7 @@ data:
             "h": 9,
             "w": 24,
             "x": 0,
-            "y": 60
+            "y": 38
           },
           "heatmap": {},
           "hideZeroBuckets": true,
