@@ -19,8 +19,14 @@ func DbConnect(cfg *config.TrackerConfig) {
 		dbname   = cfg.DatabaseConfig.DBName
 		host     = cfg.DatabaseConfig.DBHost
 		port     = cfg.DatabaseConfig.DBPort
+		sslmode  = "disable"
 	)
-	dsn := fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%s sslmode=disable", user, password, dbname, host, port)
+
+	if cfg.DatabaseConfig.RDSCa != "" {
+		sslmode = "require"
+	}
+
+	dsn := fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%s sslmode=%s", user, password, dbname, host, port, sslmode)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
