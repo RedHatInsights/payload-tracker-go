@@ -33,15 +33,13 @@ get_N_chars_commit_hash() {
 
 TEST_CONTAINER_NAME="tracker-$(get_N_chars_commit_hash 7)"
 
-echo -e "\n---------------------------------------------------------------\n"
-
 echo "Pulling postgres image"
 docker pull $POSTGRES_IMAGE
 
 echo -e "\n---------------------------------------------------------------\n"
 
 echo "Starting postgres container"
-docker run --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5 -d --rm --name postgres -e POSTGRES_PASSWORD=crc -e POSTGRES_USER=crc -e POSTGRES_DB=crc -h 0.0.0.0:5432:5432 $POSTGRES_IMAGE
+docker run --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5 -d --rm --name postgres -e POSTGRESQL_PASSWORD=crc -e POSTGRESQL_USER=crc -e POSTGRESQL_DATABASE=crc -h 0.0.0.0:5432:5432 $POSTGRES_IMAGE
 sleep 5
 
 echo -e "\n---------------------------------------------------------------\n"
@@ -56,20 +54,8 @@ docker run -d --rm --name "$TEST_CONTAINER_NAME" "$IMAGE" sleep infinity
 
 echo -e "\n---------------------------------------------------------------\n"
 
-echo "Installing dependencies"
-docker exec --workdir /workdir "$TEST_CONTAINER_NAME" make install > 'artifacts/install_logs.txt'
-
-echo -e "\n---------------------------------------------------------------\n"
-
-echo "Building migrations"
-docker exec --workdir /workdir "$TEST_CONTAINER_NAME" make pt-migration -B > 'artifacts/build_logs.txt'
-
-cat artifacts/build_logs.txt
-
-echo -e "\n---------------------------------------------------------------\n"
-
 echo "Migrating database"
-docker exec --workdir /workdir "$TEST_CONTAINER_NAME" make run-migration -e DB_HOST="localhost" > 'artifacts/migration_logs.txt'
+docker exec --workdir /workdir "$TEST_CONTAINER_NAME"  make run-migration -B -e DB_HOST="localhost" > 'artifacts/migration_logs.txt'
 MIGRATION_RESULT=$?
 
 cat artifacts/migration_logs.txt
@@ -85,7 +71,7 @@ fi
 
 echo -e "\n---------------------------------------------------------------\n"
 echo "Running tests"
-docker exec --workdir /workdir -e PATH=/opt/app-root/src/go/bin:$PATH "$TEST_CONTAINER_NAME" make test > 'artifacts/test_logs.txt'
+docker exec --workdir /workdir -e PATH=/opt/app-root/src/go/bin:$PATH "$TEST_CONTAINER_NAME" make test -e DB_HOST="localhost" > 'artifacts/test_logs.txt'
 TEST_RESULT=$?
 
 cat artifacts/test_logs.txt
