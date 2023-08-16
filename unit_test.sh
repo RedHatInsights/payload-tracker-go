@@ -50,8 +50,7 @@ docker build -f "$DOCKERFILE" -t "$TEST_CONTAINER_NAME" .
 echo -e "\n---------------------------------------------------------------\n"
 
 echo "Running container"
-docker run -d --rm --name "$TEST_CONTAINER_NAME" "$IMAGE" sleep infinity
-
+docker run -d --rm --name "$TEST_CONTAINER_NAME" "$TEST_CONTAINER_NAME" sleep infinity
 echo -e "\n---------------------------------------------------------------\n"
 
 echo "Migrating database"
