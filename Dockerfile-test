@@ -1,0 +1,6 @@
+FROM registry.access.redhat.com/ubi8/go-toolset:latest
+
+WORKDIR "$HOME/payload-tracker-go"
+
+USER 0
+COPY . /workdir

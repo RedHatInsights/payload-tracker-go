@@ -15,6 +15,9 @@ lint:
 	gofmt -l .
 	gofmt -s -w .
 
+install:
+	go get ./...
+
 test:
 	go test -p 1 -v ./...
 
