@@ -11,11 +11,6 @@ const (
 	PayloadJoins  = "left join Payloads on Payloads.id = PayloadStatuses.payload_id"
 )
 
-var (
-	services []models.Services
-	statuses []models.Statuses
-	sources  []models.Sources
-)
 
 func GetServiceByName(db *gorm.DB, service_id string) models.Services {
 	var service models.Services

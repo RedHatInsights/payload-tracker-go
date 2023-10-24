@@ -17,9 +17,6 @@ import (
 	"github.com/redhatinsights/payload-tracker-go/internal/queries"
 )
 
-var (
-	tableNames = []string{"service", "source", "status"}
-)
 
 type handler struct {
 	db *gorm.DB
