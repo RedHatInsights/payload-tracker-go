@@ -21,7 +21,7 @@ curl -s $CICD_URL/bootstrap.sh > .cicd_bootstrap.sh && source .cicd_bootstrap.sh
 source $CICD_ROOT/build.sh
 # source $APP_ROOT/unit_test.sh
 source $CICD_ROOT/deploy_ephemeral_env.sh
-oc rsh -n $NAMESPACE $(oc get pods -n $NAMESPACE -o name | grep "payload-tracker-api") ./pt-seeder
+oc rsh -n $NAMESPACE deployment/payload-tracker-api ./pt-seeder
 COMPONENT_NAME=payload-tracker
 source $CICD_ROOT/cji_smoke_test.sh
 source $CICD_ROOT/post_test_results.sh
