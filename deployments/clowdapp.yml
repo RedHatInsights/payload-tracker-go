@@ -12,6 +12,7 @@ objects:
     optionalDependencies:
     - storage-broker
     - ingress
+    - rbac
     testing:
       iqePlugin: payload-tracker
     envName: ${ENV_NAME}
