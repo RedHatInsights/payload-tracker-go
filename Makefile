@@ -1,3 +1,6 @@
+
+.PHONY: pt-api pt-consumer pt-migration
+
 all: build-all
 
 build-all: pt-api pt-consumer pt-migration
