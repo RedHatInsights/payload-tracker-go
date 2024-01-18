@@ -27,17 +27,14 @@ COPY --from=builder /go/src/app/pt-seeder ./pt-seeder
 COPY --from=builder /go/src/app/app-common-bash ./app-common-bash
 COPY tools ./tools
 
-# install postgresql from centos if not building on RHSM system
+# install postgresql from postgresql.org RPM if not building on RHSM system
 RUN FULL_RHEL=$(microdnf repolist --enabled | grep rhel-8) ; \
     if [ -z "$FULL_RHEL" ] ; then \
-        rpm -Uvh http://mirror.centos.org/centos/8-stream/BaseOS/x86_64/os/Packages/centos-stream-repos-8-3.el8.noarch.rpm \
-                 http://mirror.centos.org/centos/8-stream/BaseOS/x86_64/os/Packages/centos-gpg-keys-8-3.el8.noarch.rpm && \
-        sed -i 's/^\(enabled.*\)/\1\npriority=200/;' /etc/yum.repos.d/CentOS*.repo ; \
+        rpm -Uvh https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm ; \
     fi
 
-RUN microdnf module enable postgresql:12 && \
-    microdnf install --setopt=install_weak_deps=0 --setopt=tsflags=nodocs \
-        postgresql && \
+RUN microdnf install --setopt=install_weak_deps=0 --setopt=tsflags=nodocs \
+        postgresql12 && \
     microdnf clean all
 
 USER 1001
