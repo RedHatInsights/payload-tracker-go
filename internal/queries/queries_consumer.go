@@ -45,7 +45,7 @@ func GetPayloadByRequestId(db *gorm.DB, request_id string) (result models.Payloa
 }
 
 func UpsertPayloadByRequestId(db *gorm.DB, request_id string, payload models.Payloads) (tx *gorm.DB, payloadId uint) {
-	columnsToUpdate := []string{}
+	columnsToUpdate := []string{"request_id"}
 
 	if payload.Account != "" {
 		columnsToUpdate = append(columnsToUpdate, "account")
@@ -60,16 +60,11 @@ func UpsertPayloadByRequestId(db *gorm.DB, request_id string, payload models.Pay
 		columnsToUpdate = append(columnsToUpdate, "system_id")
 	}
 
-	var result *gorm.DB
-	onConflict := clause.OnConflict{Columns: []clause.Column{{Name: "request_id"}}}
-
-	if len(columnsToUpdate) > 0 {
-		onConflict.DoUpdates = clause.AssignmentColumns(columnsToUpdate)
-	} else {
-		onConflict.DoNothing = true
+	onConflict := clause.OnConflict{
+		Columns: []clause.Column{{Name: "request_id"}},
+		DoUpdates: clause.AssignmentColumns(columnsToUpdate),
 	}
-
-	result = db.Model(&payload).Clauses(onConflict).Create(&payload)
+	result := db.Model(&payload).Clauses(onConflict).Create(&payload)
 
 	return result, payload.Id
 }
