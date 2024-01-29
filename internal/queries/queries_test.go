@@ -145,11 +145,11 @@ var _ = Describe("Queries", func() {
 		}
 		Expect(db().Create(&payload).Error).ToNot(HaveOccurred())
 
-		newPayload := models.Payloads{
+		payload = models.Payloads{
 			RequestId: requestId,
 		}
 
-		result, id := UpsertPayloadByRequestId(db(), requestId, newPayload)
+		result, id := UpsertPayloadByRequestId(db(), requestId, payload)
 		Expect(result.Error).ToNot(HaveOccurred())
 		Expect(id).ToNot(Equal(uint(0)))
 
@@ -161,6 +161,5 @@ var _ = Describe("Queries", func() {
 		Expect(payload.SystemId).To(Equal(systemId))
 		Expect(payload.Account).To(Equal("1234"))
 		Expect(payload.OrgId).To(Equal("1234"))
-		Expect(payload.Id).ToNot(Equal(0))
 	})
 })
