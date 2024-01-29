@@ -64,6 +64,7 @@ func UpsertPayloadByRequestId(db *gorm.DB, request_id string, payload models.Pay
 		Columns: []clause.Column{{Name: "request_id"}},
 		DoUpdates: clause.AssignmentColumns(columnsToUpdate),
 	}
+
 	result := db.Model(&payload).Clauses(onConflict).Create(&payload)
 
 	return result, payload.Id
