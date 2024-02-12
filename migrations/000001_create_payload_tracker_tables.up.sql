@@ -85,21 +85,6 @@ SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
---
--- Name: alembic_version; Type: TABLE; Schema: public; Owner: crc
---
-
-CREATE TABLE public.alembic_version (
-    version_num character varying(32) NOT NULL
-);
-
-
-ALTER TABLE public.alembic_version OWNER TO crc;
-
---
--- Name: payload_statuses; Type: TABLE; Schema: public; Owner: crc
---
-
 CREATE TABLE public.payload_statuses (
     id bigint NOT NULL,
     payload_id bigint NOT NULL,
@@ -135,42 +120,6 @@ ALTER TABLE public.payload_statuses_id_seq OWNER TO crc;
 
 ALTER SEQUENCE public.payload_statuses_id_seq OWNED BY public.payload_statuses.id;
 
-
---
--- Name: partition_20240212_20240213; Type: TABLE; Schema: public; Owner: crc
---
-
-CREATE TABLE public.partition_20240212_20240213 (
-    id bigint DEFAULT nextval('public.payload_statuses_id_seq'::regclass) NOT NULL,
-    payload_id bigint NOT NULL,
-    service_id integer NOT NULL,
-    source_id integer,
-    status_id integer NOT NULL,
-    status_msg character varying,
-    date timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
-    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
-);
-
-
-ALTER TABLE public.partition_20240212_20240213 OWNER TO crc;
-
---
--- Name: partition_20240213_20240214; Type: TABLE; Schema: public; Owner: crc
---
-
-CREATE TABLE public.partition_20240213_20240214 (
-    id bigint DEFAULT nextval('public.payload_statuses_id_seq'::regclass) NOT NULL,
-    payload_id bigint NOT NULL,
-    service_id integer NOT NULL,
-    source_id integer,
-    status_id integer NOT NULL,
-    status_msg character varying,
-    date timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
-    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
-);
-
-
-ALTER TABLE public.partition_20240213_20240214 OWNER TO crc;
 
 --
 -- Name: payloads; Type: TABLE; Schema: public; Owner: crc
@@ -313,20 +262,6 @@ ALTER SEQUENCE public.statuses_id_seq OWNED BY public.statuses.id;
 
 
 --
--- Name: partition_20240212_20240213; Type: TABLE ATTACH; Schema: public; Owner: crc
---
-
-ALTER TABLE ONLY public.payload_statuses ATTACH PARTITION public.partition_20240212_20240213 FOR VALUES FROM ('2024-02-12 00:00:00+00') TO ('2024-02-13 00:00:00+00');
-
-
---
--- Name: partition_20240213_20240214; Type: TABLE ATTACH; Schema: public; Owner: crc
---
-
-ALTER TABLE ONLY public.payload_statuses ATTACH PARTITION public.partition_20240213_20240214 FOR VALUES FROM ('2024-02-13 00:00:00+00') TO ('2024-02-14 00:00:00+00');
-
-
---
 -- Name: payload_statuses id; Type: DEFAULT; Schema: public; Owner: crc
 --
 
@@ -361,86 +296,7 @@ ALTER TABLE ONLY public.sources ALTER COLUMN id SET DEFAULT nextval('public.sour
 ALTER TABLE ONLY public.statuses ALTER COLUMN id SET DEFAULT nextval('public.statuses_id_seq'::regclass);
 
 
---
--- Data for Name: alembic_version; Type: TABLE DATA; Schema: public; Owner: crc
---
 
-COPY public.alembic_version (version_num) FROM stdin;
-4cd848af7d8c
-\.
-
-
---
--- Data for Name: partition_20240212_20240213; Type: TABLE DATA; Schema: public; Owner: crc
---
-
-COPY public.partition_20240212_20240213 (id, payload_id, service_id, source_id, status_id, status_msg, date, created_at) FROM stdin;
-\.
-
-
---
--- Data for Name: partition_20240213_20240214; Type: TABLE DATA; Schema: public; Owner: crc
---
-
-COPY public.partition_20240213_20240214 (id, payload_id, service_id, source_id, status_id, status_msg, date, created_at) FROM stdin;
-\.
-
-
---
--- Data for Name: payloads; Type: TABLE DATA; Schema: public; Owner: crc
---
-
-COPY public.payloads (id, request_id, account, inventory_id, system_id, created_at, org_id) FROM stdin;
-\.
-
-
---
--- Data for Name: services; Type: TABLE DATA; Schema: public; Owner: crc
---
-
-COPY public.services (id, name) FROM stdin;
-1	advisor
-2	ccx-data-pipeline
-3	compliance
-4	hsp-archiver
-5	hsp-deleter
-6	ingress
-7	insights-advisor-service
-8	insights-engine
-9	insights-results-db-writer
-10	inventory
-11	inventory-mq-service
-12	puptoo
-13	vulnerability
-\.
-
-
---
--- Data for Name: sources; Type: TABLE DATA; Schema: public; Owner: crc
---
-
-COPY public.sources (id, name) FROM stdin;
-1	compliance-consumer
-2	compliance-sidekiq
-3	insights-client
-4	inventory
-\.
-
-
---
--- Data for Name: statuses; Type: TABLE DATA; Schema: public; Owner: crc
---
-
-COPY public.statuses (id, name) FROM stdin;
-1	error
-2	failed
-3	processed
-4	processing
-5	processing_error
-6	processing_success
-7	recieved
-8	success
-\.
 
 
 --
@@ -479,14 +335,6 @@ SELECT pg_catalog.setval('public.statuses_id_seq', 8, true);
 
 
 --
--- Name: alembic_version alembic_version_pkc; Type: CONSTRAINT; Schema: public; Owner: crc
---
-
-ALTER TABLE ONLY public.alembic_version
-    ADD CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num);
-
-
---
 -- Name: services idx_services_name; Type: CONSTRAINT; Schema: public; Owner: crc
 --
 
@@ -516,22 +364,6 @@ ALTER TABLE ONLY public.statuses
 
 ALTER TABLE ONLY public.payload_statuses
     ADD CONSTRAINT payload_statuses_pkey PRIMARY KEY (id, date);
-
-
---
--- Name: partition_20240212_20240213 partition_20240212_20240213_pkey; Type: CONSTRAINT; Schema: public; Owner: crc
---
-
-ALTER TABLE ONLY public.partition_20240212_20240213
-    ADD CONSTRAINT partition_20240212_20240213_pkey PRIMARY KEY (id, date);
-
-
---
--- Name: partition_20240213_20240214 partition_20240213_20240214_pkey; Type: CONSTRAINT; Schema: public; Owner: crc
---
-
-ALTER TABLE ONLY public.partition_20240213_20240214
-    ADD CONSTRAINT partition_20240213_20240214_pkey PRIMARY KEY (id, date);
 
 
 --
@@ -598,46 +430,12 @@ ALTER TABLE ONLY public.statuses
     ADD CONSTRAINT statuses_pkey PRIMARY KEY (id);
 
 
---
--- Name: partition_20240212_20240213_created_at_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240212_20240213_created_at_idx ON public.partition_20240212_20240213 USING btree (created_at);
-
-
---
--- Name: partition_20240212_20240213_date_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240212_20240213_date_idx ON public.partition_20240212_20240213 USING btree (date);
-
-
---
--- Name: partition_20240212_20240213_id_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE UNIQUE INDEX partition_20240212_20240213_id_idx ON public.partition_20240212_20240213 USING btree (id);
-
-
---
--- Name: partition_20240212_20240213_payload_id_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240212_20240213_payload_id_idx ON public.partition_20240212_20240213 USING btree (payload_id);
-
 
 --
 -- Name: payload_statuses_service_id_created_at_idx; Type: INDEX; Schema: public; Owner: crc
 --
 
 CREATE INDEX payload_statuses_service_id_created_at_idx ON ONLY public.payload_statuses USING btree (service_id, created_at);
-
-
---
--- Name: partition_20240212_20240213_service_id_created_at_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240212_20240213_service_id_created_at_idx ON public.partition_20240212_20240213 USING btree (service_id, created_at);
 
 
 --
@@ -648,38 +446,11 @@ CREATE INDEX payload_statuses_service_id_date_idx ON ONLY public.payload_statuse
 
 
 --
--- Name: partition_20240212_20240213_service_id_date_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240212_20240213_service_id_date_idx ON public.partition_20240212_20240213 USING btree (service_id, date);
-
-
---
--- Name: partition_20240212_20240213_service_id_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240212_20240213_service_id_idx ON public.partition_20240212_20240213 USING btree (service_id);
-
-
---
 -- Name: payload_statuses_service_id_status_id_idx; Type: INDEX; Schema: public; Owner: crc
 --
 
 CREATE INDEX payload_statuses_service_id_status_id_idx ON ONLY public.payload_statuses USING btree (service_id, status_id);
 
-
---
--- Name: partition_20240212_20240213_service_id_status_id_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240212_20240213_service_id_status_id_idx ON public.partition_20240212_20240213 USING btree (service_id, status_id);
-
-
---
--- Name: partition_20240212_20240213_source_id_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240212_20240213_source_id_idx ON public.partition_20240212_20240213 USING btree (source_id);
 
 
 --
@@ -689,25 +460,6 @@ CREATE INDEX partition_20240212_20240213_source_id_idx ON public.partition_20240
 CREATE INDEX payload_statuses_status_id_created_at_idx ON ONLY public.payload_statuses USING btree (status_id, created_at);
 
 
---
--- Name: partition_20240212_20240213_status_id_created_at_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240212_20240213_status_id_created_at_idx ON public.partition_20240212_20240213 USING btree (status_id, created_at);
-
-
---
--- Name: payload_statuses_source_id_created_at_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX payload_statuses_source_id_created_at_idx ON ONLY public.payload_statuses USING btree (status_id, created_at);
-
-
---
--- Name: partition_20240212_20240213_status_id_created_at_idx1; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240212_20240213_status_id_created_at_idx1 ON public.partition_20240212_20240213 USING btree (status_id, created_at);
 
 
 --
@@ -717,130 +469,12 @@ CREATE INDEX partition_20240212_20240213_status_id_created_at_idx1 ON public.par
 CREATE INDEX payload_statuses_status_id_date_idx ON ONLY public.payload_statuses USING btree (status_id, date);
 
 
---
--- Name: partition_20240212_20240213_status_id_date_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240212_20240213_status_id_date_idx ON public.partition_20240212_20240213 USING btree (status_id, date);
-
 
 --
 -- Name: payload_statuses_source_id_date_idx; Type: INDEX; Schema: public; Owner: crc
 --
 
 CREATE INDEX payload_statuses_source_id_date_idx ON ONLY public.payload_statuses USING btree (status_id, date);
-
-
---
--- Name: partition_20240212_20240213_status_id_date_idx1; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240212_20240213_status_id_date_idx1 ON public.partition_20240212_20240213 USING btree (status_id, date);
-
-
---
--- Name: partition_20240212_20240213_status_id_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240212_20240213_status_id_idx ON public.partition_20240212_20240213 USING btree (status_id);
-
-
---
--- Name: partition_20240213_20240214_created_at_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240213_20240214_created_at_idx ON public.partition_20240213_20240214 USING btree (created_at);
-
-
---
--- Name: partition_20240213_20240214_date_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240213_20240214_date_idx ON public.partition_20240213_20240214 USING btree (date);
-
-
---
--- Name: partition_20240213_20240214_id_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE UNIQUE INDEX partition_20240213_20240214_id_idx ON public.partition_20240213_20240214 USING btree (id);
-
-
---
--- Name: partition_20240213_20240214_payload_id_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240213_20240214_payload_id_idx ON public.partition_20240213_20240214 USING btree (payload_id);
-
-
---
--- Name: partition_20240213_20240214_service_id_created_at_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240213_20240214_service_id_created_at_idx ON public.partition_20240213_20240214 USING btree (service_id, created_at);
-
-
---
--- Name: partition_20240213_20240214_service_id_date_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240213_20240214_service_id_date_idx ON public.partition_20240213_20240214 USING btree (service_id, date);
-
-
---
--- Name: partition_20240213_20240214_service_id_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240213_20240214_service_id_idx ON public.partition_20240213_20240214 USING btree (service_id);
-
-
---
--- Name: partition_20240213_20240214_service_id_status_id_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240213_20240214_service_id_status_id_idx ON public.partition_20240213_20240214 USING btree (service_id, status_id);
-
-
---
--- Name: partition_20240213_20240214_source_id_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240213_20240214_source_id_idx ON public.partition_20240213_20240214 USING btree (source_id);
-
-
---
--- Name: partition_20240213_20240214_status_id_created_at_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240213_20240214_status_id_created_at_idx ON public.partition_20240213_20240214 USING btree (status_id, created_at);
-
-
---
--- Name: partition_20240213_20240214_status_id_created_at_idx1; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240213_20240214_status_id_created_at_idx1 ON public.partition_20240213_20240214 USING btree (status_id, created_at);
-
-
---
--- Name: partition_20240213_20240214_status_id_date_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240213_20240214_status_id_date_idx ON public.partition_20240213_20240214 USING btree (status_id, date);
-
-
---
--- Name: partition_20240213_20240214_status_id_date_idx1; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240213_20240214_status_id_date_idx1 ON public.partition_20240213_20240214 USING btree (status_id, date);
-
-
---
--- Name: partition_20240213_20240214_status_id_idx; Type: INDEX; Schema: public; Owner: crc
---
-
-CREATE INDEX partition_20240213_20240214_status_id_idx ON public.partition_20240213_20240214 USING btree (status_id);
 
 
 --
@@ -925,118 +559,6 @@ CREATE UNIQUE INDEX statuses_id_idx ON public.statuses USING btree (id);
 --
 
 CREATE UNIQUE INDEX statuses_name_idx ON public.statuses USING btree (name);
-
-
---
--- Name: partition_20240212_20240213_pkey; Type: INDEX ATTACH; Schema: public; Owner: crc
---
-
-ALTER INDEX public.payload_statuses_pkey ATTACH PARTITION public.partition_20240212_20240213_pkey;
-
-
---
--- Name: partition_20240212_20240213_service_id_created_at_idx; Type: INDEX ATTACH; Schema: public; Owner: crc
---
-
-ALTER INDEX public.payload_statuses_service_id_created_at_idx ATTACH PARTITION public.partition_20240212_20240213_service_id_created_at_idx;
-
-
---
--- Name: partition_20240212_20240213_service_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: crc
---
-
-ALTER INDEX public.payload_statuses_service_id_date_idx ATTACH PARTITION public.partition_20240212_20240213_service_id_date_idx;
-
-
---
--- Name: partition_20240212_20240213_service_id_status_id_idx; Type: INDEX ATTACH; Schema: public; Owner: crc
---
-
-ALTER INDEX public.payload_statuses_service_id_status_id_idx ATTACH PARTITION public.partition_20240212_20240213_service_id_status_id_idx;
-
-
---
--- Name: partition_20240212_20240213_status_id_created_at_idx; Type: INDEX ATTACH; Schema: public; Owner: crc
---
-
-ALTER INDEX public.payload_statuses_status_id_created_at_idx ATTACH PARTITION public.partition_20240212_20240213_status_id_created_at_idx;
-
-
---
--- Name: partition_20240212_20240213_status_id_created_at_idx1; Type: INDEX ATTACH; Schema: public; Owner: crc
---
-
-ALTER INDEX public.payload_statuses_source_id_created_at_idx ATTACH PARTITION public.partition_20240212_20240213_status_id_created_at_idx1;
-
-
---
--- Name: partition_20240212_20240213_status_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: crc
---
-
-ALTER INDEX public.payload_statuses_status_id_date_idx ATTACH PARTITION public.partition_20240212_20240213_status_id_date_idx;
-
-
---
--- Name: partition_20240212_20240213_status_id_date_idx1; Type: INDEX ATTACH; Schema: public; Owner: crc
---
-
-ALTER INDEX public.payload_statuses_source_id_date_idx ATTACH PARTITION public.partition_20240212_20240213_status_id_date_idx1;
-
-
---
--- Name: partition_20240213_20240214_pkey; Type: INDEX ATTACH; Schema: public; Owner: crc
---
-
-ALTER INDEX public.payload_statuses_pkey ATTACH PARTITION public.partition_20240213_20240214_pkey;
-
-
---
--- Name: partition_20240213_20240214_service_id_created_at_idx; Type: INDEX ATTACH; Schema: public; Owner: crc
---
-
-ALTER INDEX public.payload_statuses_service_id_created_at_idx ATTACH PARTITION public.partition_20240213_20240214_service_id_created_at_idx;
-
-
---
--- Name: partition_20240213_20240214_service_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: crc
---
-
-ALTER INDEX public.payload_statuses_service_id_date_idx ATTACH PARTITION public.partition_20240213_20240214_service_id_date_idx;
-
-
---
--- Name: partition_20240213_20240214_service_id_status_id_idx; Type: INDEX ATTACH; Schema: public; Owner: crc
---
-
-ALTER INDEX public.payload_statuses_service_id_status_id_idx ATTACH PARTITION public.partition_20240213_20240214_service_id_status_id_idx;
-
-
---
--- Name: partition_20240213_20240214_status_id_created_at_idx; Type: INDEX ATTACH; Schema: public; Owner: crc
---
-
-ALTER INDEX public.payload_statuses_status_id_created_at_idx ATTACH PARTITION public.partition_20240213_20240214_status_id_created_at_idx;
-
-
---
--- Name: partition_20240213_20240214_status_id_created_at_idx1; Type: INDEX ATTACH; Schema: public; Owner: crc
---
-
-ALTER INDEX public.payload_statuses_source_id_created_at_idx ATTACH PARTITION public.partition_20240213_20240214_status_id_created_at_idx1;
-
-
---
--- Name: partition_20240213_20240214_status_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: crc
---
-
-ALTER INDEX public.payload_statuses_status_id_date_idx ATTACH PARTITION public.partition_20240213_20240214_status_id_date_idx;
-
-
---
--- Name: partition_20240213_20240214_status_id_date_idx1; Type: INDEX ATTACH; Schema: public; Owner: crc
---
-
-ALTER INDEX public.payload_statuses_source_id_date_idx ATTACH PARTITION public.partition_20240213_20240214_status_id_date_idx1;
 
 
 --
