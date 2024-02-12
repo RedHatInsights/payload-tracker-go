@@ -1,6 +1,7 @@
 package db
 
 import (
+    "database/sql"
 	"fmt"
 
 	"github.com/redhatinsights/payload-tracker-go/internal/config"
@@ -36,4 +37,23 @@ func DbConnect(cfg *config.TrackerConfig) {
 	DB = db
 
 	l.Log.Info("DB initialization complete")
+}
+
+func DbSqlConnect(cfg *config.TrackerConfig) (*sql.DB, error) {
+	var (
+		user     = cfg.DatabaseConfig.DBUser
+		password = cfg.DatabaseConfig.DBPassword
+		dbname   = cfg.DatabaseConfig.DBName
+		host     = cfg.DatabaseConfig.DBHost
+		port     = cfg.DatabaseConfig.DBPort
+		sslmode  = "disable"
+	)
+
+	if cfg.DatabaseConfig.RDSCa != "" {
+		sslmode = "require"
+	}
+
+	dsn := fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%s sslmode=%s", user, password, dbname, host, port, sslmode)
+
+	return sql.Open("postgres", dsn)
 }

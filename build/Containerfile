@@ -8,6 +8,7 @@ COPY internal internal
 COPY tools tools
 COPY go.mod go.mod
 COPY go.sum go.sum
+COPY migrations migrations
 
 USER 0
 
@@ -26,6 +27,7 @@ WORKDIR /
 COPY --from=builder /go/src/app/pt-api ./pt-api
 COPY --from=builder /go/src/app/pt-consumer ./pt-consumer
 COPY --from=builder /go/src/app/pt-migration ./pt-migration
+COPY --from=builder /go/src/app/migrations /db/migrations/
 COPY --from=builder /go/src/app/pt-seeder ./pt-seeder
 COPY tools ./tools
 
