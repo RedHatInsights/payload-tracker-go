@@ -16,8 +16,7 @@ require (
 	github.com/redhatinsights/platform-go-middlewares v0.9.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.8.1
-	golang.org/x/crypto v0.0.0-20220314234659-1baeb1ce4c0b // indirect
-	golang.org/x/text v0.3.8 // indirect
+	golang.org/x/crypto v0.17.0 // indirect
 	gorm.io/driver/postgres v1.3.4
 	gorm.io/gorm v1.23.4
 )
