@@ -7,7 +7,6 @@ require (
 	github.com/confluentinc/confluent-kafka-go v1.7.0
 	github.com/go-chi/chi/v5 v5.0.3
 	github.com/go-chi/httprate v0.6.0
-	github.com/go-redis/redis/v8 v8.11.5
 	github.com/google/uuid v1.3.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.18.1
@@ -23,7 +22,6 @@ require (
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
-	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -31,7 +29,7 @@ require (
 	github.com/jackc/pgconn v1.11.0 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
-	github.com/jackc/pgproto3/v2 v2.2.0 // indirect
+	github.com/jackc/pgproto3/v2 v2.3.3 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
 	github.com/jackc/pgtype v1.10.0 // indirect
 	github.com/jackc/pgx/v4 v4.15.0 // indirect
