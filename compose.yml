@@ -1,16 +1,26 @@
 version: '3.1'
 services:
-    # comment out payload-tracker-api stanza to disable it
+    # comment out payload-tracker-api and payload-tracker-consumer stanza to disable them
     payload-tracker-api:
         image: payload-tracker-go
         ports:
             - "8080:8080"
         environment:
-            DB_HOST: "localhost"
+            DB_HOST: "payload-tracker-db"
         command:
             - /pt-api
         depends_on:
             - payload-tracker-db
+    payload-tracker-consumer:
+        image: payload-tracker-go
+        environment:
+            DB_HOST: "payload-tracker-db"
+            KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
+        command:
+            - /pt-consumer
+        depends_on:
+            - payload-tracker-db
+            - kafka
     payload-tracker-db:
         image: postgres
         restart: always
@@ -32,7 +42,8 @@ services:
         depends_on:
             - zookeeper
         environment:
-            - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:29092
+            # - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:29092
+            - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:29092
             - KAFKA_BROKER_ID=1
             - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
             - KAFKA_ZOOKEEPER_CONNECT=zookeeper:32181
