@@ -29,17 +29,6 @@ COPY --from=builder /go/src/app/pt-migration ./pt-migration
 COPY --from=builder /go/src/app/pt-seeder ./pt-seeder
 COPY tools ./tools
 
-# install postgresql from postgresql.org RPM if not building on RHSM system
-RUN FULL_RHEL=$(microdnf repolist --enabled | grep rhel-8) ; \
-    if [ -z "$FULL_RHEL" ] ; then \
-        rpm -Uvh https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm ; \
-    fi
-
-RUN microdnf install --setopt=install_weak_deps=0 --setopt=tsflags=nodocs \
-        postgresql12 && \
-    microdnf update -y && \
-    microdnf clean all
-
 USER 1001
 
 # There is no command here becuase this image can be used for
