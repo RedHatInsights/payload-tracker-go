@@ -33,11 +33,11 @@ objects:
           - command:
             - ./pt-migration
             image: ${IMAGE}:${IMAGE_TAG}
-            inheritEnv: true
+            inheritEnv: true    
         minReadySeconds: 15
         progressDeadlineSeconds: 600
         image: ${IMAGE}:${IMAGE_TAG}
-        command:
+        command: 
           - ./pt-api
         livenessProbe:
           failureThreshold: 3
@@ -79,11 +79,11 @@ objects:
             value: ${SSL_CERT_DIR}
     - name: consumer
       minReplicas: ${{CONSUMER_REPLICAS}}
-      podSpec:
+      podSpec:  
         minReadySeconds: 15
         progressDeadlineSeconds: 600
         image: ${IMAGE}:${IMAGE_TAG}
-        command:
+        command: 
           - ./pt-consumer
         livenessProbe:
           failureThreshold: 3
