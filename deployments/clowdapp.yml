@@ -123,13 +123,13 @@ objects:
         image: quay.io/cloudservices/postgresql-rds:12
         restartPolicy: Never
         volumes:
-          - name: playbook-tracker-go-db-cleaner-volume
+          - name: payload-tracker-go-db-cleaner-volume
             configMap:
-              name: playbook-tracker-go-db-cleaner-config
+              name: payload-tracker-go-db-cleaner-config
         volumeMounts:
-          - name: playbook-tracker-go-db-cleaner-volume
-            mountPath: /playbook-tracker-go-db-cleaner
-        command: [ 'sh', '/playbook-tracker-go-db-cleaner/clean.sh' ]
+          - name: payload-tracker-go-db-cleaner-volume
+            mountPath: /payload-tracker-go-db-cleaner
+        command: [ 'sh', '/payload-tracker-go-db-cleaner/clean.sh' ]
         env:
           - name: PGHOST
             valueFrom:
@@ -137,16 +137,19 @@ objects:
                 name: payload-tracker-db-creds
                 key: ${DB_SECRET_HOSTNAME_KEY}
           - name: PGDATABASE
-            value: ${DB_NAME}
+            valueFrom:
+              secretKeyRef:
+                name: payload-tracker-db-creds
+                key: ${DB_SECRET_DBNAME_KEY}
           - name: PGUSER
             valueFrom:
               secretKeyRef:
-                name: virtual-assistant-db
+                name: payload-tracker-db-creds
                 key: ${DB_SECRET_USERNAME_KEY}
           - name: PGPASSWORD
             valueFrom:
               secretKeyRef:
-                name: virtual-assistant-db
+                name: payload-tracker-db-creds
                 key: ${DB_SECRET_PASSWORD_KEY}
         resources:
           limits:
@@ -159,7 +162,7 @@ objects:
 - apiVersion: v1
   kind: ConfigMap
   metadata:
-    name: playbook-tracker-go-db-cleaner-config
+    name: payload-tracker-go-db-cleaner-config
   data:
     clean.sh: |
       #!/bin/bash
@@ -253,9 +256,9 @@ parameters:
   value: 'true'
 - name: CLEANER_SCHEDULE
   value: "00 10 * * *"
-- name: DB_NAME
-  description: Database name used by the db-cleaner CronJob
-  value: postgres
+- name: DB_SECRET_DBNAME_KEY
+  description: Key of the database name field in the payload-tracker-db-creds secret
+  value: db.name
 - name: DB_SECRET_HOSTNAME_KEY
   description: Key of the hostname field in the payload-tracker-db-creds secret
   value: db.host
