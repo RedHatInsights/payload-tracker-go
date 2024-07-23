@@ -120,10 +120,37 @@ objects:
       schedule: ${CLEANER_SCHEDULE}
       suspend: ${{CLEANER_SUSPEND}}
       podSpec:
-        image: quay.io/cloudservices/payload-tracker-go:${IMAGE_TAG}
+        image: quay.io/cloudservices/postgresql-rds:12
         restartPolicy: Never
-        command:
-          - ./tools/cron-job.sh
+        volumes:
+          - name: payload-tracker-go-db-cleaner-volume
+            configMap:
+              name: payload-tracker-go-db-cleaner-config
+        volumeMounts:
+          - name: payload-tracker-go-db-cleaner-volume
+            mountPath: /payload-tracker-go-db-cleaner
+        command: [ 'sh', '/payload-tracker-go-db-cleaner/clean.sh' ]
+        env:
+          - name: PGHOST
+            valueFrom:
+              secretKeyRef:
+                name: payload-tracker-db-creds
+                key: ${DB_SECRET_HOSTNAME_KEY}
+          - name: PGDATABASE
+            valueFrom:
+              secretKeyRef:
+                name: payload-tracker-db-creds
+                key: ${DB_SECRET_DBNAME_KEY}
+          - name: PGUSER
+            valueFrom:
+              secretKeyRef:
+                name: payload-tracker-db-creds
+                key: ${DB_SECRET_USERNAME_KEY}
+          - name: PGPASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: payload-tracker-db-creds
+                key: ${DB_SECRET_PASSWORD_KEY}
         resources:
           limits:
             cpu: ${CPU_LIMIT}
@@ -132,6 +159,36 @@ objects:
             cpu: 200m
             memory: 256Mi
 
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: payload-tracker-go-db-cleaner-config
+  data:
+    clean.sh: |
+      #!/bin/bash
+      
+      RETENTION_DAYS=${RETENTION_DAYS:-7}
+      MAX_NUMBER_OF_RETRIES=${MAX_NUMBER_OF_RETRIES:-3}
+      SLEEP_TIME=${SLEEP_TIME:-10}
+      
+      echo "RETENTION_DAYS: $RETENTION_DAYS"
+      echo "MAX_NUMBER_OF_RETRIES: $MAX_NUMBER_OF_RETRIES"
+      echo "SLEEP_TIME: $SLEEP_TIME"
+      
+      psql -c "DELETE FROM payload_statuses WHERE created_at < (NOW() - interval '$RETENTION_DAYS days');"
+      psql -c "DELETE FROM payloads WHERE created_at < (NOW() - interval '$RETENTION_DAYS days');"
+      psql -c "VACUUM ANALYZE payload_statuses;"
+      psql -c "VACUUM ANALYZE payloads;"
+      
+      for i in $(seq 1 ${MAX_NUMBER_OF_RETRIES})
+      do
+        echo "Creating partition"
+      
+        # Try to create the partition ...if it works, jump out of the retry logic
+        psql -c "SELECT create_partition(NOW()::DATE + INTERVAL '1 DAY', NOW()::DATE + INTERVAL '2 DAY');" && break || sleep $SLEEP_TIME
+      done
+      
+      psql -c "SELECT drop_partition(NOW()::DATE - INTERVAL '$RETENTION_DAYS DAY', NOW()::DATE - (($RETENTION_DAYS - 1) || ' DAY')::INTERVAL);"
 
 parameters:
 - description: Initial amount of memory the payload-tracker container will request.
@@ -199,6 +256,18 @@ parameters:
   value: 'true'
 - name: CLEANER_SCHEDULE
   value: "00 10 * * *"
+- name: DB_SECRET_DBNAME_KEY
+  description: Key of the database name field in the payload-tracker-db-creds secret
+  value: db.name
+- name: DB_SECRET_HOSTNAME_KEY
+  description: Key of the hostname field in the payload-tracker-db-creds secret
+  value: db.host
+- name: DB_SECRET_PASSWORD_KEY
+  description: Key of the password field in payload-tracker-db-creds secret
+  value: db.password
+- name: DB_SECRET_USERNAME_KEY
+  description: Key of the username field in the payload-tracker-db-creds secret
+  value: db.user
 - name: STORAGE_BROKER_URL
   value: "http://storage-broker-processor:8000/archive/url"
 - name: KIBANA_URL

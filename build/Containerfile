@@ -11,9 +11,6 @@ COPY go.sum go.sum
 
 USER 0
 
-RUN git clone https://github.com/redhatinsights/app-common-bash app-common && \
-    go build -o app-common-bash app-common/main.go
-
 RUN go get -d ./... && \
     go build -o pt-api cmd/payload-tracker-api/main.go && \
     go build -o pt-consumer cmd/payload-tracker-consumer/main.go && \
@@ -30,19 +27,7 @@ COPY --from=builder /go/src/app/pt-api ./pt-api
 COPY --from=builder /go/src/app/pt-consumer ./pt-consumer
 COPY --from=builder /go/src/app/pt-migration ./pt-migration
 COPY --from=builder /go/src/app/pt-seeder ./pt-seeder
-COPY --from=builder /go/src/app/app-common-bash ./app-common-bash
 COPY tools ./tools
-
-# install postgresql from postgresql.org RPM if not building on RHSM system
-RUN FULL_RHEL=$(microdnf repolist --enabled | grep rhel-8) ; \
-    if [ -z "$FULL_RHEL" ] ; then \
-        rpm -Uvh https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm ; \
-    fi
-
-RUN microdnf install --setopt=install_weak_deps=0 --setopt=tsflags=nodocs \
-        postgresql12 && \
-    microdnf update -y && \
-    microdnf clean all
 
 USER 1001
 
