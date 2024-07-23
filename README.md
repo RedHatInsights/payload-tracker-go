@@ -110,6 +110,8 @@ $> lubdub
 
 ## Running Tests
 Use `go tests` to test the application
+
+## Konflux Testing
 ```
 $> go test ./...
 ```
