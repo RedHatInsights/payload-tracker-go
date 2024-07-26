@@ -135,22 +135,22 @@ objects:
             valueFrom:
               secretKeyRef:
                 name: payload-tracker-db-creds
-                key: ${DB_SECRET_HOSTNAME_KEY}
+                key: db.host
           - name: PGDATABASE
             valueFrom:
               secretKeyRef:
                 name: payload-tracker-db-creds
-                key: ${DB_SECRET_DBNAME_KEY}
+                key: db.name
           - name: PGUSER
             valueFrom:
               secretKeyRef:
                 name: payload-tracker-db-creds
-                key: ${DB_SECRET_USERNAME_KEY}
+                key: db.user
           - name: PGPASSWORD
             valueFrom:
               secretKeyRef:
                 name: payload-tracker-db-creds
-                key: ${DB_SECRET_PASSWORD_KEY}
+                key: db.password
         resources:
           limits:
             cpu: ${CPU_LIMIT}
@@ -256,18 +256,6 @@ parameters:
   value: 'true'
 - name: CLEANER_SCHEDULE
   value: "00 10 * * *"
-- name: DB_SECRET_DBNAME_KEY
-  description: Key of the database name field in the payload-tracker-db-creds secret
-  value: db.name
-- name: DB_SECRET_HOSTNAME_KEY
-  description: Key of the hostname field in the payload-tracker-db-creds secret
-  value: db.host
-- name: DB_SECRET_PASSWORD_KEY
-  description: Key of the password field in payload-tracker-db-creds secret
-  value: db.password
-- name: DB_SECRET_USERNAME_KEY
-  description: Key of the username field in the payload-tracker-db-creds secret
-  value: db.user
 - name: STORAGE_BROKER_URL
   value: "http://storage-broker-processor:8000/archive/url"
 - name: KIBANA_URL
