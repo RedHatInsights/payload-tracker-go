@@ -4,7 +4,7 @@
 # Options that must be configured by app owner
 # --------------------------------------------
 APP_NAME="payload-tracker"  # name of app-sre "application" folder this component lives in
-COMPONENT_NAME="payload-tracker-go"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
+COMPONENT_NAME="payload-tracker"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
 IMAGE="quay.io/cloudservices/payload-tracker-go"  
 
 # ADD BACK IN WHEN PAYLOAD-TRACKER-GO HAS SMOKE TESTS
