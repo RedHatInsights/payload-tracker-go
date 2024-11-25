@@ -153,11 +153,11 @@ objects:
                 key: ${DB_SECRET_PASSWORD_KEY}
         resources:
           limits:
-            cpu: ${CPU_LIMIT}
-            memory: ${MEMORY_LIMIT}
+            cpu: ${VACUUM_CPU_LIMIT}
+            memory: ${VACUUM_MEMORY_LIMIT}
           requests:
-            cpu: 200m
-            memory: 256Mi
+            cpu: ${VACUUM_CPU_REQUEST}
+            memory: ${VACUUM_MEMORY_REQUEST}
 
 - apiVersion: v1
   kind: ConfigMap
@@ -235,6 +235,26 @@ parameters:
 - description: Maximum amount of cpu the payload-tracker consumer can use.
   displayName: CPU Limit
   name: CONSUMER_CPU_LIMIT
+  required: true
+  value: 500m
+- description: Initial amount of memory the vacuum job will request.
+  displayName: Memory Request
+  name: VACUUM_MEMORY_REQUEST
+  required: true
+  value: 256Mi
+- description: Maximum amount of memory for the vacuum job.
+  displayName: Memory Limit
+  name: VACUUM_MEMORY_LIMIT
+  required: true
+  value: 512Mi
+- description: Initial amount of cpu the vacuum job will request.
+  displayName: CPU Request
+  name: VACUUM_CPU_REQUEST
+  required: true
+  value: 200m
+- description: Maximum amount of cpu the vacuum job can use.
+  displayName: CPU Limit
+  name: VACUUM_CPU_LIMIT
   required: true
   value: 500m
 - description: The log level to use for logging
