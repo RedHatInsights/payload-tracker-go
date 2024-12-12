@@ -94,8 +94,16 @@ func NewConsumerEventLoop(
 			case kafka.Error:
 				endpoints.IncConsumeErrors()
 				l.Log.Errorf("Consumer error: %v (%v)\n", e.Code(), e)
+			case kafka.OffsetsCommitted:
+				if e.Error != nil {
+					l.Log.Errorf("Unable to commit offset: %#v", e)
+					break
+				}
+
+				l.Log.Debugf("Ignored OffsetsComitted: %#v", e)
+
 			default:
-				l.Log.Infof("Ignored %v\n", e)
+				l.Log.Infof("Ignored %#v\n", e)
 			}
 
 		}
