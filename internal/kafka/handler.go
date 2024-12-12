@@ -17,7 +17,6 @@ import (
 	"github.com/redhatinsights/payload-tracker-go/internal/queries"
 )
 
-
 type handler struct {
 	db *gorm.DB
 }
@@ -117,13 +116,13 @@ func (this *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *con
 	endpoints.IncMessagesProcessed()
 	result := queries.InsertPayloadStatus(this.db, sanitizedPayloadStatus)
 	if result.Error != nil {
-		endpoints.IncMessageProcessErrors()
 		l.Log.Debug("Failed to insert sanitized PayloadStatus with ERROR: ", result.Error)
 		result = queries.InsertPayloadStatus(this.db, sanitizedPayloadStatus)
 		if result.Error != nil {
 			l.Log.Debug("Failed to re-insert sanitized PayloadStatus with ERROR: ", result.Error)
 			result = queries.InsertPayloadStatus(this.db, sanitizedPayloadStatus)
 			if result.Error != nil {
+				endpoints.IncMessageProcessErrors()
 				l.Log.Error("Failed final attempt to re-insert PayloadStatus with ERROR: ", result.Error)
 			}
 		}
