@@ -100,10 +100,10 @@ func NewConsumerEventLoop(
 					break
 				}
 
-				l.Log.Debugf("Ignored OffsetsComitted: %#v", e)
+				l.Log.Tracef("Ignored OffsetsComitted: %#v", e)
 
 			default:
-				l.Log.Infof("Ignored %#v\n", e)
+				l.Log.Infof("Ignored Kafka event: %#v\n", e)
 			}
 
 		}
