@@ -7,7 +7,7 @@ import (
 
 	k "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/google/uuid"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"github.com/redhatinsights/payload-tracker-go/internal/config"
