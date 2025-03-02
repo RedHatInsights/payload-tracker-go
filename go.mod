@@ -6,7 +6,7 @@ toolchain go1.24.0
 
 require (
 	github.com/aws/aws-sdk-go v1.55.6
-	github.com/confluentinc/confluent-kafka-go v1.9.2
+	github.com/confluentinc/confluent-kafka-go/v2 v2.8.0
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-chi/httprate v0.14.1
 	github.com/google/uuid v1.6.0
