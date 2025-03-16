@@ -2,7 +2,7 @@ module github.com/redhatinsights/payload-tracker-go
 
 go 1.22.0
 
-toolchain go1.24.0
+toolchain go1.24.1
 
 require (
 	github.com/aws/aws-sdk-go v1.55.6
