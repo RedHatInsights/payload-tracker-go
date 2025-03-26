@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
 	"github.com/redhatinsights/payload-tracker-go/internal/config"
@@ -114,18 +115,18 @@ func (this *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *con
 	// Insert payload into DB
 	endpoints.ObserveMessageProcessTime(time.Since(start))
 	endpoints.IncMessagesProcessed()
-	result := queries.InsertPayloadStatus(this.db, sanitizedPayloadStatus)
-	if result.Error != nil {
-		l.Log.Debug("Failed to insert sanitized PayloadStatus with ERROR: ", result.Error)
-		result = queries.InsertPayloadStatus(this.db, sanitizedPayloadStatus)
-		if result.Error != nil {
-			l.Log.Debug("Failed to re-insert sanitized PayloadStatus with ERROR: ", result.Error)
-			result = queries.InsertPayloadStatus(this.db, sanitizedPayloadStatus)
-			if result.Error != nil {
-				endpoints.IncMessageProcessErrors()
-				l.Log.Error("Failed final attempt to re-insert PayloadStatus with ERROR: ", result.Error)
-			}
+
+	// TODO: Configurable retries
+	retries, attempts := 3, 0
+	for retries >= attempts {
+		if err := attemptPayloadInsertion(this.db, sanitizedPayloadStatus); err != nil {
+			l.Log.WithFields(logrus.Fields{"attempts": attempts}).Debug("Failed to insert sanitized PayloadStatus with ERROR: ", err)
+			attempts += 1
+
+			continue
 		}
+
+		break
 	}
 }
 
@@ -138,6 +139,16 @@ func validateRequestID(requestIDLength int, requestID string) bool {
 	}
 
 	return true
+}
+
+func attemptPayloadInsertion(db *gorm.DB, payloadStatus *models.PayloadStatuses) error {
+	result := queries.InsertPayloadStatus(db, payloadStatus)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
 }
 
 func sanitizePayload(msg *message.PayloadStatusMessage) {
