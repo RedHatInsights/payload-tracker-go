@@ -116,17 +116,16 @@ func (this *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *con
 	endpoints.ObserveMessageProcessTime(time.Since(start))
 	endpoints.IncMessagesProcessed()
 
-	// TODO: Configurable retries
-	retries, attempts := 3, 0
+	retries, attempts := config.Get().KafkaConfig.KafkaRetries, 0
 	for retries >= attempts {
-		if err := attemptPayloadInsertion(this.db, sanitizedPayloadStatus); err != nil {
-			l.Log.WithFields(logrus.Fields{"attempts": attempts}).Debug("Failed to insert sanitized PayloadStatus with ERROR: ", err)
-			attempts += 1
-
-			continue
+		if err := queries.InsertPayloadStatus(this.db, sanitizedPayloadStatus); err == nil {
+			break
 		}
 
-		break
+		l.Log.WithFields(logrus.Fields{"attempts": attempts}).Debug("Failed to insert sanitized PayloadStatus with ERROR: ", err)
+		attempts += 1
+
+		continue
 	}
 }
 
@@ -139,16 +138,6 @@ func validateRequestID(requestIDLength int, requestID string) bool {
 	}
 
 	return true
-}
-
-func attemptPayloadInsertion(db *gorm.DB, payloadStatus *models.PayloadStatuses) error {
-	result := queries.InsertPayloadStatus(db, payloadStatus)
-
-	if result.Error != nil {
-		return result.Error
-	}
-
-	return nil
 }
 
 func sanitizePayload(msg *message.PayloadStatusMessage) {
