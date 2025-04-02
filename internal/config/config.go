@@ -38,6 +38,7 @@ type KafkaCfg struct {
 	KafkaTopic                 string
 	KafkaUsername              string
 	KafkaPassword              string
+	KafkaRetries               int
 	KafkaCA                    string
 	SASLMechanism              string
 	Protocol                   string
@@ -182,6 +183,7 @@ func Get() *TrackerConfig {
 			KafkaRetryBackoffMs:        options.GetInt("kafka.retry.backoff.ms"),
 			KafkaBootstrapServers:      options.GetString("kafka.bootstrap.servers"),
 			KafkaTopic:                 options.GetString("topic.payload.status"),
+			KafkaRetries:               options.GetInt("kafka.retries"),
 		},
 		DatabaseConfig: DatabaseCfg{
 			DBUser:     options.GetString("db.user"),
@@ -224,7 +226,6 @@ func Get() *TrackerConfig {
 		// write the Kafka CA path using the app-common-go package
 		if broker.Cacert != nil {
 			caPath, err := clowder.LoadedConfig.KafkaCa(broker)
-
 			if err != nil {
 				panic("Kafka CA Failed to Write")
 			}
@@ -235,7 +236,6 @@ func Get() *TrackerConfig {
 		// write the RDS CA using the app-common-go package
 		if clowder.LoadedConfig.Database.RdsCa != nil {
 			rdsCAPath, err := clowder.LoadedConfig.RdsCa()
-
 			if err != nil {
 				panic("RDS CA Failed to Write")
 			}
