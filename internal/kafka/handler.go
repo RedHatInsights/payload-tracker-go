@@ -117,7 +117,7 @@ func (this *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *con
 	endpoints.IncMessagesProcessed()
 
 	retries, attempts := config.Get().KafkaConfig.KafkaRetries, 0
-	for retries >= attempts {
+	for retries > attempts {
 		err := queries.InsertPayloadStatus(this.db, sanitizedPayloadStatus)
 
 		if err == nil {
