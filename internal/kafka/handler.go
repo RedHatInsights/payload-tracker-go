@@ -118,7 +118,9 @@ func (this *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *con
 
 	retries, attempts := config.Get().KafkaConfig.KafkaRetries, 0
 	for retries >= attempts {
-		if err := queries.InsertPayloadStatus(this.db, sanitizedPayloadStatus); err == nil {
+		err := queries.InsertPayloadStatus(this.db, sanitizedPayloadStatus)
+
+		if err == nil {
 			break
 		}
 
