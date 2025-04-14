@@ -102,6 +102,7 @@ func Get() *TrackerConfig {
 	options.SetDefault("kafka.request.required.acks", -1) // -1 == "all"
 	options.SetDefault("kafka.message.send.max.retries", 15)
 	options.SetDefault("kafka.retry.backoff.ms", 100)
+	options.SetDefault("kafka.retries", 3)
 
 	// request config
 	options.SetDefault("validate.request.id.length", 32)

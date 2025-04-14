@@ -3,7 +3,6 @@ package kafka
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	k "github.com/confluentinc/confluent-kafka-go/v2/kafka"
@@ -63,37 +62,21 @@ var _ = Describe("Kafka message handler", func() {
 	Describe("On valid payload status message", func() {
 		It("Creates the required DB entries", func() {
 			payloadMsgVal := getSimplePayloadStatusMessage()
-			println("getSimplePayloadStatusMessage")
-			fmt.Printf("%+v\n", payloadMsgVal)
 			payloadStatusMessage := newKafkaMessage(payloadMsgVal)
-			println("payloadStatusMessage")
-			fmt.Printf("%+v\n", payloadStatusMessage)
 
 			msgHandler.onMessage(context.Background(), payloadStatusMessage, config.Get())
-			println("After msgHandler")
 
 			dbResult := queries.RetrieveRequestIdPayloads(db(), payloadMsgVal.RequestID, "created_at", "asc", "0")
-			fmt.Printf("%+v\n", dbResult)
-			println("After dbResult")
 
 			Expect(dbResult[0].Service).To(Equal(payloadMsgVal.Service))
-			println("Service")
 			Expect(dbResult[0].Account).To(Equal(payloadMsgVal.Account))
-			println("Account")
 			Expect(dbResult[0].OrgID).To(Equal(payloadMsgVal.OrgID))
-			println("OrgID")
 			Expect(dbResult[0].RequestID).To(Equal(payloadMsgVal.RequestID))
-			println("RequestID")
 			Expect(dbResult[0].InventoryID).To(Equal(payloadMsgVal.InventoryID))
-			println("InventoryID")
 			Expect(dbResult[0].SystemID).To(Equal(payloadMsgVal.SystemID))
-			println("SystemID")
 			Expect(dbResult[0].Status).To(Equal(payloadMsgVal.Status))
-			println("Status")
 			Expect(dbResult[0].StatusMsg).To(Equal(payloadMsgVal.StatusMSG))
-			println("StatusMsg")
 			Expect(dbResult[0].Source).To(Equal(payloadMsgVal.Source))
-			println("Source")
 		})
 	})
 
