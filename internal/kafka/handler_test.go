@@ -52,6 +52,7 @@ var _ = Describe("Kafka message handler", func() {
 	var msgHandler handler
 
 	db := test.WithDatabase()
+	cfg := config.Get()
 
 	BeforeEach(func() {
 		msgHandler = handler{
@@ -64,7 +65,7 @@ var _ = Describe("Kafka message handler", func() {
 			payloadMsgVal := getSimplePayloadStatusMessage()
 			payloadStatusMessage := newKafkaMessage(payloadMsgVal)
 
-			msgHandler.onMessage(context.Background(), payloadStatusMessage, config.Get())
+			msgHandler.onMessage(context.Background(), payloadStatusMessage, cfg)
 
 			dbResult := queries.RetrieveRequestIdPayloads(db(), payloadMsgVal.RequestID, "created_at", "asc", "0")
 
@@ -77,6 +78,21 @@ var _ = Describe("Kafka message handler", func() {
 			Expect(dbResult[0].Status).To(Equal(payloadMsgVal.Status))
 			Expect(dbResult[0].StatusMsg).To(Equal(payloadMsgVal.StatusMSG))
 			Expect(dbResult[0].Source).To(Equal(payloadMsgVal.Source))
+		})
+
+		It("Should not insert with negative retries", func() {
+			cfg.KafkaConfig.KafkaRetries = -1
+
+			payloadMsgVal := getSimplePayloadStatusMessage()
+			// Make this unique
+			payloadMsgVal.RequestID = "e4b3d38f199f4abdb1cfbcf6e3b81f57"
+			payloadStatusMessage := newKafkaMessage(payloadMsgVal)
+
+			msgHandler.onMessage(context.Background(), payloadStatusMessage, cfg)
+
+			dbResult := queries.RetrieveRequestIdPayloads(db(), payloadMsgVal.RequestID, "created_at", "asc", "0")
+
+			Expect(len(dbResult)).To(Equal(0))
 		})
 	})
 
