@@ -26,7 +26,7 @@ type handler struct {
 func (this *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config.TrackerConfig) {
 	// Track the time from beginning of handling the message to the insert
 	start := time.Now()
-	l.Log.Debug("Processing Payload Message ", msg.Value)
+	l.Log.Debug("Processing Payload Message ", string(msg.Value))
 
 	payloadStatus := &message.PayloadStatusMessage{}
 	sanitizedPayloadStatus := &models.PayloadStatuses{}
@@ -118,7 +118,7 @@ func (this *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *con
 
 	retries, attempts := cfg.KafkaConfig.KafkaRetries, 0
 	for retries > attempts {
-		err := queries.InsertPayloadStatus(this.db, sanitizedPayloadStatus)
+		err := queries.InsertPayloadStatus(this.db, sanitizedPayloadStatus).Error
 
 		if err == nil {
 			break
