@@ -120,6 +120,9 @@ func Get() *TrackerConfig {
 	// debug config
 	options.SetDefault("debug.log.status.json", false)
 
+	// global database config
+	options.SetDefault("db.retries", 3)
+
 	if clowder.IsClowderEnabled() {
 		cfg := clowder.LoadedConfig
 
@@ -135,7 +138,6 @@ func Get() *TrackerConfig {
 		options.SetDefault("db.name", cfg.Database.Name)
 		options.SetDefault("db.host", cfg.Database.Hostname)
 		options.SetDefault("db.port", cfg.Database.Port)
-		options.SetDefault("db.retries", 3)
 		options.SetDefault("rdsCa", cfg.Database.RdsCa)
 		// cloudwatch
 		options.SetDefault("logGroup", cfg.Logging.Cloudwatch.LogGroup)
