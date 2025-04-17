@@ -38,7 +38,6 @@ type KafkaCfg struct {
 	KafkaTopic                 string
 	KafkaUsername              string
 	KafkaPassword              string
-	KafkaRetries               int
 	KafkaCA                    string
 	SASLMechanism              string
 	Protocol                   string
@@ -50,6 +49,7 @@ type DatabaseCfg struct {
 	DBName     string
 	DBHost     string
 	DBPort     string
+	DBRetries  int
 	RDSCa      string
 }
 
@@ -102,7 +102,6 @@ func Get() *TrackerConfig {
 	options.SetDefault("kafka.request.required.acks", -1) // -1 == "all"
 	options.SetDefault("kafka.message.send.max.retries", 15)
 	options.SetDefault("kafka.retry.backoff.ms", 100)
-	options.SetDefault("kafka.retries", 3)
 
 	// request config
 	options.SetDefault("validate.request.id.length", 32)
@@ -136,6 +135,7 @@ func Get() *TrackerConfig {
 		options.SetDefault("db.name", cfg.Database.Name)
 		options.SetDefault("db.host", cfg.Database.Hostname)
 		options.SetDefault("db.port", cfg.Database.Port)
+		options.SetDefault("db.retries", 3)
 		options.SetDefault("rdsCa", cfg.Database.RdsCa)
 		// cloudwatch
 		options.SetDefault("logGroup", cfg.Logging.Cloudwatch.LogGroup)
@@ -184,7 +184,6 @@ func Get() *TrackerConfig {
 			KafkaRetryBackoffMs:        options.GetInt("kafka.retry.backoff.ms"),
 			KafkaBootstrapServers:      options.GetString("kafka.bootstrap.servers"),
 			KafkaTopic:                 options.GetString("topic.payload.status"),
-			KafkaRetries:               options.GetInt("kafka.retries"),
 		},
 		DatabaseConfig: DatabaseCfg{
 			DBUser:     options.GetString("db.user"),
@@ -192,6 +191,7 @@ func Get() *TrackerConfig {
 			DBName:     options.GetString("db.name"),
 			DBHost:     options.GetString("db.host"),
 			DBPort:     options.GetString("db.port"),
+			DBRetries:  options.GetInt("db.retries"),
 		},
 		CloudwatchConfig: CloudwatchCfg{
 			CWLogGroup:  options.GetString("logGroup"),

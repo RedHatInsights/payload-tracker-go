@@ -116,7 +116,7 @@ func (this *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *con
 	endpoints.ObserveMessageProcessTime(time.Since(start))
 	endpoints.IncMessagesProcessed()
 
-	retries, attempts := cfg.KafkaConfig.KafkaRetries, 0
+	retries, attempts := cfg.DatabaseConfig.DBRetries, 0
 	for retries > attempts {
 		err := queries.InsertPayloadStatus(this.db, sanitizedPayloadStatus).Error
 
@@ -126,8 +126,6 @@ func (this *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *con
 
 		l.Log.WithFields(logrus.Fields{"attempts": attempts}).Debug("Failed to insert sanitized PayloadStatus with ERROR: ", err)
 		attempts += 1
-
-		continue
 	}
 }
 

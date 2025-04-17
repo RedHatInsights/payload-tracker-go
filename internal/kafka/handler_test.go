@@ -81,7 +81,7 @@ var _ = Describe("Kafka message handler", func() {
 		})
 
 		It("Should not insert with negative retries", func() {
-			cfg.KafkaConfig.KafkaRetries = -1
+			cfg.DatabaseConfig.DBRetries = -1
 
 			payloadMsgVal := getSimplePayloadStatusMessage()
 			// Make this unique
