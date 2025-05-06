@@ -22,6 +22,12 @@ type handler struct {
 	db *gorm.DB
 }
 
+var (
+	cachedStatuses = make(map[string]models.Statuses)
+	cachedServices = make(map[string]models.Services)
+	cachedSources  = make(map[string]models.Sources)
+)
+
 // OnMessage takes in each payload status message and processes it
 func (this *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config.TrackerConfig) {
 	// Track the time from beginning of handling the message to the insert
@@ -63,8 +69,26 @@ func (this *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *con
 	l.Log.Debug("Adding Status, Sources, and Services to sanitizedPayload")
 
 	// Status & Service: Always defined in the message
-	existingStatus := queries.GetStatusByName(this.db, payloadStatus.Status)
-	existingService := queries.GetServiceByName(this.db, payloadStatus.Service)
+	var existingStatus models.Statuses
+	cachedStatus, ok := cachedStatuses[payloadStatus.Status]
+
+	if ok {
+		existingStatus = cachedStatus
+	} else {
+		existingStatus = queries.GetStatusByName(this.db, payloadStatus.Status)
+		cachedStatuses[payloadStatus.Status] = existingStatus
+	}
+
+	var existingService models.Services
+	cachedService, ok := cachedServices[payloadStatus.Service]
+
+	if ok {
+		existingService = cachedService
+	} else {
+		existingService := queries.GetServiceByName(this.db, payloadStatus.Service)
+		cachedServices[payloadStatus.Service] = existingService
+	}
+
 	if (models.Statuses{}) == existingStatus {
 		statusResult, newStatus := queries.CreateStatusTableEntry(this.db, payloadStatus.Status)
 		if statusResult.Error != nil {
@@ -91,7 +115,16 @@ func (this *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *con
 
 	// Sources
 	if payloadStatus.Source != "" {
-		existingSource := queries.GetSourceByName(this.db, payloadStatus.Source)
+		var existingSource models.Sources
+		cachedSource, ok := cachedSources[payloadStatus.Source]
+
+		if ok {
+			existingSource = cachedSource
+		} else {
+			existingSource := queries.GetSourceByName(this.db, payloadStatus.Source)
+			cachedSources[payloadStatus.Source] = existingSource
+		}
+
 		if (models.Sources{}) == existingSource {
 			result, newSource := queries.CreateSourceTableEntry(this.db, payloadStatus.Source)
 			if result.Error != nil {
