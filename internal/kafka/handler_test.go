@@ -81,6 +81,8 @@ var _ = Describe("Kafka message handler", func() {
 		})
 
 		It("Should not insert with negative retries", func() {
+			// This is a nasty gloabl unfortunately
+			originalDBRetries := cfg.DatabaseConfig.DBRetries
 			cfg.DatabaseConfig.DBRetries = -1
 
 			payloadMsgVal := getSimplePayloadStatusMessage()
@@ -93,6 +95,9 @@ var _ = Describe("Kafka message handler", func() {
 			dbResult := queries.RetrieveRequestIdPayloads(db(), payloadMsgVal.RequestID, "created_at", "asc", "0")
 
 			Expect(len(dbResult)).To(Equal(0))
+
+			// Set the retries back
+			cfg.DatabaseConfig.DBRetries = originalDBRetries
 		})
 	})
 
