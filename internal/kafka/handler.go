@@ -120,11 +120,8 @@ func (h *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config
 	l.Log.Debug("Adding Status, Sources, and Services to sanitizedPayload")
 
 	// Status & Service: Always defined in the message
-	var existingStatus models.Statuses
-	existingStatus = h.GetStatusByName(h.db, payloadStatus.Status)
-
-	var existingService models.Services
-	existingService = h.GetServiceByName(h.db, payloadStatus.Service)
+	existingStatus := h.GetStatusByName(h.db, payloadStatus.Status)
+	existingService := h.GetServiceByName(h.db, payloadStatus.Service)
 
 	if (models.Statuses{}) == existingStatus {
 		statusResult, newStatus := queries.CreateStatusTableEntry(h.db, payloadStatus.Status)
@@ -152,8 +149,7 @@ func (h *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config
 
 	// Sources
 	if payloadStatus.Source != "" {
-		var existingSource models.Sources
-		existingSource = h.GetSourceByName(h.db, payloadStatus.Source)
+		existingSource := h.GetSourceByName(h.db, payloadStatus.Source)
 
 		if (models.Sources{}) == existingSource {
 			result, newSource := queries.CreateSourceTableEntry(h.db, payloadStatus.Source)
