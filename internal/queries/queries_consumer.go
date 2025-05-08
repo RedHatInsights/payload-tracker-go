@@ -11,20 +11,19 @@ const (
 	PayloadJoins  = "left join Payloads on Payloads.id = PayloadStatuses.payload_id"
 )
 
-
-func GetServiceByName(db *gorm.DB, service_id string) models.Services {
+func GetDBServiceByName(db *gorm.DB, service_id string) models.Services {
 	var service models.Services
 	db.Where("name = ?", service_id).First(&service)
 	return service
 }
 
-func GetStatusByName(db *gorm.DB, status_id string) models.Statuses {
+func GetDBStatusByName(db *gorm.DB, status_id string) models.Statuses {
 	var status models.Statuses
 	db.Where("name = ?", status_id).First(&status)
 	return status
 }
 
-func GetSourceByName(db *gorm.DB, source_id string) models.Sources {
+func GetDBSourceByName(db *gorm.DB, source_id string) models.Sources {
 	var source models.Sources
 	db.Where("name = ?", source_id).First(&source)
 	return source
@@ -56,7 +55,7 @@ func UpsertPayloadByRequestId(db *gorm.DB, request_id string, payload models.Pay
 	}
 
 	onConflict := clause.OnConflict{
-		Columns: []clause.Column{{Name: "request_id"}},
+		Columns:   []clause.Column{{Name: "request_id"}},
 		DoUpdates: clause.AssignmentColumns(columnsToUpdate),
 	}
 
