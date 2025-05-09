@@ -18,65 +18,11 @@ import (
 	"github.com/redhatinsights/payload-tracker-go/internal/queries"
 )
 
-type DBInterface interface {
-	GetStatusByName(db *gorm.DB, statusName string) models.Statuses
-	GetServiceByName(db *gorm.DB, name string) models.Services
-	GetSourceByName(db *gorm.DB, name string) models.Sources
-}
-
-type DBImpl struct {
-	statusCache  map[string]models.Statuses
-	serviceCache map[string]models.Services
-	sourceCache  map[string]models.Sources
-}
-
 type handler struct {
-	db *gorm.DB
-}
-
-func (h *handler) GetStatusByName(db *gorm.DB, statusName string) models.Statuses {
-	cache := make(map[string]models.Statuses)
-
-	cached, ok := cache[statusName]
-	if ok {
-		return cached
-	}
-
-	dataToCache := queries.GetDBStatusByName(db, statusName)
-
-	cache[statusName] = dataToCache
-
-	return dataToCache
-}
-
-func (h *handler) GetServiceByName(db *gorm.DB, serviceName string) models.Services {
-	cache := make(map[string]models.Services)
-
-	cached, ok := cache[serviceName]
-	if ok {
-		return cached
-	}
-
-	dataToCache := queries.GetDBServiceByName(db, serviceName)
-
-	cache[serviceName] = dataToCache
-
-	return dataToCache
-}
-
-func (h *handler) GetSourceByName(db *gorm.DB, sourceName string) models.Sources {
-	cache := make(map[string]models.Sources)
-
-	cached, ok := cache[sourceName]
-	if ok {
-		return cached
-	}
-
-	dataToCache := queries.GetDBSourceByName(db, sourceName)
-
-	cache[sourceName] = dataToCache
-
-	return dataToCache
+	db               *gorm.DB
+	getStatusByName  queries.GetStatusByName
+	getServiceByName queries.GetServiceByName
+	getSourceByName  queries.GetSourceByName
 }
 
 // OnMessage takes in each payload status message and processes it
@@ -116,12 +62,12 @@ func (h *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config
 	sanitizedPayloadStatus.PayloadId = payloadId
 
 	// Check if service/source/status are in table
-	// this section checks the subsiquent DB tables to see if the service_id, source_id, and status_id exist for the given message
+	// this section checks the subsequent DB tables to see if the service_id, source_id, and status_id exist for the given message
 	l.Log.Debug("Adding Status, Sources, and Services to sanitizedPayload")
 
 	// Status & Service: Always defined in the message
-	existingStatus := h.GetStatusByName(h.db, payloadStatus.Status)
-	existingService := h.GetServiceByName(h.db, payloadStatus.Service)
+	existingStatus := h.getStatusByName(h.db, payloadStatus.Status)
+	existingService := h.getServiceByName(h.db, payloadStatus.Service)
 
 	if (models.Statuses{}) == existingStatus {
 		statusResult, newStatus := queries.CreateStatusTableEntry(h.db, payloadStatus.Status)
@@ -149,7 +95,7 @@ func (h *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config
 
 	// Sources
 	if payloadStatus.Source != "" {
-		existingSource := h.GetSourceByName(h.db, payloadStatus.Source)
+		existingSource := h.getSourceByName(h.db, payloadStatus.Source)
 
 		if (models.Sources{}) == existingSource {
 			result, newSource := queries.CreateSourceTableEntry(h.db, payloadStatus.Source)
