@@ -19,11 +19,14 @@ import (
 )
 
 type handler struct {
-	db *gorm.DB
+	db               *gorm.DB
+	getStatusByName  queries.GetStatusByName
+	getServiceByName queries.GetServiceByName
+	getSourceByName  queries.GetSourceByName
 }
 
 // OnMessage takes in each payload status message and processes it
-func (this *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config.TrackerConfig) {
+func (h *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config.TrackerConfig) {
 	// Track the time from beginning of handling the message to the insert
 	start := time.Now()
 	l.Log.Debug("Processing Payload Message ", string(msg.Value))
@@ -51,7 +54,7 @@ func (this *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *con
 	// Upsert into Payloads Table
 	payload := createPayload(payloadStatus)
 
-	upsertResult, payloadId := queries.UpsertPayloadByRequestId(this.db, payloadStatus.RequestID, payload)
+	upsertResult, payloadId := queries.UpsertPayloadByRequestId(h.db, payloadStatus.RequestID, payload)
 	if upsertResult.Error != nil {
 		l.Log.Error("ERROR Payload table upsert failed: ", upsertResult.Error)
 		return
@@ -59,14 +62,15 @@ func (this *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *con
 	sanitizedPayloadStatus.PayloadId = payloadId
 
 	// Check if service/source/status are in table
-	// this section checks the subsiquent DB tables to see if the service_id, source_id, and status_id exist for the given message
+	// this section checks the subsequent DB tables to see if the service_id, source_id, and status_id exist for the given message
 	l.Log.Debug("Adding Status, Sources, and Services to sanitizedPayload")
 
 	// Status & Service: Always defined in the message
-	existingStatus := queries.GetStatusByName(this.db, payloadStatus.Status)
-	existingService := queries.GetServiceByName(this.db, payloadStatus.Service)
+	existingStatus := h.getStatusByName(h.db, payloadStatus.Status)
+	existingService := h.getServiceByName(h.db, payloadStatus.Service)
+
 	if (models.Statuses{}) == existingStatus {
-		statusResult, newStatus := queries.CreateStatusTableEntry(this.db, payloadStatus.Status)
+		statusResult, newStatus := queries.CreateStatusTableEntry(h.db, payloadStatus.Status)
 		if statusResult.Error != nil {
 			l.Log.Error("Error Creating Statuses Table Entry ERROR: ", statusResult.Error)
 			return
@@ -78,7 +82,7 @@ func (this *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *con
 	}
 
 	if (models.Services{}) == existingService {
-		serviceResult, newService := queries.CreateServiceTableEntry(this.db, payloadStatus.Service)
+		serviceResult, newService := queries.CreateServiceTableEntry(h.db, payloadStatus.Service)
 		if serviceResult.Error != nil {
 			l.Log.Error("Error Creating Service Table Entry ERROR: ", serviceResult.Error)
 			return
@@ -91,9 +95,10 @@ func (this *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *con
 
 	// Sources
 	if payloadStatus.Source != "" {
-		existingSource := queries.GetSourceByName(this.db, payloadStatus.Source)
+		existingSource := h.getSourceByName(h.db, payloadStatus.Source)
+
 		if (models.Sources{}) == existingSource {
-			result, newSource := queries.CreateSourceTableEntry(this.db, payloadStatus.Source)
+			result, newSource := queries.CreateSourceTableEntry(h.db, payloadStatus.Source)
 			if result.Error != nil {
 				l.Log.Error("Error Creating Sources Table Entry ERROR: ", result.Error)
 				return
@@ -118,7 +123,7 @@ func (this *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *con
 
 	retries, attempts := cfg.DatabaseConfig.DBRetries, 0
 	for retries > attempts {
-		err := queries.InsertPayloadStatus(this.db, sanitizedPayloadStatus).Error
+		err := queries.InsertPayloadStatus(h.db, sanitizedPayloadStatus).Error
 
 		if err == nil {
 			break
