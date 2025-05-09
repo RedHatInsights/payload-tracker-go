@@ -1,6 +1,8 @@
 package queries
 
 import (
+	"fmt"
+
 	models "github.com/redhatinsights/payload-tracker-go/internal/models/db"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -9,6 +11,12 @@ import (
 const (
 	StatusColumns = "payload_id, status_id, service_id, source_id, date, inventory_id, system_id, account, org_id"
 	PayloadJoins  = "left join Payloads on Payloads.id = PayloadStatuses.payload_id"
+)
+
+type (
+	GetStatusByName  func(db *gorm.DB, statusName string) models.Statuses
+	GetServiceByName func(db *gorm.DB, serviceName string) models.Services
+	GetSourceByName  func(db *gorm.DB, sourceName string) models.Sources
 )
 
 func GetDBServiceByName(db *gorm.DB, service_id string) models.Services {
@@ -27,6 +35,75 @@ func GetDBSourceByName(db *gorm.DB, source_id string) models.Sources {
 	var source models.Sources
 	db.Where("name = ?", source_id).First(&source)
 	return source
+}
+
+func GetCachedStatusByName(getStatusByName GetStatusByName) GetStatusByName {
+	cache := make(map[string]models.Statuses)
+	fmt.Println("******************")
+	fmt.Println("Cache status function")
+	fmt.Println("******************")
+
+	return func(db *gorm.DB, statusName string) models.Statuses {
+		cached, ok := cache[statusName]
+		if ok {
+			fmt.Println("##########################")
+			fmt.Println("Cached status result found")
+			fmt.Println("##########################")
+			return cached
+		}
+
+		dataToCache := getStatusByName(db, statusName)
+
+		cache[statusName] = dataToCache
+
+		return dataToCache
+	}
+}
+
+func GetCachedServiceByName(getServiceByName GetServiceByName) GetServiceByName {
+	cache := make(map[string]models.Services)
+	fmt.Println("******************")
+	fmt.Println("Cache service function")
+	fmt.Println("******************")
+
+	return func(db *gorm.DB, serviceName string) models.Services {
+		cached, ok := cache[serviceName]
+		if ok {
+			fmt.Println("##########################")
+			fmt.Println("Cached service result found")
+			fmt.Println("##########################")
+			return cached
+		}
+
+		dataToCache := getServiceByName(db, serviceName)
+
+		cache[serviceName] = dataToCache
+
+		return dataToCache
+	}
+}
+
+func GetCachedSourceByName(getSourceByName GetSourceByName) GetSourceByName {
+	cache := make(map[string]models.Sources)
+	fmt.Println("******************")
+	fmt.Println("Cache source function")
+	fmt.Println("******************")
+
+	return func(db *gorm.DB, sourceName string) models.Sources {
+		cached, ok := cache[sourceName]
+		if ok {
+			fmt.Println("##########################")
+			fmt.Println("Cached source result found")
+			fmt.Println("##########################")
+			return cached
+		}
+
+		dataToCache := getSourceByName(db, sourceName)
+
+		cache[sourceName] = dataToCache
+
+		return dataToCache
+	}
 }
 
 func GetPayloadByRequestId(db *gorm.DB, request_id string) (result models.Payloads, err error) {
