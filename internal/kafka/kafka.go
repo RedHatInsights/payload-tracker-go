@@ -68,8 +68,10 @@ func NewConsumerEventLoop(
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 
 	handler := &handler{
-		db:              db,
-		getStatusByName: queries.GetCachedStatusByName(queries.GetDBStatusByName),
+		db:               db,
+		getStatusByName:  queries.GetCachedStatusByName(queries.GetDBStatusByName),
+		getServiceByName: queries.GetCachedServiceByName(queries.GetDBServiceByName),
+		getSourceByName:  queries.GetCachedSourceByName(queries.GetDBSourceByName),
 	}
 
 	run := true
