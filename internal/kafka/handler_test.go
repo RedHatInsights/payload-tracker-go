@@ -51,15 +51,16 @@ func getSimplePayloadStatusMessage() message.PayloadStatusMessage {
 var _ = Describe("Kafka message handler", func() {
 	var msgHandler handler
 
-	db := test.WithDatabase()
+	dbInit := test.WithDatabase()
+	db := dbInit()
 	cfg := config.Get()
 
 	BeforeEach(func() {
 		msgHandler = handler{
-			db:               db(),
-			getStatusByName:  queries.GetCachedStatusByName(queries.GetDBStatusByName(db())),
-			getServiceByName: queries.GetCachedServiceByName(queries.GetDBServiceByName(db())),
-			getSourceByName:  queries.GetCachedSourceByName(queries.GetDBSourceByName(db())),
+			db:               db,
+			getStatusByName:  queries.GetCachedStatusByName(queries.GetDBStatusByName(db)),
+			getServiceByName: queries.GetCachedServiceByName(queries.GetDBServiceByName(db)),
+			getSourceByName:  queries.GetCachedSourceByName(queries.GetDBSourceByName(db)),
 		}
 	})
 
