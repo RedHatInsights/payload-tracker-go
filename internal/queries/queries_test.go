@@ -3,7 +3,6 @@ package queries
 import (
 	models "github.com/redhatinsights/payload-tracker-go/internal/models/db"
 	"github.com/redhatinsights/payload-tracker-go/internal/utils/test"
-	"gorm.io/gorm"
 
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo"
@@ -15,7 +14,7 @@ func getUUID() string {
 }
 
 func fakeGetStatusByName(cachedResult *bool) GetStatusByName {
-	return func(db *gorm.DB, statusName string) models.Statuses {
+	return func(statusName string) models.Statuses {
 		*cachedResult = false
 		return models.Statuses{
 			Id:   1,
@@ -25,7 +24,7 @@ func fakeGetStatusByName(cachedResult *bool) GetStatusByName {
 }
 
 func fakeGetServiceByName(cachedResult *bool) GetServiceByName {
-	return func(db *gorm.DB, serviceName string) models.Services {
+	return func(serviceName string) models.Services {
 		*cachedResult = false
 		return models.Services{
 			Id:   1,
@@ -35,7 +34,7 @@ func fakeGetServiceByName(cachedResult *bool) GetServiceByName {
 }
 
 func fakeGetSourceByName(cachedResult *bool) GetSourceByName {
-	return func(db *gorm.DB, sourceName string) models.Sources {
+	return func(sourceName string) models.Sources {
 		*cachedResult = false
 		return models.Sources{
 			Id:   1,
@@ -195,60 +194,58 @@ var _ = Describe("Queries", func() {
 	})
 	It("Checks if we got a cached status result from the database", func() {
 		const statusName = "CachedStatus"
-		db := db()
+		// db := db()
 		cachedResult := true
 		fakeGetStatusByName := fakeGetStatusByName(&cachedResult)
 		getStatusByName := GetCachedStatusByName(fakeGetStatusByName)
 
 		// Cache miss
-		status := getStatusByName(db, statusName)
+		status := getStatusByName(statusName)
 
 		Expect(cachedResult).To(Equal(false))
 		Expect(status.Name).To(Equal(statusName))
 
 		// Should be cached now
 		cachedResult = true
-		status = getStatusByName(db, statusName)
+		status = getStatusByName(statusName)
 
 		Expect(cachedResult).To(Equal(true))
 		Expect(status.Name).To(Equal(statusName))
 	})
 	It("Checks if we got a cached service result from the database", func() {
 		const serviceName = "CachedService"
-		db := db()
 		cachedResult := true
 		fakeGetServiceByName := fakeGetServiceByName(&cachedResult)
 		getServiceByName := GetCachedServiceByName(fakeGetServiceByName)
 
 		// Cache miss
-		service := getServiceByName(db, serviceName)
+		service := getServiceByName(serviceName)
 
 		Expect(cachedResult).To(Equal(false))
 		Expect(service.Name).To(Equal(serviceName))
 
 		// Should be cached now
 		cachedResult = true
-		service = getServiceByName(db, serviceName)
+		service = getServiceByName(serviceName)
 
 		Expect(cachedResult).To(Equal(true))
 		Expect(service.Name).To(Equal(serviceName))
 	})
 	It("Checks if we got a cached source result from the database", func() {
 		const sourceName = "CachedSource"
-		db := db()
 		cachedResult := true
 		fakeGetSourceByName := fakeGetSourceByName(&cachedResult)
 		getSourceByName := GetCachedSourceByName(fakeGetSourceByName)
 
 		// Cache miss
-		source := getSourceByName(db, sourceName)
+		source := getSourceByName(sourceName)
 
 		Expect(cachedResult).To(Equal(false))
 		Expect(source.Name).To(Equal(sourceName))
 
 		// Should be cached now
 		cachedResult = true
-		source = getSourceByName(db, sourceName)
+		source = getSourceByName(sourceName)
 
 		Expect(cachedResult).To(Equal(true))
 		Expect(source.Name).To(Equal(sourceName))

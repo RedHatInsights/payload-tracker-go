@@ -12,77 +12,86 @@ const (
 )
 
 type (
-	GetStatusByName  func(db *gorm.DB, statusName string) models.Statuses
-	GetServiceByName func(db *gorm.DB, serviceName string) models.Services
-	GetSourceByName  func(db *gorm.DB, sourceName string) models.Sources
+	GetStatusByName  func(statusName string) models.Statuses
+	GetServiceByName func(serviceName string) models.Services
+	GetSourceByName  func(sourceName string) models.Sources
 )
 
-func GetDBServiceByName(db *gorm.DB, service_id string) models.Services {
-	var service models.Services
-	db.Where("name = ?", service_id).First(&service)
-	return service
+func GetDBServiceByName(db *gorm.DB) GetServiceByName {
+	return func(service_id string) models.Services {
+		var service models.Services
+
+		db.Where("name = ?", service_id).First(&service)
+		return service
+	}
 }
 
-func GetDBStatusByName(db *gorm.DB, status_id string) models.Statuses {
-	var status models.Statuses
-	db.Where("name = ?", status_id).First(&status)
-	return status
+func GetDBStatusByName(db *gorm.DB) GetStatusByName {
+	return func(status_id string) models.Statuses {
+		var status models.Statuses
+
+		db.Where("name = ?", status_id).First(&status)
+		return status
+	}
 }
 
-func GetDBSourceByName(db *gorm.DB, source_id string) models.Sources {
-	var source models.Sources
-	db.Where("name = ?", source_id).First(&source)
-	return source
+func GetDBSourceByName(db *gorm.DB) GetSourceByName {
+	return func(source_id string) models.Sources {
+		var source models.Sources
+
+		db.Where("name = ?", source_id).First(&source)
+		return source
+	}
 }
 
 func GetCachedStatusByName(getStatusByName GetStatusByName) GetStatusByName {
 	cache := make(map[string]models.Statuses)
 
-	return func(db *gorm.DB, statusName string) models.Statuses {
+	return func(statusName string) models.Statuses {
 		cached, ok := cache[statusName]
 		if ok {
 			return cached
 		}
 
-		dataToCache := getStatusByName(db, statusName)
+		dbEntry := getStatusByName(statusName)
 
-		cache[statusName] = dataToCache
+		cache[statusName] = dbEntry
 
-		return dataToCache
+		return dbEntry
 	}
 }
 
 func GetCachedServiceByName(getServiceByName GetServiceByName) GetServiceByName {
 	cache := make(map[string]models.Services)
 
-	return func(db *gorm.DB, serviceName string) models.Services {
+	return func(serviceName string) models.Services {
 		cached, ok := cache[serviceName]
 		if ok {
 			return cached
 		}
 
-		dataToCache := getServiceByName(db, serviceName)
+		dbEntry := getServiceByName(serviceName)
 
-		cache[serviceName] = dataToCache
+		cache[serviceName] = dbEntry
 
-		return dataToCache
+		return dbEntry
 	}
 }
 
 func GetCachedSourceByName(getSourceByName GetSourceByName) GetSourceByName {
 	cache := make(map[string]models.Sources)
 
-	return func(db *gorm.DB, sourceName string) models.Sources {
+	return func(sourceName string) models.Sources {
 		cached, ok := cache[sourceName]
 		if ok {
 			return cached
 		}
 
-		dataToCache := getSourceByName(db, sourceName)
+		dbEntry := getSourceByName(sourceName)
 
-		cache[sourceName] = dataToCache
+		cache[sourceName] = dbEntry
 
-		return dataToCache
+		return dbEntry
 	}
 }
 
