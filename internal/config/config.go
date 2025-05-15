@@ -50,6 +50,7 @@ type DatabaseCfg struct {
 	DBHost     string
 	DBPort     string
 	DBRetries  int
+	DBCached   bool
 	RDSCa      string
 }
 
@@ -122,6 +123,7 @@ func Get() *TrackerConfig {
 
 	// global database config
 	options.SetDefault("db.retries", 3)
+	options.SetDefault("db.cached", true)
 
 	if clowder.IsClowderEnabled() {
 		cfg := clowder.LoadedConfig
@@ -194,6 +196,7 @@ func Get() *TrackerConfig {
 			DBHost:     options.GetString("db.host"),
 			DBPort:     options.GetString("db.port"),
 			DBRetries:  options.GetInt("db.retries"),
+			DBCached:   options.GetBool("db.cached"),
 		},
 		CloudwatchConfig: CloudwatchCfg{
 			CWLogGroup:  options.GetString("logGroup"),

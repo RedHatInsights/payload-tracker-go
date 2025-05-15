@@ -1,6 +1,7 @@
 package queries
 
 import (
+	"github.com/redhatinsights/payload-tracker-go/internal/config"
 	models "github.com/redhatinsights/payload-tracker-go/internal/models/db"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -88,12 +89,18 @@ func (d *PayloadFieldsRepositoryFromCache) GetSource(sourceName string) models.S
 	return dbEntry
 }
 
-func NewPayloadFieldsRepositoryFromCache(db *gorm.DB) *PayloadFieldsRepositoryFromCache {
+func NewPayloadFieldsRepository(db *gorm.DB) PayloadFieldsRepository {
+	cfg := config.Get()
+
 	statusCache := make(map[string]models.Statuses)
 	serviceCache := make(map[string]models.Services)
 	sourceCache := make(map[string]models.Sources)
 
-	return &PayloadFieldsRepositoryFromCache{&PayloadFieldsRepositoryFromDB{db}, statusCache, serviceCache, sourceCache}
+	if cfg.DatabaseConfig.DBCached {
+		return &PayloadFieldsRepositoryFromCache{&PayloadFieldsRepositoryFromDB{db}, statusCache, serviceCache, sourceCache}
+	} else {
+		return &PayloadFieldsRepositoryFromDB{db}
+	}
 }
 
 func GetPayloadByRequestId(db *gorm.DB, request_id string) (result models.Payloads, err error) {

@@ -10,32 +10,44 @@ import (
 )
 
 type testDBImpl struct {
-	DB               PayloadFieldsRepositoryFromDB
-	GetStatusCalled  bool
-	GetServiceCalled bool
-	GetSourceCalled  bool
+	getStatusCalled  bool
+	getServiceCalled bool
+	getSourceCalled  bool
 }
 
 func (d *testDBImpl) GetStatus(statusName string) models.Statuses {
-	d.GetStatusCalled = true
+	d.getStatusCalled = true
 
 	return models.Statuses{Id: 1234, Name: statusName}
 }
 
 func (d *testDBImpl) GetService(serviceName string) models.Services {
-	d.GetServiceCalled = true
+	d.getServiceCalled = true
 
 	return models.Services{Id: 1234, Name: serviceName}
 }
 
 func (d *testDBImpl) GetSource(sourceName string) models.Sources {
-	d.GetSourceCalled = true
+	d.getSourceCalled = true
 
 	return models.Sources{Id: 1234, Name: sourceName}
 }
 
 func getUUID() string {
 	return uuid.New().String()
+}
+
+func newPayloadFieldsRepositoryFromCache(testDBImpl *testDBImpl) PayloadFieldsRepository {
+	statusCache := make(map[string]models.Statuses)
+	serviceCache := make(map[string]models.Services)
+	sourceCache := make(map[string]models.Sources)
+
+	return &PayloadFieldsRepositoryFromCache{
+		DB:           testDBImpl,
+		StatusCache:  statusCache,
+		ServiceCache: serviceCache,
+		SourceCache:  sourceCache,
+	}
 }
 
 var _ = Describe("Queries", func() {
@@ -189,51 +201,62 @@ var _ = Describe("Queries", func() {
 	})
 	It("Checks if we got a cached status result from the database", func() {
 		const statusName string = "TestStatus"
-		dbImpl := testDBImpl{}
-		cachedDBImpl := PayloadFieldsRepositoryFromCache{DB: &dbImpl, StatusCache: make(map[string]models.Statuses), ServiceCache: make(map[string]models.Services), SourceCache: make(map[string]models.Sources)}
+		testDBImpl := testDBImpl{}
+		payloadFieldsRepository := newPayloadFieldsRepositoryFromCache(&testDBImpl)
 
 		// Cache miss
-		cachedDBImpl.GetStatus(statusName)
+		payloadReturned := payloadFieldsRepository.GetStatus(statusName)
 
-		Expect(dbImpl.GetStatusCalled).To(Equal(true))
+		Expect(testDBImpl.getStatusCalled).To(Equal(true))
+		Expect(payloadReturned.Id).To(Equal(int32(1234)))
+		Expect(payloadReturned.Name).To(Equal(statusName))
 
 		// Cache hit
-		dbImpl.GetStatusCalled = false
-		cachedDBImpl.GetStatus(statusName)
+		testDBImpl.getStatusCalled = false
+		payloadReturned = payloadFieldsRepository.GetStatus(statusName)
 
-		Expect(dbImpl.GetStatusCalled).To(Equal(false))
+		Expect(testDBImpl.getStatusCalled).To(Equal(false))
+		Expect(payloadReturned.Id).To(Equal(int32(1234)))
+		Expect(payloadReturned.Name).To(Equal(statusName))
 	})
 	It("Checks if we got a cached service result from the database", func() {
 		const serviceName = "TestService"
-
-		dbImpl := testDBImpl{}
-		cachedDBImpl := PayloadFieldsRepositoryFromCache{DB: &dbImpl, StatusCache: make(map[string]models.Statuses), ServiceCache: make(map[string]models.Services), SourceCache: make(map[string]models.Sources)}
+		testDBImpl := testDBImpl{}
+		payloadFieldsRepository := newPayloadFieldsRepositoryFromCache(&testDBImpl)
 
 		// Cache miss
-		cachedDBImpl.GetStatus(serviceName)
+		payloadReturned := payloadFieldsRepository.GetService(serviceName)
 
-		Expect(dbImpl.GetStatusCalled).To(Equal(true))
+		Expect(testDBImpl.getServiceCalled).To(Equal(true))
+		Expect(payloadReturned.Id).To(Equal(int32(1234)))
+		Expect(payloadReturned.Name).To(Equal(serviceName))
 
 		// Cache hit
-		dbImpl.GetStatusCalled = false
-		cachedDBImpl.GetStatus(serviceName)
+		testDBImpl.getServiceCalled = false
+		payloadReturned = payloadFieldsRepository.GetService(serviceName)
 
-		Expect(dbImpl.GetStatusCalled).To(Equal(false))
+		Expect(testDBImpl.getServiceCalled).To(Equal(false))
+		Expect(payloadReturned.Id).To(Equal(int32(1234)))
+		Expect(payloadReturned.Name).To(Equal(serviceName))
 	})
 	It("Checks if we got a cached source result from the database", func() {
 		const sourceName = "TestSource"
-		dbImpl := testDBImpl{}
-		cachedDBImpl := PayloadFieldsRepositoryFromCache{DB: &dbImpl, StatusCache: make(map[string]models.Statuses), ServiceCache: make(map[string]models.Services), SourceCache: make(map[string]models.Sources)}
+		testDBImpl := testDBImpl{}
+		payloadFieldsRepository := newPayloadFieldsRepositoryFromCache(&testDBImpl)
 
 		// Cache miss
-		cachedDBImpl.GetStatus(sourceName)
+		payloadReturned := payloadFieldsRepository.GetSource(sourceName)
 
-		Expect(dbImpl.GetStatusCalled).To(Equal(true))
+		Expect(testDBImpl.getSourceCalled).To(Equal(true))
+		Expect(payloadReturned.Id).To(Equal(int32(1234)))
+		Expect(payloadReturned.Name).To(Equal(sourceName))
 
 		// Cache hit
-		dbImpl.GetStatusCalled = false
-		cachedDBImpl.GetStatus(sourceName)
+		testDBImpl.getSourceCalled = false
+		payloadReturned = payloadFieldsRepository.GetSource(sourceName)
 
-		Expect(dbImpl.GetStatusCalled).To(Equal(false))
+		Expect(testDBImpl.getSourceCalled).To(Equal(false))
+		Expect(payloadReturned.Id).To(Equal(int32(1234)))
+		Expect(payloadReturned.Name).To(Equal(sourceName))
 	})
 })
