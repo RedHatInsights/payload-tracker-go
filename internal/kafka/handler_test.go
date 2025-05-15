@@ -56,10 +56,8 @@ var _ = Describe("Kafka message handler", func() {
 
 	BeforeEach(func() {
 		msgHandler = handler{
-			db:               db(),
-			getStatusByName:  queries.GetCachedStatusByName(queries.GetDBStatusByName(db())),
-			getServiceByName: queries.GetCachedServiceByName(queries.GetDBServiceByName(db())),
-			getSourceByName:  queries.GetCachedSourceByName(queries.GetDBSourceByName(db())),
+			db:          db(),
+			dbInterface: queries.NewPayloadFieldsRepositoryFromCache(db()),
 		}
 	})
 

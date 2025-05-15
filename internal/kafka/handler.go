@@ -19,10 +19,8 @@ import (
 )
 
 type handler struct {
-	db               *gorm.DB
-	getStatusByName  queries.GetStatusByName
-	getServiceByName queries.GetServiceByName
-	getSourceByName  queries.GetSourceByName
+	db          *gorm.DB
+	dbInterface queries.PayloadFieldsRepository
 }
 
 // OnMessage takes in each payload status message and processes it
@@ -66,8 +64,8 @@ func (h *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config
 	l.Log.Debug("Adding Status, Sources, and Services to sanitizedPayload")
 
 	// Status & Service: Always defined in the message
-	existingStatus := h.getStatusByName(payloadStatus.Status)
-	existingService := h.getServiceByName(payloadStatus.Service)
+	existingStatus := h.dbInterface.GetStatus(payloadStatus.Status)
+	existingService := h.dbInterface.GetService(payloadStatus.Service)
 
 	if (models.Statuses{}) == existingStatus {
 		statusResult, newStatus := queries.CreateStatusTableEntry(h.db, payloadStatus.Status)
@@ -84,7 +82,7 @@ func (h *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config
 	if (models.Services{}) == existingService {
 		serviceResult, newService := queries.CreateServiceTableEntry(h.db, payloadStatus.Service)
 		if serviceResult.Error != nil {
-			l.Log.Error("Error Creating Service Table Entry ERROR: ", serviceResult.Error)
+			l.Log.Error("Error Creating8u Service Table Entry ERROR: ", serviceResult.Error)
 			return
 		}
 
@@ -95,7 +93,7 @@ func (h *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config
 
 	// Sources
 	if payloadStatus.Source != "" {
-		existingSource := h.getSourceByName(payloadStatus.Source)
+		existingSource := h.dbInterface.GetSource(payloadStatus.Source)
 
 		if (models.Sources{}) == existingSource {
 			result, newSource := queries.CreateSourceTableEntry(h.db, payloadStatus.Source)

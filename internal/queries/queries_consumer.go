@@ -11,88 +11,89 @@ const (
 	PayloadJoins  = "left join Payloads on Payloads.id = PayloadStatuses.payload_id"
 )
 
-type (
-	GetStatusByName  func(statusName string) models.Statuses
-	GetServiceByName func(serviceName string) models.Services
-	GetSourceByName  func(sourceName string) models.Sources
-)
-
-func GetDBServiceByName(db *gorm.DB) GetServiceByName {
-	return func(service_id string) models.Services {
-		var service models.Services
-
-		db.Where("name = ?", service_id).First(&service)
-		return service
-	}
+type PayloadFieldsRepository interface {
+	GetStatus(string) models.Statuses
+	GetService(string) models.Services
+	GetSource(string) models.Sources
 }
 
-func GetDBStatusByName(db *gorm.DB) GetStatusByName {
-	return func(status_id string) models.Statuses {
-		var status models.Statuses
-
-		db.Where("name = ?", status_id).First(&status)
-		return status
-	}
+type PayloadFieldsRepositoryFromDB struct {
+	DB *gorm.DB
 }
 
-func GetDBSourceByName(db *gorm.DB) GetSourceByName {
-	return func(source_id string) models.Sources {
-		var source models.Sources
-
-		db.Where("name = ?", source_id).First(&source)
-		return source
-	}
+type PayloadFieldsRepositoryFromCache struct {
+	DB           PayloadFieldsRepository
+	StatusCache  map[string]models.Statuses
+	ServiceCache map[string]models.Services
+	SourceCache  map[string]models.Sources
 }
 
-func GetCachedStatusByName(getStatusByName GetStatusByName) GetStatusByName {
-	cache := make(map[string]models.Statuses)
+func (d *PayloadFieldsRepositoryFromDB) GetStatus(statusName string) models.Statuses {
+	var status models.Statuses
 
-	return func(statusName string) models.Statuses {
-		cached, ok := cache[statusName]
-		if ok {
-			return cached
-		}
-
-		dbEntry := getStatusByName(statusName)
-
-		cache[statusName] = dbEntry
-
-		return dbEntry
-	}
+	d.DB.Where("name = ?", statusName).First(&status)
+	return status
 }
 
-func GetCachedServiceByName(getServiceByName GetServiceByName) GetServiceByName {
-	cache := make(map[string]models.Services)
+func (d *PayloadFieldsRepositoryFromDB) GetService(serviceName string) models.Services {
+	var service models.Services
 
-	return func(serviceName string) models.Services {
-		cached, ok := cache[serviceName]
-		if ok {
-			return cached
-		}
-
-		dbEntry := getServiceByName(serviceName)
-
-		cache[serviceName] = dbEntry
-
-		return dbEntry
-	}
+	d.DB.Where("name = ?", serviceName).First(&service)
+	return service
 }
 
-func GetCachedSourceByName(getSourceByName GetSourceByName) GetSourceByName {
-	cache := make(map[string]models.Sources)
+func (d *PayloadFieldsRepositoryFromDB) GetSource(sourceName string) models.Sources {
+	var source models.Sources
 
-	return func(sourceName string) models.Sources {
-		cached, ok := cache[sourceName]
-		if ok {
-			return cached
-		}
+	d.DB.Where("name = ?", sourceName).First(&source)
+	return source
+}
 
-		dbEntry := getSourceByName(sourceName)
-
-		cache[sourceName] = dbEntry
-
-		return dbEntry
+func (d *PayloadFieldsRepositoryFromCache) GetStatus(statusName string) models.Statuses {
+	cached, ok := d.StatusCache[statusName]
+	if ok {
+		return cached
 	}
+
+	dbEntry := d.DB.GetStatus(statusName)
+
+	d.StatusCache[statusName] = dbEntry
+
+	return dbEntry
+}
+
+func (d *PayloadFieldsRepositoryFromCache) GetService(serviceName string) models.Services {
+	cached, ok := d.ServiceCache[serviceName]
+	if ok {
+		return cached
+	}
+
+	dbEntry := d.DB.GetService(serviceName)
+
+	d.ServiceCache[serviceName] = dbEntry
+
+	return dbEntry
+}
+
+func (d *PayloadFieldsRepositoryFromCache) GetSource(sourceName string) models.Sources {
+	cached, ok := d.SourceCache[sourceName]
+	if ok {
+		return cached
+	}
+
+	dbEntry := d.DB.GetSource(sourceName)
+
+	d.SourceCache[sourceName] = dbEntry
+
+	return dbEntry
+}
+
+func NewPayloadFieldsRepositoryFromCache(db *gorm.DB) *PayloadFieldsRepositoryFromCache {
+	statusCache := make(map[string]models.Statuses)
+	serviceCache := make(map[string]models.Services)
+	sourceCache := make(map[string]models.Sources)
+
+	return &PayloadFieldsRepositoryFromCache{&PayloadFieldsRepositoryFromDB{db}, statusCache, serviceCache, sourceCache}
 }
 
 func GetPayloadByRequestId(db *gorm.DB, request_id string) (result models.Payloads, err error) {

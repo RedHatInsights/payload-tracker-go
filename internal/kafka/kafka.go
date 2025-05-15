@@ -66,12 +66,11 @@ func NewConsumerEventLoop(
 ) {
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
+	dbImpl := queries.NewPayloadFieldsRepositoryFromCache(db)
 
 	handler := &handler{
-		db:               db,
-		getStatusByName:  queries.GetCachedStatusByName(queries.GetDBStatusByName(db)),
-		getServiceByName: queries.GetCachedServiceByName(queries.GetDBServiceByName(db)),
-		getSourceByName:  queries.GetCachedSourceByName(queries.GetDBSourceByName(db)),
+		db:          db,
+		dbInterface: dbImpl,
 	}
 
 	run := true
