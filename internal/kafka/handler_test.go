@@ -56,7 +56,8 @@ var _ = Describe("Kafka message handler", func() {
 
 	BeforeEach(func() {
 		msgHandler = handler{
-			db: db(),
+			db:          db(),
+			dbInterface: queries.NewPayloadFieldsRepository(db()),
 		}
 	})
 

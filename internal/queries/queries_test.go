@@ -9,8 +9,45 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+type testDBImpl struct {
+	getStatusCalled  bool
+	getServiceCalled bool
+	getSourceCalled  bool
+}
+
+func (d *testDBImpl) GetStatus(statusName string) models.Statuses {
+	d.getStatusCalled = true
+
+	return models.Statuses{Id: 1234, Name: statusName}
+}
+
+func (d *testDBImpl) GetService(serviceName string) models.Services {
+	d.getServiceCalled = true
+
+	return models.Services{Id: 1234, Name: serviceName}
+}
+
+func (d *testDBImpl) GetSource(sourceName string) models.Sources {
+	d.getSourceCalled = true
+
+	return models.Sources{Id: 1234, Name: sourceName}
+}
+
 func getUUID() string {
 	return uuid.New().String()
+}
+
+func newPayloadFieldsRepositoryFromCache(testDBImpl *testDBImpl) PayloadFieldsRepository {
+	statusCache := make(map[string]models.Statuses)
+	serviceCache := make(map[string]models.Services)
+	sourceCache := make(map[string]models.Sources)
+
+	return &PayloadFieldsRepositoryFromCache{
+		DB:           testDBImpl,
+		StatusCache:  statusCache,
+		ServiceCache: serviceCache,
+		SourceCache:  sourceCache,
+	}
 }
 
 var _ = Describe("Queries", func() {
@@ -161,5 +198,65 @@ var _ = Describe("Queries", func() {
 		Expect(payload.SystemId).To(Equal(systemId))
 		Expect(payload.Account).To(Equal("1234"))
 		Expect(payload.OrgId).To(Equal("1234"))
+	})
+	It("Checks if we got a cached status result from the database", func() {
+		const statusName string = "TestStatus"
+		testDBImpl := testDBImpl{}
+		payloadFieldsRepository := newPayloadFieldsRepositoryFromCache(&testDBImpl)
+
+		// Cache miss
+		payloadReturned := payloadFieldsRepository.GetStatus(statusName)
+
+		Expect(testDBImpl.getStatusCalled).To(Equal(true))
+		Expect(payloadReturned.Id).To(Equal(int32(1234)))
+		Expect(payloadReturned.Name).To(Equal(statusName))
+
+		// Cache hit
+		testDBImpl.getStatusCalled = false
+		payloadReturned = payloadFieldsRepository.GetStatus(statusName)
+
+		Expect(testDBImpl.getStatusCalled).To(Equal(false))
+		Expect(payloadReturned.Id).To(Equal(int32(1234)))
+		Expect(payloadReturned.Name).To(Equal(statusName))
+	})
+	It("Checks if we got a cached service result from the database", func() {
+		const serviceName = "TestService"
+		testDBImpl := testDBImpl{}
+		payloadFieldsRepository := newPayloadFieldsRepositoryFromCache(&testDBImpl)
+
+		// Cache miss
+		payloadReturned := payloadFieldsRepository.GetService(serviceName)
+
+		Expect(testDBImpl.getServiceCalled).To(Equal(true))
+		Expect(payloadReturned.Id).To(Equal(int32(1234)))
+		Expect(payloadReturned.Name).To(Equal(serviceName))
+
+		// Cache hit
+		testDBImpl.getServiceCalled = false
+		payloadReturned = payloadFieldsRepository.GetService(serviceName)
+
+		Expect(testDBImpl.getServiceCalled).To(Equal(false))
+		Expect(payloadReturned.Id).To(Equal(int32(1234)))
+		Expect(payloadReturned.Name).To(Equal(serviceName))
+	})
+	It("Checks if we got a cached source result from the database", func() {
+		const sourceName = "TestSource"
+		testDBImpl := testDBImpl{}
+		payloadFieldsRepository := newPayloadFieldsRepositoryFromCache(&testDBImpl)
+
+		// Cache miss
+		payloadReturned := payloadFieldsRepository.GetSource(sourceName)
+
+		Expect(testDBImpl.getSourceCalled).To(Equal(true))
+		Expect(payloadReturned.Id).To(Equal(int32(1234)))
+		Expect(payloadReturned.Name).To(Equal(sourceName))
+
+		// Cache hit
+		testDBImpl.getSourceCalled = false
+		payloadReturned = payloadFieldsRepository.GetSource(sourceName)
+
+		Expect(testDBImpl.getSourceCalled).To(Equal(false))
+		Expect(payloadReturned.Id).To(Equal(int32(1234)))
+		Expect(payloadReturned.Name).To(Equal(sourceName))
 	})
 })
