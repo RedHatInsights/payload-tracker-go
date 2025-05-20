@@ -66,11 +66,15 @@ func NewConsumerEventLoop(
 ) {
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
-	NewPayloadFieldsFromRepositoryCache := queries.NewPayloadFieldsRepository(db)
+	payloadFieldsRepository, err := queries.NewPayloadFieldsRepository(db, cfg)
+	if err != nil {
+		// TODO: Make a real error
+		panic("OH NO")
+	}
 
 	handler := &handler{
-		db:          db,
-		dbInterface: NewPayloadFieldsFromRepositoryCache,
+		db:                      db,
+		payloadFieldsRepository: payloadFieldsRepository,
 	}
 
 	run := true

@@ -9,46 +9,32 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-type testDBImpl struct {
+type mockPayloadFieldsRepository struct {
 	getStatusCalled  bool
 	getServiceCalled bool
 	getSourceCalled  bool
 }
 
-func (d *testDBImpl) GetStatus(statusName string) models.Statuses {
-	d.getStatusCalled = true
+func (m *mockPayloadFieldsRepository) GetStatus(statusName string) models.Statuses {
+	m.getStatusCalled = true
 
 	return models.Statuses{Id: 1234, Name: statusName}
 }
 
-func (d *testDBImpl) GetService(serviceName string) models.Services {
-	d.getServiceCalled = true
+func (m *mockPayloadFieldsRepository) GetService(serviceName string) models.Services {
+	m.getServiceCalled = true
 
 	return models.Services{Id: 1234, Name: serviceName}
 }
 
-func (d *testDBImpl) GetSource(sourceName string) models.Sources {
-	d.getSourceCalled = true
+func (m *mockPayloadFieldsRepository) GetSource(sourceName string) models.Sources {
+	m.getSourceCalled = true
 
 	return models.Sources{Id: 1234, Name: sourceName}
 }
 
 func getUUID() string {
 	return uuid.New().String()
-}
-
-func newPayloadFieldsRepositoryFromCache() (PayloadFieldsRepository, *testDBImpl) {
-	testDBImpl := testDBImpl{}
-	statusCache := make(map[string]models.Statuses)
-	serviceCache := make(map[string]models.Services)
-	sourceCache := make(map[string]models.Sources)
-
-	return &PayloadFieldsRepositoryFromCache{
-		DB:           &testDBImpl,
-		StatusCache:  statusCache,
-		ServiceCache: serviceCache,
-		SourceCache:  sourceCache,
-	}, &testDBImpl
 }
 
 var _ = Describe("Queries", func() {
@@ -202,58 +188,61 @@ var _ = Describe("Queries", func() {
 	})
 	It("Checks if we got a cached status result from the database", func() {
 		const statusName string = "TestStatus"
-		payloadFieldsRepository, testDBImpl := newPayloadFieldsRepositoryFromCache()
+		mockPayloadFieldsRepository := mockPayloadFieldsRepository{}
+		payloadFieldsRepository := newPayloadFieldsRepositoryFromCache(&mockPayloadFieldsRepository)
 
 		// Cache miss
 		payloadReturned := payloadFieldsRepository.GetStatus(statusName)
 
-		Expect(testDBImpl.getStatusCalled).To(Equal(true))
+		Expect(mockPayloadFieldsRepository.getStatusCalled).To(Equal(true))
 		Expect(payloadReturned.Id).To(Equal(int32(1234)))
 		Expect(payloadReturned.Name).To(Equal(statusName))
 
 		// Cache hit
-		testDBImpl.getStatusCalled = false
+		mockPayloadFieldsRepository.getStatusCalled = false
 		payloadReturned = payloadFieldsRepository.GetStatus(statusName)
 
-		Expect(testDBImpl.getStatusCalled).To(Equal(false))
+		Expect(mockPayloadFieldsRepository.getStatusCalled).To(Equal(false))
 		Expect(payloadReturned.Id).To(Equal(int32(1234)))
 		Expect(payloadReturned.Name).To(Equal(statusName))
 	})
 	It("Checks if we got a cached service result from the database", func() {
 		const serviceName = "TestService"
-		payloadFieldsRepository, testDBImpl := newPayloadFieldsRepositoryFromCache()
+		mockPayloadFieldsRepository := mockPayloadFieldsRepository{}
+		payloadFieldsRepository := newPayloadFieldsRepositoryFromCache(&mockPayloadFieldsRepository)
 
 		// Cache miss
 		payloadReturned := payloadFieldsRepository.GetService(serviceName)
 
-		Expect(testDBImpl.getServiceCalled).To(Equal(true))
+		Expect(mockPayloadFieldsRepository.getServiceCalled).To(Equal(true))
 		Expect(payloadReturned.Id).To(Equal(int32(1234)))
 		Expect(payloadReturned.Name).To(Equal(serviceName))
 
 		// Cache hit
-		testDBImpl.getServiceCalled = false
+		mockPayloadFieldsRepository.getServiceCalled = false
 		payloadReturned = payloadFieldsRepository.GetService(serviceName)
 
-		Expect(testDBImpl.getServiceCalled).To(Equal(false))
+		Expect(mockPayloadFieldsRepository.getServiceCalled).To(Equal(false))
 		Expect(payloadReturned.Id).To(Equal(int32(1234)))
 		Expect(payloadReturned.Name).To(Equal(serviceName))
 	})
 	It("Checks if we got a cached source result from the database", func() {
 		const sourceName = "TestSource"
-		payloadFieldsRepository, testDBImpl := newPayloadFieldsRepositoryFromCache()
+		mockPayloadFieldsRepository := mockPayloadFieldsRepository{}
+		payloadFieldsRepository := newPayloadFieldsRepositoryFromCache(&mockPayloadFieldsRepository)
 
 		// Cache miss
 		payloadReturned := payloadFieldsRepository.GetSource(sourceName)
 
-		Expect(testDBImpl.getSourceCalled).To(Equal(true))
+		Expect(mockPayloadFieldsRepository.getSourceCalled).To(Equal(true))
 		Expect(payloadReturned.Id).To(Equal(int32(1234)))
 		Expect(payloadReturned.Name).To(Equal(sourceName))
 
 		// Cache hit
-		testDBImpl.getSourceCalled = false
+		mockPayloadFieldsRepository.getSourceCalled = false
 		payloadReturned = payloadFieldsRepository.GetSource(sourceName)
 
-		Expect(testDBImpl.getSourceCalled).To(Equal(false))
+		Expect(mockPayloadFieldsRepository.getSourceCalled).To(Equal(false))
 		Expect(payloadReturned.Id).To(Equal(int32(1234)))
 		Expect(payloadReturned.Name).To(Equal(sourceName))
 	})

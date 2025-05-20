@@ -23,83 +23,97 @@ type PayloadFieldsRepositoryFromDB struct {
 }
 
 type PayloadFieldsRepositoryFromCache struct {
-	DB           PayloadFieldsRepository
-	StatusCache  map[string]models.Statuses
-	ServiceCache map[string]models.Services
-	SourceCache  map[string]models.Sources
+	PayloadFields PayloadFieldsRepository
+	statusCache   map[string]models.Statuses
+	serviceCache  map[string]models.Services
+	sourceCache   map[string]models.Sources
 }
 
-func (d *PayloadFieldsRepositoryFromDB) GetStatus(statusName string) models.Statuses {
+func (p *PayloadFieldsRepositoryFromDB) GetStatus(statusName string) models.Statuses {
 	var status models.Statuses
 
-	d.DB.Where("name = ?", statusName).First(&status)
+	p.DB.Where("name = ?", statusName).First(&status)
 	return status
 }
 
-func (d *PayloadFieldsRepositoryFromDB) GetService(serviceName string) models.Services {
+func (p *PayloadFieldsRepositoryFromDB) GetService(serviceName string) models.Services {
 	var service models.Services
 
-	d.DB.Where("name = ?", serviceName).First(&service)
+	p.DB.Where("name = ?", serviceName).First(&service)
 	return service
 }
 
-func (d *PayloadFieldsRepositoryFromDB) GetSource(sourceName string) models.Sources {
+func (p *PayloadFieldsRepositoryFromDB) GetSource(sourceName string) models.Sources {
 	var source models.Sources
 
-	d.DB.Where("name = ?", sourceName).First(&source)
+	p.DB.Where("name = ?", sourceName).First(&source)
 	return source
 }
 
-func (d *PayloadFieldsRepositoryFromCache) GetStatus(statusName string) models.Statuses {
-	cached, ok := d.StatusCache[statusName]
+func (p *PayloadFieldsRepositoryFromCache) GetStatus(statusName string) models.Statuses {
+	cached, ok := p.statusCache[statusName]
 	if ok {
 		return cached
 	}
 
-	dbEntry := d.DB.GetStatus(statusName)
+	dbEntry := p.PayloadFields.GetStatus(statusName)
 
-	d.StatusCache[statusName] = dbEntry
+	p.statusCache[statusName] = dbEntry
 
 	return dbEntry
 }
 
-func (d *PayloadFieldsRepositoryFromCache) GetService(serviceName string) models.Services {
-	cached, ok := d.ServiceCache[serviceName]
+func (p *PayloadFieldsRepositoryFromCache) GetService(serviceName string) models.Services {
+	cached, ok := p.serviceCache[serviceName]
 	if ok {
 		return cached
 	}
 
-	dbEntry := d.DB.GetService(serviceName)
+	dbEntry := p.PayloadFields.GetService(serviceName)
 
-	d.ServiceCache[serviceName] = dbEntry
+	p.serviceCache[serviceName] = dbEntry
 
 	return dbEntry
 }
 
-func (d *PayloadFieldsRepositoryFromCache) GetSource(sourceName string) models.Sources {
-	cached, ok := d.SourceCache[sourceName]
+func (p *PayloadFieldsRepositoryFromCache) GetSource(sourceName string) models.Sources {
+	cached, ok := p.sourceCache[sourceName]
 	if ok {
 		return cached
 	}
 
-	dbEntry := d.DB.GetSource(sourceName)
+	dbEntry := p.PayloadFields.GetSource(sourceName)
 
-	d.SourceCache[sourceName] = dbEntry
+	p.sourceCache[sourceName] = dbEntry
 
 	return dbEntry
 }
 
-func NewPayloadFieldsRepository(db *gorm.DB) PayloadFieldsRepository {
-	cfg := config.Get()
+func NewPayloadFieldsRepository(db *gorm.DB, cfg *config.TrackerConfig) (PayloadFieldsRepository, error) {
+	payloadDB := &PayloadFieldsRepositoryFromDB{DB: db}
+	var payloadFieldsRepository PayloadFieldsRepository
 
+	// TODO: Errors here
+	switch cfg.ConsumerConfig.ConsumerPayloadFieldsRepoImpl {
+	case "db":
+		return payloadDB, nil
+	case "db_with_cache":
+		payloadFieldsRepository = newPayloadFieldsRepositoryFromCache(payloadDB)
+	}
+
+	return payloadFieldsRepository, nil
+}
+
+func newPayloadFieldsRepositoryFromCache(payloadFieldsRepository PayloadFieldsRepository) PayloadFieldsRepository {
 	statusCache := make(map[string]models.Statuses)
 	serviceCache := make(map[string]models.Services)
 	sourceCache := make(map[string]models.Sources)
 
-	if cfg.DatabaseConfig.DBCached {
-		return &PayloadFieldsRepositoryFromCache{&PayloadFieldsRepositoryFromDB{db}, statusCache, serviceCache, sourceCache}
-	} else {
-		return &PayloadFieldsRepositoryFromDB{db}
+	return &PayloadFieldsRepositoryFromCache{
+		PayloadFields: payloadFieldsRepository,
+		statusCache:   statusCache,
+		serviceCache:  serviceCache,
+		sourceCache:   sourceCache,
 	}
 }
 

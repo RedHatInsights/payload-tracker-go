@@ -19,8 +19,8 @@ import (
 )
 
 type handler struct {
-	db          *gorm.DB
-	dbInterface queries.PayloadFieldsRepository
+	db                      *gorm.DB
+	payloadFieldsRepository queries.PayloadFieldsRepository
 }
 
 // OnMessage takes in each payload status message and processes it
@@ -64,8 +64,8 @@ func (h *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config
 	l.Log.Debug("Adding Status, Sources, and Services to sanitizedPayload")
 
 	// Status & Service: Always defined in the message
-	existingStatus := h.dbInterface.GetStatus(payloadStatus.Status)
-	existingService := h.dbInterface.GetService(payloadStatus.Service)
+	existingStatus := h.payloadFieldsRepository.GetStatus(payloadStatus.Status)
+	existingService := h.payloadFieldsRepository.GetService(payloadStatus.Service)
 
 	if (models.Statuses{}) == existingStatus {
 		statusResult, newStatus := queries.CreateStatusTableEntry(h.db, payloadStatus.Status)
@@ -93,7 +93,7 @@ func (h *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config
 
 	// Sources
 	if payloadStatus.Source != "" {
-		existingSource := h.dbInterface.GetSource(payloadStatus.Source)
+		existingSource := h.payloadFieldsRepository.GetSource(payloadStatus.Source)
 
 		if (models.Sources{}) == existingSource {
 			result, newSource := queries.CreateSourceTableEntry(h.db, payloadStatus.Source)
