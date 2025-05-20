@@ -37,17 +37,18 @@ func getUUID() string {
 	return uuid.New().String()
 }
 
-func newPayloadFieldsRepositoryFromCache(testDBImpl *testDBImpl) PayloadFieldsRepository {
+func newPayloadFieldsRepositoryFromCache() (PayloadFieldsRepository, *testDBImpl) {
+	testDBImpl := testDBImpl{}
 	statusCache := make(map[string]models.Statuses)
 	serviceCache := make(map[string]models.Services)
 	sourceCache := make(map[string]models.Sources)
 
 	return &PayloadFieldsRepositoryFromCache{
-		DB:           testDBImpl,
+		DB:           &testDBImpl,
 		StatusCache:  statusCache,
 		ServiceCache: serviceCache,
 		SourceCache:  sourceCache,
-	}
+	}, &testDBImpl
 }
 
 var _ = Describe("Queries", func() {
@@ -201,8 +202,7 @@ var _ = Describe("Queries", func() {
 	})
 	It("Checks if we got a cached status result from the database", func() {
 		const statusName string = "TestStatus"
-		testDBImpl := testDBImpl{}
-		payloadFieldsRepository := newPayloadFieldsRepositoryFromCache(&testDBImpl)
+		payloadFieldsRepository, testDBImpl := newPayloadFieldsRepositoryFromCache()
 
 		// Cache miss
 		payloadReturned := payloadFieldsRepository.GetStatus(statusName)
@@ -221,8 +221,7 @@ var _ = Describe("Queries", func() {
 	})
 	It("Checks if we got a cached service result from the database", func() {
 		const serviceName = "TestService"
-		testDBImpl := testDBImpl{}
-		payloadFieldsRepository := newPayloadFieldsRepositoryFromCache(&testDBImpl)
+		payloadFieldsRepository, testDBImpl := newPayloadFieldsRepositoryFromCache()
 
 		// Cache miss
 		payloadReturned := payloadFieldsRepository.GetService(serviceName)
@@ -241,8 +240,7 @@ var _ = Describe("Queries", func() {
 	})
 	It("Checks if we got a cached source result from the database", func() {
 		const sourceName = "TestSource"
-		testDBImpl := testDBImpl{}
-		payloadFieldsRepository := newPayloadFieldsRepositoryFromCache(&testDBImpl)
+		payloadFieldsRepository, testDBImpl := newPayloadFieldsRepositoryFromCache()
 
 		// Cache miss
 		payloadReturned := payloadFieldsRepository.GetSource(sourceName)
