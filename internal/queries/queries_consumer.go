@@ -109,17 +109,17 @@ func NewPayloadFieldsRepository(db *gorm.DB, cfg *config.TrackerConfig) (payload
 func newPayloadFieldsRepositoryFromCache(payloadFieldsRepository PayloadFieldsRepository) (PayloadFieldsRepository, error) {
 	statusCache := expirable_lru.NewLRU[string, models.Statuses](0, nil, 12*time.Hour)
 	if statusCache == nil {
-		return nil, fmt.Errorf("Unable to create LRU cache for caching Status results")
+		return nil, fmt.Errorf("unable to create LRU cache for caching Status results")
 	}
 
 	serviceCache := expirable_lru.NewLRU[string, models.Services](0, nil, 12*time.Hour)
 	if serviceCache == nil {
-		return nil, fmt.Errorf("Unable to create LRU cache for caching Service results")
+		return nil, fmt.Errorf("unable to create LRU cache for caching Service results")
 	}
 
 	sourceCache := expirable_lru.NewLRU[string, models.Sources](0, nil, 12*time.Hour)
 	if sourceCache == nil {
-		return nil, fmt.Errorf("Unable to create LRU cache for caching Source results")
+		return nil, fmt.Errorf("unable to create LRU cache for caching Source results")
 	}
 
 	return &PayloadFieldsRepositoryFromCache{
