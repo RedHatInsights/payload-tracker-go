@@ -101,6 +101,8 @@ func NewPayloadFieldsRepository(db *gorm.DB, cfg *config.TrackerConfig) (payload
 		return payloadDB, nil
 	case "db_with_cache":
 		payloadFieldsRepository, err = newPayloadFieldsRepositoryFromCache(payloadDB)
+	default:
+		return nil, fmt.Errorf("unable to configure PayloadFieldRepository implementation")
 	}
 
 	return payloadFieldsRepository, err
