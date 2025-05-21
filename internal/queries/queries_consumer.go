@@ -1,6 +1,9 @@
 package queries
 
 import (
+	"time"
+
+	expirable_lru "github.com/hashicorp/golang-lru/v2/expirable"
 	"github.com/redhatinsights/payload-tracker-go/internal/config"
 	models "github.com/redhatinsights/payload-tracker-go/internal/models/db"
 	"gorm.io/gorm"
@@ -24,9 +27,9 @@ type PayloadFieldsRepositoryFromDB struct {
 
 type PayloadFieldsRepositoryFromCache struct {
 	PayloadFields PayloadFieldsRepository
-	statusCache   map[string]models.Statuses
-	serviceCache  map[string]models.Services
-	sourceCache   map[string]models.Sources
+	statusCache   *expirable_lru.LRU[string, models.Statuses]
+	serviceCache  *expirable_lru.LRU[string, models.Services]
+	sourceCache   *expirable_lru.LRU[string, models.Sources]
 }
 
 func (p *PayloadFieldsRepositoryFromDB) GetStatus(statusName string) models.Statuses {
@@ -51,40 +54,40 @@ func (p *PayloadFieldsRepositoryFromDB) GetSource(sourceName string) models.Sour
 }
 
 func (p *PayloadFieldsRepositoryFromCache) GetStatus(statusName string) models.Statuses {
-	cached, ok := p.statusCache[statusName]
+	cached, ok := p.statusCache.Get(statusName)
 	if ok {
 		return cached
 	}
 
 	dbEntry := p.PayloadFields.GetStatus(statusName)
 
-	p.statusCache[statusName] = dbEntry
+	p.statusCache.Add(statusName, dbEntry)
 
 	return dbEntry
 }
 
 func (p *PayloadFieldsRepositoryFromCache) GetService(serviceName string) models.Services {
-	cached, ok := p.serviceCache[serviceName]
+	cached, ok := p.serviceCache.Get(serviceName)
 	if ok {
 		return cached
 	}
 
 	dbEntry := p.PayloadFields.GetService(serviceName)
 
-	p.serviceCache[serviceName] = dbEntry
+	p.serviceCache.Add(serviceName, dbEntry)
 
 	return dbEntry
 }
 
 func (p *PayloadFieldsRepositoryFromCache) GetSource(sourceName string) models.Sources {
-	cached, ok := p.sourceCache[sourceName]
+	cached, ok := p.sourceCache.Get(sourceName)
 	if ok {
 		return cached
 	}
 
 	dbEntry := p.PayloadFields.GetSource(sourceName)
 
-	p.sourceCache[sourceName] = dbEntry
+	p.sourceCache.Add(sourceName, dbEntry)
 
 	return dbEntry
 }
@@ -105,9 +108,9 @@ func NewPayloadFieldsRepository(db *gorm.DB, cfg *config.TrackerConfig) (Payload
 }
 
 func newPayloadFieldsRepositoryFromCache(payloadFieldsRepository PayloadFieldsRepository) PayloadFieldsRepository {
-	statusCache := make(map[string]models.Statuses)
-	serviceCache := make(map[string]models.Services)
-	sourceCache := make(map[string]models.Sources)
+	statusCache := expirable_lru.NewLRU[string, models.Statuses](0, nil, 12*time.Hour)
+	serviceCache := expirable_lru.NewLRU[string, models.Services](0, nil, 12*time.Hour)
+	sourceCache := expirable_lru.NewLRU[string, models.Sources](0, nil, 12*time.Hour)
 
 	return &PayloadFieldsRepositoryFromCache{
 		PayloadFields: payloadFieldsRepository,
