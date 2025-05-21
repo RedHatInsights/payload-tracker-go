@@ -189,7 +189,11 @@ var _ = Describe("Queries", func() {
 	It("Checks if we got a cached status result from the database", func() {
 		const statusName string = "TestStatus"
 		mockPayloadFieldsRepository := mockPayloadFieldsRepository{}
-		payloadFieldsRepository := newPayloadFieldsRepositoryFromCache(&mockPayloadFieldsRepository)
+
+		payloadFieldsRepository, err := newPayloadFieldsRepositoryFromCache(&mockPayloadFieldsRepository)
+		if err != nil {
+			panic(err)
+		}
 
 		// Cache miss
 		payloadReturned := payloadFieldsRepository.GetStatus(statusName)
@@ -209,7 +213,11 @@ var _ = Describe("Queries", func() {
 	It("Checks if we got a cached service result from the database", func() {
 		const serviceName = "TestService"
 		mockPayloadFieldsRepository := mockPayloadFieldsRepository{}
-		payloadFieldsRepository := newPayloadFieldsRepositoryFromCache(&mockPayloadFieldsRepository)
+
+		payloadFieldsRepository, err := newPayloadFieldsRepositoryFromCache(&mockPayloadFieldsRepository)
+		if err != nil {
+			panic(err)
+		}
 
 		// Cache miss
 		payloadReturned := payloadFieldsRepository.GetService(serviceName)
@@ -229,7 +237,11 @@ var _ = Describe("Queries", func() {
 	It("Checks if we got a cached source result from the database", func() {
 		const sourceName = "TestSource"
 		mockPayloadFieldsRepository := mockPayloadFieldsRepository{}
-		payloadFieldsRepository := newPayloadFieldsRepositoryFromCache(&mockPayloadFieldsRepository)
+
+		payloadFieldsRepository, err := newPayloadFieldsRepositoryFromCache(&mockPayloadFieldsRepository)
+		if err != nil {
+			panic(err)
+		}
 
 		// Cache miss
 		payloadReturned := payloadFieldsRepository.GetSource(sourceName)

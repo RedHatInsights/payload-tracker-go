@@ -68,8 +68,7 @@ func NewConsumerEventLoop(
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 	payloadFieldsRepository, err := queries.NewPayloadFieldsRepository(db, cfg)
 	if err != nil {
-		// TODO: Make a real error
-		panic("OH NO")
+		panic(err)
 	}
 
 	handler := &handler{

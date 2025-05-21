@@ -1,6 +1,7 @@
 package queries
 
 import (
+	"fmt"
 	"time"
 
 	expirable_lru "github.com/hashicorp/golang-lru/v2/expirable"
@@ -92,32 +93,41 @@ func (p *PayloadFieldsRepositoryFromCache) GetSource(sourceName string) models.S
 	return dbEntry
 }
 
-func NewPayloadFieldsRepository(db *gorm.DB, cfg *config.TrackerConfig) (PayloadFieldsRepository, error) {
+func NewPayloadFieldsRepository(db *gorm.DB, cfg *config.TrackerConfig) (payloadFieldsRepository PayloadFieldsRepository, err error) {
 	payloadDB := &PayloadFieldsRepositoryFromDB{DB: db}
-	var payloadFieldsRepository PayloadFieldsRepository
 
-	// TODO: Errors here
 	switch cfg.ConsumerConfig.ConsumerPayloadFieldsRepoImpl {
 	case "db":
 		return payloadDB, nil
 	case "db_with_cache":
-		payloadFieldsRepository = newPayloadFieldsRepositoryFromCache(payloadDB)
+		payloadFieldsRepository, err = newPayloadFieldsRepositoryFromCache(payloadDB)
 	}
 
-	return payloadFieldsRepository, nil
+	return payloadFieldsRepository, err
 }
 
-func newPayloadFieldsRepositoryFromCache(payloadFieldsRepository PayloadFieldsRepository) PayloadFieldsRepository {
+func newPayloadFieldsRepositoryFromCache(payloadFieldsRepository PayloadFieldsRepository) (PayloadFieldsRepository, error) {
 	statusCache := expirable_lru.NewLRU[string, models.Statuses](0, nil, 12*time.Hour)
+	if statusCache == nil {
+		return nil, fmt.Errorf("Unable to create LRU cache for caching Status results")
+	}
+
 	serviceCache := expirable_lru.NewLRU[string, models.Services](0, nil, 12*time.Hour)
+	if serviceCache == nil {
+		return nil, fmt.Errorf("Unable to create LRU cache for caching Service results")
+	}
+
 	sourceCache := expirable_lru.NewLRU[string, models.Sources](0, nil, 12*time.Hour)
+	if sourceCache == nil {
+		return nil, fmt.Errorf("Unable to create LRU cache for caching Source results")
+	}
 
 	return &PayloadFieldsRepositoryFromCache{
 		PayloadFields: payloadFieldsRepository,
 		statusCache:   statusCache,
 		serviceCache:  serviceCache,
 		sourceCache:   sourceCache,
-	}
+	}, nil
 }
 
 func GetPayloadByRequestId(db *gorm.DB, request_id string) (result models.Payloads, err error) {

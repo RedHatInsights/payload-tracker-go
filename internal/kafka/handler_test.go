@@ -59,8 +59,7 @@ var _ = Describe("Kafka message handler", func() {
 		cfg.ConsumerConfig.ConsumerPayloadFieldsRepoImpl = "db"
 		payloadFieldsRepository, err := queries.NewPayloadFieldsRepository(db, cfg)
 		if err != nil {
-			// TODO: Error handling here too
-			panic("TEST OH NO")
+			panic(err)
 		}
 
 		msgHandler = handler{
