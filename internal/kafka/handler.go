@@ -82,7 +82,7 @@ func (h *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config
 	if (models.Services{}) == existingService {
 		serviceResult, newService := queries.CreateServiceTableEntry(h.db, payloadStatus.Service)
 		if serviceResult.Error != nil {
-			l.Log.Error("Error Creating8u Service Table Entry ERROR: ", serviceResult.Error)
+			l.Log.Error("Error Creating Service Table Entry ERROR: ", serviceResult.Error)
 			return
 		}
 
