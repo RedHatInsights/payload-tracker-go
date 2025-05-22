@@ -11,6 +11,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/redhatinsights/payload-tracker-go/internal/config"
+	l "github.com/redhatinsights/payload-tracker-go/internal/logging"
 	"github.com/redhatinsights/payload-tracker-go/internal/models/message"
 	"github.com/redhatinsights/payload-tracker-go/internal/queries"
 	"github.com/redhatinsights/payload-tracker-go/internal/utils/test"
@@ -59,7 +60,7 @@ var _ = Describe("Kafka message handler", func() {
 		cfg.ConsumerConfig.ConsumerPayloadFieldsRepoImpl = "db"
 		payloadFieldsRepository, err := queries.NewPayloadFieldsRepository(db, cfg)
 		if err != nil {
-			panic(err)
+			l.Log.Fatal(err)
 		}
 
 		msgHandler = handler{

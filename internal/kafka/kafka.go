@@ -68,7 +68,7 @@ func NewConsumerEventLoop(
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 	payloadFieldsRepository, err := queries.NewPayloadFieldsRepository(db, cfg)
 	if err != nil {
-		panic(err)
+		l.Log.Fatal(err)
 	}
 
 	handler := &handler{
