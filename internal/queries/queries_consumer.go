@@ -1,6 +1,11 @@
 package queries
 
 import (
+	"fmt"
+	"time"
+
+	expirable_lru "github.com/hashicorp/golang-lru/v2/expirable"
+	"github.com/redhatinsights/payload-tracker-go/internal/config"
 	models "github.com/redhatinsights/payload-tracker-go/internal/models/db"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -11,23 +16,120 @@ const (
 	PayloadJoins  = "left join Payloads on Payloads.id = PayloadStatuses.payload_id"
 )
 
-
-func GetServiceByName(db *gorm.DB, service_id string) models.Services {
-	var service models.Services
-	db.Where("name = ?", service_id).First(&service)
-	return service
+type PayloadFieldsRepository interface {
+	GetStatus(string) models.Statuses
+	GetService(string) models.Services
+	GetSource(string) models.Sources
 }
 
-func GetStatusByName(db *gorm.DB, status_id string) models.Statuses {
+type PayloadFieldsRepositoryFromDB struct {
+	DB *gorm.DB
+}
+
+type PayloadFieldsRepositoryFromCache struct {
+	PayloadFields PayloadFieldsRepository
+	statusCache   *expirable_lru.LRU[string, models.Statuses]
+	serviceCache  *expirable_lru.LRU[string, models.Services]
+	sourceCache   *expirable_lru.LRU[string, models.Sources]
+}
+
+func (p *PayloadFieldsRepositoryFromDB) GetStatus(statusName string) models.Statuses {
 	var status models.Statuses
-	db.Where("name = ?", status_id).First(&status)
+
+	p.DB.Where("name = ?", statusName).First(&status)
 	return status
 }
 
-func GetSourceByName(db *gorm.DB, source_id string) models.Sources {
+func (p *PayloadFieldsRepositoryFromDB) GetService(serviceName string) models.Services {
+	var service models.Services
+
+	p.DB.Where("name = ?", serviceName).First(&service)
+	return service
+}
+
+func (p *PayloadFieldsRepositoryFromDB) GetSource(sourceName string) models.Sources {
 	var source models.Sources
-	db.Where("name = ?", source_id).First(&source)
+
+	p.DB.Where("name = ?", sourceName).First(&source)
 	return source
+}
+
+func (p *PayloadFieldsRepositoryFromCache) GetStatus(statusName string) models.Statuses {
+	cached, ok := p.statusCache.Get(statusName)
+	if ok {
+		return cached
+	}
+
+	dbEntry := p.PayloadFields.GetStatus(statusName)
+
+	p.statusCache.Add(statusName, dbEntry)
+
+	return dbEntry
+}
+
+func (p *PayloadFieldsRepositoryFromCache) GetService(serviceName string) models.Services {
+	cached, ok := p.serviceCache.Get(serviceName)
+	if ok {
+		return cached
+	}
+
+	dbEntry := p.PayloadFields.GetService(serviceName)
+
+	p.serviceCache.Add(serviceName, dbEntry)
+
+	return dbEntry
+}
+
+func (p *PayloadFieldsRepositoryFromCache) GetSource(sourceName string) models.Sources {
+	cached, ok := p.sourceCache.Get(sourceName)
+	if ok {
+		return cached
+	}
+
+	dbEntry := p.PayloadFields.GetSource(sourceName)
+
+	p.sourceCache.Add(sourceName, dbEntry)
+
+	return dbEntry
+}
+
+func NewPayloadFieldsRepository(db *gorm.DB, cfg *config.TrackerConfig) (payloadFieldsRepository PayloadFieldsRepository, err error) {
+	payloadDB := &PayloadFieldsRepositoryFromDB{DB: db}
+
+	switch cfg.ConsumerConfig.ConsumerPayloadFieldsRepoImpl {
+	case "db":
+		return payloadDB, nil
+	case "db_with_cache":
+		payloadFieldsRepository, err = newPayloadFieldsRepositoryFromCache(payloadDB)
+	default:
+		return nil, fmt.Errorf("unable to configure PayloadFieldRepository implementation")
+	}
+
+	return payloadFieldsRepository, err
+}
+
+func newPayloadFieldsRepositoryFromCache(payloadFieldsRepository PayloadFieldsRepository) (PayloadFieldsRepository, error) {
+	statusCache := expirable_lru.NewLRU[string, models.Statuses](0, nil, 12*time.Hour)
+	if statusCache == nil {
+		return nil, fmt.Errorf("unable to create LRU cache for caching Status results")
+	}
+
+	serviceCache := expirable_lru.NewLRU[string, models.Services](0, nil, 12*time.Hour)
+	if serviceCache == nil {
+		return nil, fmt.Errorf("unable to create LRU cache for caching Service results")
+	}
+
+	sourceCache := expirable_lru.NewLRU[string, models.Sources](0, nil, 12*time.Hour)
+	if sourceCache == nil {
+		return nil, fmt.Errorf("unable to create LRU cache for caching Source results")
+	}
+
+	return &PayloadFieldsRepositoryFromCache{
+		PayloadFields: payloadFieldsRepository,
+		statusCache:   statusCache,
+		serviceCache:  serviceCache,
+		sourceCache:   sourceCache,
+	}, nil
 }
 
 func GetPayloadByRequestId(db *gorm.DB, request_id string) (result models.Payloads, err error) {
@@ -56,7 +158,7 @@ func UpsertPayloadByRequestId(db *gorm.DB, request_id string, payload models.Pay
 	}
 
 	onConflict := clause.OnConflict{
-		Columns: []clause.Column{{Name: "request_id"}},
+		Columns:   []clause.Column{{Name: "request_id"}},
 		DoUpdates: clause.AssignmentColumns(columnsToUpdate),
 	}
 

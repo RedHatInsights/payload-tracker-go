@@ -12,6 +12,7 @@ import (
 	config "github.com/redhatinsights/payload-tracker-go/internal/config"
 	"github.com/redhatinsights/payload-tracker-go/internal/endpoints"
 	l "github.com/redhatinsights/payload-tracker-go/internal/logging"
+	"github.com/redhatinsights/payload-tracker-go/internal/queries"
 )
 
 // NewConsumer Creates brand new consumer instance based on topic
@@ -42,13 +43,11 @@ func NewConsumer(ctx context.Context, config *config.TrackerConfig, topic string
 	}
 
 	consumer, err := kafka.NewConsumer(&configMap)
-
 	if err != nil {
 		return nil, err
 	}
 
 	err = consumer.SubscribeTopics([]string{topic}, nil)
-
 	if err != nil {
 		return nil, err
 	}
@@ -65,12 +64,16 @@ func NewConsumerEventLoop(
 	consumer *kafka.Consumer,
 	db *gorm.DB,
 ) {
-
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
+	payloadFieldsRepository, err := queries.NewPayloadFieldsRepository(db, cfg)
+	if err != nil {
+		l.Log.Fatal(err)
+	}
 
 	handler := &handler{
-		db: db,
+		db:                      db,
+		payloadFieldsRepository: payloadFieldsRepository,
 	}
 
 	run := true

@@ -24,6 +24,7 @@ type TrackerConfig struct {
 	RequestConfig               RequestCfg
 	KibanaConfig                KibanaCfg
 	DebugConfig                 DebugCfg
+	ConsumerConfig              ConsumerCfg
 }
 
 type KafkaCfg struct {
@@ -76,6 +77,10 @@ type DebugCfg struct {
 	LogStatusJson bool
 }
 
+type ConsumerCfg struct {
+	ConsumerPayloadFieldsRepoImpl string
+}
+
 // Get sets each config option with its defaults
 func Get() *TrackerConfig {
 	options := viper.New()
@@ -119,6 +124,9 @@ func Get() *TrackerConfig {
 
 	// debug config
 	options.SetDefault("debug.log.status.json", false)
+
+	// consumer config
+	options.SetDefault("consumer.payload.fields.repository.impl", "db_with_cache")
 
 	// global database config
 	options.SetDefault("db.retries", 3)
@@ -186,6 +194,9 @@ func Get() *TrackerConfig {
 			KafkaRetryBackoffMs:        options.GetInt("kafka.retry.backoff.ms"),
 			KafkaBootstrapServers:      options.GetString("kafka.bootstrap.servers"),
 			KafkaTopic:                 options.GetString("topic.payload.status"),
+		},
+		ConsumerConfig: ConsumerCfg{
+			ConsumerPayloadFieldsRepoImpl: options.GetString("consumer.payload.fields.repo.impl"),
 		},
 		DatabaseConfig: DatabaseCfg{
 			DBUser:     options.GetString("db.user"),
