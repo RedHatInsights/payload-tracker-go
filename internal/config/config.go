@@ -126,7 +126,7 @@ func Get() *TrackerConfig {
 	options.SetDefault("debug.log.status.json", false)
 
 	// consumer config
-	options.SetDefault("consumer.payload.fields.repository.impl", "db_with_cache")
+	options.SetDefault("consumer.payload.fields.repo.impl", "db_with_cache")
 
 	// global database config
 	options.SetDefault("db.retries", 3)
