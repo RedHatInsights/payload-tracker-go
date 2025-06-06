@@ -57,6 +57,7 @@ func (p *PayloadFieldsRepositoryFromDB) GetSource(sourceName string) models.Sour
 func (p *PayloadFieldsRepositoryFromCache) GetStatus(statusName string) models.Statuses {
 	cached, ok := p.statusCache.Get(statusName)
 	if ok {
+		fmt.Printf("status cache hit: %+v\n", cached)
 		return cached
 	}
 
@@ -64,12 +65,15 @@ func (p *PayloadFieldsRepositoryFromCache) GetStatus(statusName string) models.S
 
 	p.statusCache.Add(statusName, dbEntry)
 
+	fmt.Printf("status cache miss: %+v\n", dbEntry)
+
 	return dbEntry
 }
 
 func (p *PayloadFieldsRepositoryFromCache) GetService(serviceName string) models.Services {
 	cached, ok := p.serviceCache.Get(serviceName)
 	if ok {
+		fmt.Printf("service cache hit: %+v\n", cached)
 		return cached
 	}
 
@@ -77,18 +81,23 @@ func (p *PayloadFieldsRepositoryFromCache) GetService(serviceName string) models
 
 	p.serviceCache.Add(serviceName, dbEntry)
 
+	fmt.Printf("service cache miss: %+v\n", dbEntry)
+
 	return dbEntry
 }
 
 func (p *PayloadFieldsRepositoryFromCache) GetSource(sourceName string) models.Sources {
 	cached, ok := p.sourceCache.Get(sourceName)
 	if ok {
+		fmt.Printf("source cache hit: %+v\n", cached)
 		return cached
 	}
 
 	dbEntry := p.PayloadFields.GetSource(sourceName)
 
 	p.sourceCache.Add(sourceName, dbEntry)
+
+	fmt.Printf("source cache miss: %+v\n", dbEntry)
 
 	return dbEntry
 }
