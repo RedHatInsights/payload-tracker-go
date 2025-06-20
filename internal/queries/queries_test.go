@@ -1,7 +1,10 @@
 package queries
 
 import (
+	"fmt"
+
 	models "github.com/redhatinsights/payload-tracker-go/internal/models/db"
+	"github.com/redhatinsights/payload-tracker-go/internal/redis"
 	"github.com/redhatinsights/payload-tracker-go/internal/utils/test"
 
 	"github.com/google/uuid"
@@ -37,8 +40,68 @@ func getUUID() string {
 	return uuid.New().String()
 }
 
+func testStatusCaching(payloadFieldsRepository PayloadFieldsRepository, mockPayloadFieldsRepository *mockPayloadFieldsRepository, statusName string) {
+	// Cache miss
+	payloadReturned := payloadFieldsRepository.GetStatus(statusName)
+	// __AUTO_GENERATED_PRINT_VAR_START__
+	fmt.Println(fmt.Sprintf("MISS testStatusCaching payloadReturned: %v", payloadReturned)) // __AUTO_GENERATED_PRINT_VAR_END__
+
+	Expect(mockPayloadFieldsRepository.getStatusCalled).To(Equal(true))
+	// __AUTO_GENERATED_PRINT_VAR_START__
+	fmt.Println(fmt.Sprintf("testStatusCaching mockPayloadFieldsRepository.getStatusCalled: %v", mockPayloadFieldsRepository.getStatusCalled)) // __AUTO_GENERATED_PRINT_VAR_END__
+	Expect(payloadReturned.Id).To(Equal(int32(1234)))
+	Expect(payloadReturned.Name).To(Equal(statusName))
+
+	// Cache hit
+	mockPayloadFieldsRepository.getStatusCalled = false
+	// __AUTO_GENERATED_PRINT_VAR_START__
+	fmt.Println(fmt.Sprintf("testStatusCaching mockPayloadFieldsRepository.getStatusCalled: %v", mockPayloadFieldsRepository.getStatusCalled)) // __AUTO_GENERATED_PRINT_VAR_END__
+	payloadReturned = payloadFieldsRepository.GetStatus(statusName)
+	// __AUTO_GENERATED_PRINT_VAR_START__
+	fmt.Println(fmt.Sprintf("HIT testStatusCaching payloadReturned: %v", payloadReturned)) // __AUTO_GENERATED_PRINT_VAR_END__
+
+	Expect(mockPayloadFieldsRepository.getStatusCalled).To(Equal(false))
+	Expect(payloadReturned.Id).To(Equal(int32(1234)))
+	Expect(payloadReturned.Name).To(Equal(statusName))
+}
+
+func testServiceCaching(payloadFieldsRepository PayloadFieldsRepository, mockPayloadFieldsRepository *mockPayloadFieldsRepository, serviceName string) {
+	// Cache miss
+	payloadReturned := payloadFieldsRepository.GetService(serviceName)
+
+	Expect(mockPayloadFieldsRepository.getServiceCalled).To(Equal(true))
+	Expect(payloadReturned.Id).To(Equal(int32(1234)))
+	Expect(payloadReturned.Name).To(Equal(serviceName))
+
+	// Cache hit
+	mockPayloadFieldsRepository.getServiceCalled = false
+	payloadReturned = payloadFieldsRepository.GetService(serviceName)
+
+	Expect(mockPayloadFieldsRepository.getStatusCalled).To(Equal(false))
+	Expect(payloadReturned.Id).To(Equal(int32(1234)))
+	Expect(payloadReturned.Name).To(Equal(serviceName))
+}
+
+func testSourceCaching(payloadFieldsRepository PayloadFieldsRepository, mockPayloadFieldsRepository *mockPayloadFieldsRepository, sourceName string) {
+	// Cache miss
+	payloadReturned := payloadFieldsRepository.GetSource(sourceName)
+
+	Expect(mockPayloadFieldsRepository.getSourceCalled).To(Equal(true))
+	Expect(payloadReturned.Id).To(Equal(int32(1234)))
+	Expect(payloadReturned.Name).To(Equal(sourceName))
+
+	// Cache hit
+	mockPayloadFieldsRepository.getSourceCalled = false
+	payloadReturned = payloadFieldsRepository.GetSource(sourceName)
+
+	Expect(mockPayloadFieldsRepository.getSourceCalled).To(Equal(false))
+	Expect(payloadReturned.Id).To(Equal(int32(1234)))
+	Expect(payloadReturned.Name).To(Equal(sourceName))
+}
+
 var _ = Describe("Queries", func() {
 	db := test.WithDatabase()
+	redis.Init()
 
 	It("Retrieves request id payload", func() {
 		requestId := getUUID()
@@ -188,74 +251,67 @@ var _ = Describe("Queries", func() {
 	})
 	It("Checks if we got a cached status result from the database", func() {
 		const statusName string = "TestStatus"
-		mockPayloadFieldsRepository := mockPayloadFieldsRepository{}
+		mockPayloadFieldsRepository := &mockPayloadFieldsRepository{}
 
-		payloadFieldsRepository, err := newPayloadFieldsRepositoryFromCache(&mockPayloadFieldsRepository)
+		payloadFieldsRepository, err := newPayloadFieldsRepositoryFromCache(mockPayloadFieldsRepository)
 		if err != nil {
 			panic(err)
 		}
 
-		// Cache miss
-		payloadReturned := payloadFieldsRepository.GetStatus(statusName)
-
-		Expect(mockPayloadFieldsRepository.getStatusCalled).To(Equal(true))
-		Expect(payloadReturned.Id).To(Equal(int32(1234)))
-		Expect(payloadReturned.Name).To(Equal(statusName))
-
-		// Cache hit
-		mockPayloadFieldsRepository.getStatusCalled = false
-		payloadReturned = payloadFieldsRepository.GetStatus(statusName)
-
-		Expect(mockPayloadFieldsRepository.getStatusCalled).To(Equal(false))
-		Expect(payloadReturned.Id).To(Equal(int32(1234)))
-		Expect(payloadReturned.Name).To(Equal(statusName))
+		testStatusCaching(payloadFieldsRepository, mockPayloadFieldsRepository, statusName)
 	})
 	It("Checks if we got a cached service result from the database", func() {
 		const serviceName = "TestService"
-		mockPayloadFieldsRepository := mockPayloadFieldsRepository{}
+		mockPayloadFieldsRepository := &mockPayloadFieldsRepository{}
 
-		payloadFieldsRepository, err := newPayloadFieldsRepositoryFromCache(&mockPayloadFieldsRepository)
+		payloadFieldsRepository, err := newPayloadFieldsRepositoryFromCache(mockPayloadFieldsRepository)
 		if err != nil {
 			panic(err)
 		}
 
-		// Cache miss
-		payloadReturned := payloadFieldsRepository.GetService(serviceName)
-
-		Expect(mockPayloadFieldsRepository.getServiceCalled).To(Equal(true))
-		Expect(payloadReturned.Id).To(Equal(int32(1234)))
-		Expect(payloadReturned.Name).To(Equal(serviceName))
-
-		// Cache hit
-		mockPayloadFieldsRepository.getServiceCalled = false
-		payloadReturned = payloadFieldsRepository.GetService(serviceName)
-
-		Expect(mockPayloadFieldsRepository.getServiceCalled).To(Equal(false))
-		Expect(payloadReturned.Id).To(Equal(int32(1234)))
-		Expect(payloadReturned.Name).To(Equal(serviceName))
+		testServiceCaching(payloadFieldsRepository, mockPayloadFieldsRepository, serviceName)
 	})
 	It("Checks if we got a cached source result from the database", func() {
 		const sourceName = "TestSource"
-		mockPayloadFieldsRepository := mockPayloadFieldsRepository{}
+		mockPayloadFieldsRepository := &mockPayloadFieldsRepository{}
 
-		payloadFieldsRepository, err := newPayloadFieldsRepositoryFromCache(&mockPayloadFieldsRepository)
+		payloadFieldsRepository, err := newPayloadFieldsRepositoryFromCache(mockPayloadFieldsRepository)
 		if err != nil {
 			panic(err)
 		}
 
-		// Cache miss
-		payloadReturned := payloadFieldsRepository.GetSource(sourceName)
+		testSourceCaching(payloadFieldsRepository, mockPayloadFieldsRepository, sourceName)
+	})
+	It("Checks if we got a status result from redis", func() {
+		const statusName string = "TestStatusRedis"
+		fmt.Println("STARTING REDIS STATUS TEST")
+		mockPayloadFieldsRepository := &mockPayloadFieldsRepository{}
 
-		Expect(mockPayloadFieldsRepository.getSourceCalled).To(Equal(true))
-		Expect(payloadReturned.Id).To(Equal(int32(1234)))
-		Expect(payloadReturned.Name).To(Equal(sourceName))
+		payloadFieldsRepository, err := newPayloadFieldsRepositoryFromRedis(mockPayloadFieldsRepository)
+		if err != nil {
+			panic(err)
+		}
+		testStatusCaching(payloadFieldsRepository, mockPayloadFieldsRepository, statusName)
+		fmt.Println("ENDING REDIS STATUS TEST")
+	})
+	It("Checks if we got a service result from redis", func() {
+		const serviceName string = "TestServiceRedis"
+		mockPayloadFieldsRepository := &mockPayloadFieldsRepository{}
 
-		// Cache hit
-		mockPayloadFieldsRepository.getSourceCalled = false
-		payloadReturned = payloadFieldsRepository.GetSource(sourceName)
+		payloadFieldsRepository, err := newPayloadFieldsRepositoryFromRedis(mockPayloadFieldsRepository)
+		if err != nil {
+			panic(err)
+		}
+		testServiceCaching(payloadFieldsRepository, mockPayloadFieldsRepository, serviceName)
+	})
+	It("Checks if we got a source result from redis", func() {
+		const sourceName string = "TestSourceRedis"
+		mockPayloadFieldsRepository := &mockPayloadFieldsRepository{}
 
-		Expect(mockPayloadFieldsRepository.getSourceCalled).To(Equal(false))
-		Expect(payloadReturned.Id).To(Equal(int32(1234)))
-		Expect(payloadReturned.Name).To(Equal(sourceName))
+		payloadFieldsRepository, err := newPayloadFieldsRepositoryFromRedis(mockPayloadFieldsRepository)
+		if err != nil {
+			panic(err)
+		}
+		testSourceCaching(payloadFieldsRepository, mockPayloadFieldsRepository, sourceName)
 	})
 })

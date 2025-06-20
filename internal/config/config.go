@@ -25,6 +25,7 @@ type TrackerConfig struct {
 	KibanaConfig                KibanaCfg
 	DebugConfig                 DebugCfg
 	ConsumerConfig              ConsumerCfg
+	RedisConfig                 RedisCfg
 }
 
 type KafkaCfg struct {
@@ -81,6 +82,12 @@ type ConsumerCfg struct {
 	ConsumerPayloadFieldsRepoImpl string
 }
 
+type RedisCfg struct {
+	Host     string
+	Port     int
+	Password string
+}
+
 // Get sets each config option with its defaults
 func Get() *TrackerConfig {
 	options := viper.New()
@@ -130,6 +137,11 @@ func Get() *TrackerConfig {
 
 	// global database config
 	options.SetDefault("db.retries", 3)
+
+	// redis config
+	options.SetDefault("redis.host", "payload-tracker-redis")
+	options.SetDefault("redis.port", 6379)
+	options.SetDefault("redis.password", "")
 
 	if clowder.IsClowderEnabled() {
 		cfg := clowder.LoadedConfig
@@ -224,6 +236,11 @@ func Get() *TrackerConfig {
 		},
 		DebugConfig: DebugCfg{
 			LogStatusJson: options.GetBool("debug.log.status.json"),
+		},
+		RedisConfig: RedisCfg{
+			Host:     options.GetString("redis.host"),
+			Port:     options.GetInt("redis.port"),
+			Password: options.GetString("redis.password"),
 		},
 	}
 
