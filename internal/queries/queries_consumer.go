@@ -2,11 +2,14 @@ package queries
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	expirable_lru "github.com/hashicorp/golang-lru/v2/expirable"
 	"github.com/redhatinsights/payload-tracker-go/internal/config"
 	models "github.com/redhatinsights/payload-tracker-go/internal/models/db"
+	"github.com/redhatinsights/payload-tracker-go/internal/redis"
+	_redis "github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -31,6 +34,11 @@ type PayloadFieldsRepositoryFromCache struct {
 	statusCache   *expirable_lru.LRU[string, models.Statuses]
 	serviceCache  *expirable_lru.LRU[string, models.Services]
 	sourceCache   *expirable_lru.LRU[string, models.Sources]
+}
+
+type PayloadFieldsRepositoryFromRedis struct {
+	PayloadFields PayloadFieldsRepository
+	Client        *_redis.Client
 }
 
 func (p *PayloadFieldsRepositoryFromDB) GetStatus(statusName string) models.Statuses {
@@ -93,6 +101,51 @@ func (p *PayloadFieldsRepositoryFromCache) GetSource(sourceName string) models.S
 	return dbEntry
 }
 
+func (p *PayloadFieldsRepositoryFromRedis) GetStatus(statusName string) models.Statuses {
+	var status models.Statuses
+
+	if err := redis.Get(statusName, &status); err == nil {
+		return status
+	}
+
+	dbEntry := p.PayloadFields.GetStatus(statusName)
+	if err := redis.Set(statusName, dbEntry, 12*time.Hour); err != nil {
+		log.Fatal(err)
+	}
+
+	return dbEntry
+}
+
+func (p *PayloadFieldsRepositoryFromRedis) GetService(serviceName string) models.Services {
+	var service models.Services
+
+	if err := redis.Get(serviceName, &service); err == nil {
+		return service
+	}
+
+	dbEntry := p.PayloadFields.GetService(serviceName)
+	if err := redis.Set(serviceName, dbEntry, 12*time.Hour); err != nil {
+		log.Fatal(err)
+	}
+
+	return dbEntry
+}
+
+func (p *PayloadFieldsRepositoryFromRedis) GetSource(sourceName string) models.Sources {
+	var source models.Sources
+
+	if err := redis.Get(sourceName, &source); err == nil {
+		return source
+	}
+
+	dbEntry := p.PayloadFields.GetSource(sourceName)
+	if err := redis.Set(sourceName, dbEntry, 12*time.Hour); err != nil {
+		log.Fatal(err)
+	}
+
+	return dbEntry
+}
+
 func NewPayloadFieldsRepository(db *gorm.DB, cfg *config.TrackerConfig) (payloadFieldsRepository PayloadFieldsRepository, err error) {
 	payloadDB := &PayloadFieldsRepositoryFromDB{DB: db}
 
@@ -101,6 +154,10 @@ func NewPayloadFieldsRepository(db *gorm.DB, cfg *config.TrackerConfig) (payload
 		return payloadDB, nil
 	case "db_with_cache":
 		payloadFieldsRepository, err = newPayloadFieldsRepositoryFromCache(payloadDB)
+	case "redis":
+		redis.Init()
+
+		payloadFieldsRepository, err = newPayloadFieldsRepositoryFromRedis(payloadDB)
 	default:
 		return nil, fmt.Errorf("unable to configure PayloadFieldRepository implementation")
 	}
@@ -129,6 +186,12 @@ func newPayloadFieldsRepositoryFromCache(payloadFieldsRepository PayloadFieldsRe
 		statusCache:   statusCache,
 		serviceCache:  serviceCache,
 		sourceCache:   sourceCache,
+	}, nil
+}
+
+func newPayloadFieldsRepositoryFromRedis(payloadFieldsRepository PayloadFieldsRepository) (PayloadFieldsRepository, error) {
+	return &PayloadFieldsRepositoryFromRedis{
+		PayloadFields: payloadFieldsRepository,
 	}, nil
 }
 
