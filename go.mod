@@ -5,7 +5,7 @@ go 1.24.2
 require (
 	github.com/aws/aws-sdk-go v1.55.7
 	github.com/confluentinc/confluent-kafka-go/v2 v2.8.0
-	github.com/go-chi/chi/v5 v5.2.1
+	github.com/go-chi/chi/v5 v5.2.2
 	github.com/go-chi/httprate v0.14.1
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
