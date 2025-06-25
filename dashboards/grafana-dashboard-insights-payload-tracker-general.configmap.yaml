@@ -283,21 +283,42 @@ data:
           "fieldConfig": {
             "defaults": {
               "color": {
-                "mode": "thresholds"
+                "mode": "palette-classic"
               },
-              "mappings": [
-                {
-                  "options": {
-                    "": {
-                      "index": 0
-                    },
-                    "Failed Messages": {
-                      "index": 1
-                    }
-                  },
-                  "type": "value"
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
                 }
-              ],
+              },
+              "mappings": [],
+              "noValue": "0",
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -308,38 +329,7 @@ data:
                 ]
               }
             },
-            "overrides": [
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "Failed Messages"
-                },
-                "properties": [
-                  {
-                    "id": "color",
-                    "value": {
-                      "fixedColor": "semi-dark-red",
-                      "mode": "fixed"
-                    }
-                  }
-                ]
-              },
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "Successful Messages"
-                },
-                "properties": [
-                  {
-                    "id": "color",
-                    "value": {
-                      "fixedColor": "green",
-                      "mode": "fixed"
-                    }
-                  }
-                ]
-              }
-            ]
+            "overrides": []
           },
           "gridPos": {
             "h": 11,
@@ -349,21 +339,16 @@ data:
           },
           "id": 48,
           "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "vertical",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
             },
-            "showPercentChange": false,
-            "text": {},
-            "textMode": "auto",
-            "wideLayout": true
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
           },
           "pluginVersion": "10.4.1",
           "targets": [
@@ -378,93 +363,13 @@ data:
               "format": "time_series",
               "hide": false,
               "instant": false,
-              "legendFormat": "Total {{container}}",
+              "legendFormat": "{{pod}}",
               "range": true,
-              "refId": "A"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "editorMode": "builder",
-              "expr": "payload_tracker_message_process_errors{container=\"payload-tracker-consumer\"}",
-              "hide": false,
-              "legendFormat": "Failed: {{container}}",
-              "range": true,
-              "refId": "D"
+              "refId": "Messages processed"
             }
           ],
           "title": "Messages Processed",
-          "transformations": [
-            {
-              "id": "calculateField",
-              "options": {
-                "alias": "Total Number of Messages Processed",
-                "binary": {
-                  "left": "Total 10.128.5.5:9000",
-                  "reducer": "sum",
-                  "right": "Total 10.129.36.95:9000"
-                },
-                "mode": "reduceRow",
-                "reduce": {
-                  "include": [
-                    "Total payload-tracker-consumer"
-                  ],
-                  "reducer": "sum"
-                }
-              }
-            },
-            {
-              "id": "calculateField",
-              "options": {
-                "alias": "Failed Messages",
-                "mode": "reduceRow",
-                "reduce": {
-                  "include": [
-                    "Failed: payload-tracker-consumer"
-                  ],
-                  "reducer": "sum"
-                }
-              }
-            },
-            {
-              "id": "calculateField",
-              "options": {
-                "alias": "Successful Messages",
-                "binary": {
-                  "left": "Total Number of Messages Processed",
-                  "operator": "-",
-                  "reducer": "sum",
-                  "right": "Failed Messages"
-                },
-                "mode": "binary",
-                "reduce": {
-                  "reducer": "sum"
-                }
-              }
-            },
-            {
-              "id": "organize",
-              "options": {
-                "excludeByName": {
-                  "Failed: 10.128.5.5:9000": true,
-                  "Failed: 10.129.36.95:9000": true,
-                  "Failed: 10.130.22.176:9000": true,
-                  "Failed: payload-tracker-consumer": true,
-                  "Total 10.128.5.5:9000": true,
-                  "Total 10.129.36.95:9000": true,
-                  "Total 10.130.22.176:9000": true,
-                  "Total Number of Messages Processed": true,
-                  "Total Number of Messages Processed ": true,
-                  "Total payload-tracker-consumer": true
-                },
-                "indexByName": {},
-                "renameByName": {}
-              }
-            }
-          ],
-          "type": "stat"
+          "type": "timeseries"
         },
         {
           "datasource": {
@@ -961,7 +866,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "sum(increase(payload_tracker_consumed_messages[$__range])) / sum(increase(payload_tracker_consume_errors[$__range]))",
+              "expr": "sum(increase(payload_tracker_consume_errors[$__range])) / sum(increase(payload_tracker_consumed_messages[$__range]))",
               "format": "time_series",
               "instant": false,
               "interval": "",
