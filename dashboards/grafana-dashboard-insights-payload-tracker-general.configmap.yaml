@@ -27,6 +27,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
+      "id": 886179,
       "links": [
         {
           "icon": "external link",
@@ -75,6 +76,18 @@ data:
           "title": "Service Prod Deployment",
           "type": "link",
           "url": "https://console-openshift-console.apps.crcp01ue1.o9m8.p1.openshiftapps.com/k8s/ns/payload-tracker-prod/deployments/payload-tracker/pods"
+        },
+        {
+          "asDropdown": false,
+          "icon": "dashboard",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [],
+          "targetBlank": true,
+          "title": "AWS RDS dashboard for Payload Tracker",
+          "tooltip": "",
+          "type": "link",
+          "url": "https://grafana.app-sre.devshift.net/d/AWSRDSdbi/aws-rds?var-datasource=PD4288CE6A02EB473&var-region=default&var-dbinstanceidentifier=payload-tracker-prod-db"
         }
       ],
       "liveNow": false,
@@ -1318,7 +1331,7 @@ data:
       "timezone": "",
       "title": "Payload Tracker",
       "uid": "eGSUe-SZk",
-      "version": 4,
+      "version": 5,
       "weekStart": ""
     }
 kind: ConfigMap
