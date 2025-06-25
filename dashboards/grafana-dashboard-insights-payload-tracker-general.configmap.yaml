@@ -866,7 +866,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "sum(increase(payload_tracker_consume_errors[$__range])) / sum(increase(payload_tracker_consumed_messages[$__range]))",
+              "expr": "sum(increase(payload_tracker_consume_errors[$__range]) or (up * 0)) / sum(increase(payload_tracker_consumed_messages[$__range]))",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -1248,9 +1248,9 @@ data:
         "list": [
           {
             "current": {
-              "selected": false,
-              "text": "crcs02ue1-prometheus",
-              "value": "PDD8BE47D10408F45"
+              "selected": true,
+              "text": "crcp01ue1-prometheus",
+              "value": "PC1EAC84DCBBF0697"
             },
             "hide": 0,
             "includeAll": false,
@@ -1268,8 +1268,8 @@ data:
           {
             "current": {
               "selected": true,
-              "text": "aws-resources-exporter-stage",
-              "value": "P80B3240D3DAB93EB"
+              "text": "aws-resources-exporter-production",
+              "value": "PCEFB875D6FD018FC"
             },
             "hide": 0,
             "includeAll": false,
@@ -1318,7 +1318,7 @@ data:
       "timezone": "",
       "title": "Payload Tracker",
       "uid": "eGSUe-SZk",
-      "version": 2,
+      "version": 4,
       "weekStart": ""
     }
 kind: ConfigMap
