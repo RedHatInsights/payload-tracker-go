@@ -120,7 +120,7 @@ objects:
       schedule: ${CLEANER_SCHEDULE}
       suspend: ${{CLEANER_SUSPEND}}
       podSpec:
-        image: quay.io/cloudservices/postgresql-rds:16
+        image: quay.io/redhat-services-prod/hcm-eng-prod-tenant/postgresql-rds:16
         restartPolicy: Never
         volumes:
           - name: payload-tracker-go-db-cleaner-volume
