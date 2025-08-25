@@ -156,17 +156,6 @@ ALTER TABLE ONLY public.sources ALTER COLUMN id SET DEFAULT nextval('public.sour
 ALTER TABLE ONLY public.statuses ALTER COLUMN id SET DEFAULT nextval('public.statuses_id_seq'::regclass);
 
 
-SELECT pg_catalog.setval('public.payload_statuses_id_seq', 1, false);
-
-SELECT pg_catalog.setval('public.payloads_id_seq', 1, false);
-
-SELECT pg_catalog.setval('public.services_id_seq', 13, true);
-
-SELECT pg_catalog.setval('public.sources_id_seq', 4, true);
-
-SELECT pg_catalog.setval('public.statuses_id_seq', 8, true);
-
-
 ALTER TABLE ONLY public.services
     ADD CONSTRAINT idx_services_name UNIQUE (name);
 
