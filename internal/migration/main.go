@@ -26,7 +26,7 @@ func main() {
         panic(err)
     }
 
-    err = performDbMigration(databaseConn, logging.Log, "file:///db/migrations", "up")
+    err = performDbMigration(databaseConn, logging.Log, "file://./migrations", "up")
     if err != nil {
         panic(err)
     }
