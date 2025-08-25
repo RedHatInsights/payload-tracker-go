@@ -18,6 +18,7 @@ objects:
     envName: ${ENV_NAME}
     database:
       name: payloadtracker
+      version: 16
     kafkaTopics:
     - replicas: 3
       partitions: 20
