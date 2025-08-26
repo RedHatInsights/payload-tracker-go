@@ -21,19 +21,19 @@ func main() {
 
 	cfg := config.Get()
 
-	databaseConn, err  := db.DbSqlConnect(cfg)
-    if err != nil {
-        panic(err)
-    }
+	databaseConn, err := db.DbSqlConnect(cfg)
+	if err != nil {
+		panic(err)
+	}
 
-    err = performDbMigration(databaseConn, logging.Log, "file://./migrations", "up")
-    if err != nil {
-        panic(err)
-    }
+	err = performDbMigration(databaseConn, logging.Log, "file://./migrations", "up")
+	if err != nil {
+		panic(err)
+	}
 }
 
 type loggerWrapper struct {
-    *logrus.Logger
+	*logrus.Logger
 }
 
 func (lw loggerWrapper) Verbose() bool {
