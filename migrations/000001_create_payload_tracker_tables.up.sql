@@ -246,3 +246,4 @@ ALTER TABLE public.payload_statuses
 
 
 SELECT create_partition(NOW()::DATE, NOW()::DATE + interval '1 DAY');
+SELECT create_partition('0000-00-00', '0000-00-01');
