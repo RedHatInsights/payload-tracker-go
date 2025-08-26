@@ -1,7 +1,7 @@
 package db
 
 import (
-    "database/sql"
+	"database/sql"
 	"fmt"
 
 	"github.com/redhatinsights/payload-tracker-go/internal/config"
