@@ -61,6 +61,8 @@ func (p *PayloadFieldsRepositoryFromCache) GetStatus(statusName string) models.S
 	}
 
 	dbEntry := p.PayloadFields.GetStatus(statusName)
+    fmt.Println("statusName: ", statusName)
+    fmt.Println("dbEntry: ", dbEntry)
 
 	p.statusCache.Add(statusName, dbEntry)
 
