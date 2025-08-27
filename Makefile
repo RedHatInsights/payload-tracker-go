@@ -28,7 +28,7 @@ run-seed: pt-seeder
 	./pt-seeder
 
 run-migration: pt-migration
-	./pt-migration
+	./pt-migration upgrade
 
 clean:
 	go clean
