@@ -62,7 +62,9 @@ func (p *PayloadFieldsRepositoryFromCache) GetStatus(statusName string) models.S
 
 	dbEntry := p.PayloadFields.GetStatus(statusName)
 
-	p.statusCache.Add(statusName, dbEntry)
+	if dbEntry != (models.Statuses{}) {
+		p.statusCache.Add(statusName, dbEntry)
+	}
 
 	return dbEntry
 }
@@ -75,7 +77,9 @@ func (p *PayloadFieldsRepositoryFromCache) GetService(serviceName string) models
 
 	dbEntry := p.PayloadFields.GetService(serviceName)
 
-	p.serviceCache.Add(serviceName, dbEntry)
+	if dbEntry != (models.Services{}) {
+		p.serviceCache.Add(serviceName, dbEntry)
+	}
 
 	return dbEntry
 }
@@ -88,7 +92,9 @@ func (p *PayloadFieldsRepositoryFromCache) GetSource(sourceName string) models.S
 
 	dbEntry := p.PayloadFields.GetSource(sourceName)
 
-	p.sourceCache.Add(sourceName, dbEntry)
+	if dbEntry != (models.Sources{}) {
+		p.sourceCache.Add(sourceName, dbEntry)
+	}
 
 	return dbEntry
 }
