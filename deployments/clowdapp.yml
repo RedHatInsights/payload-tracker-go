@@ -33,6 +33,7 @@ objects:
         initContainers:
           - command:
             - ./pt-migration
+            - upgrade
             image: ${IMAGE}:${IMAGE_TAG}
             inheritEnv: true    
         minReadySeconds: 15
