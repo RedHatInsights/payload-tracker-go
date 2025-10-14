@@ -121,6 +121,7 @@ objects:
       suspend: ${{CLEANER_SUSPEND}}
       podSpec:
         image: registry.redhat.io/rhel9/postgresql-16:latest
+        imagePullPolicy: Always
         restartPolicy: Never
         volumes:
           - name: payload-tracker-go-db-cleaner-volume
