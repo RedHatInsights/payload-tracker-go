@@ -120,7 +120,7 @@ objects:
       schedule: ${CLEANER_SCHEDULE}
       suspend: ${{CLEANER_SUSPEND}}
       podSpec:
-        image: registry.redhat.io/rhel9/postgresql-16:latest
+        image: registry.redhat.io/rhel9/postgresql-16:9.7
         imagePullPolicy: Always
         restartPolicy: Never
         volumes:
