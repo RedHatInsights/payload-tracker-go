@@ -76,7 +76,7 @@ func main() {
 
 	fmt.Println("Seeding Payload Status Table")
 	for i := 0; i < len(fields.PayloadStatuses); i++ {
-		date, _ := time.Parse(time.RFC3339, fields.PayloadStatuses[i].Date)
+		date := time.Now().UTC()
 
 		payloadStatus := models.PayloadStatuses{
 			PayloadId: fields.PayloadStatuses[i].PayloadId,

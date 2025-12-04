@@ -83,16 +83,16 @@ var _ = Describe("Payloads with DB", func() {
 				InventoryId: uuid.New().String(),
 				SystemId:    uuid.New().String(),
 			}
-			statusData := models.Statuses{Name: "test-status"}
-			sourceData := models.Sources{Name: "test-source"}
-			serviceData := models.Services{Name: "test-service"}
+			statusData := models.Statuses{Name: fmt.Sprintf("test-status-%d", time.Now().Unix())}
+			sourceData := models.Sources{Name: fmt.Sprintf("test-source-%d", time.Now().Unix())}
+			serviceData := models.Services{Name: fmt.Sprintf("test-service-%d", time.Now().Unix())}
 
 			Expect(db().Create(&statusData).Error).ToNot(HaveOccurred())
 			Expect(db().Create(&sourceData).Error).ToNot(HaveOccurred())
 			Expect(db().Create(&serviceData).Error).ToNot(HaveOccurred())
 			Expect(db().Create(&payloadData).Error).ToNot(HaveOccurred())
 
-			payloadDate, _ := time.Parse(time.RFC3339, "2022-06-03T14:00:32.253Z")
+			payloadDate := time.Now().UTC()
 			payloadStatusData := models.PayloadStatuses{
 				PayloadId: payloadData.Id,
 				Status:    statusData,

@@ -34,7 +34,7 @@ func newKafkaMessage(value message.PayloadStatusMessage) *k.Message {
 }
 
 func getSimplePayloadStatusMessage() message.PayloadStatusMessage {
-	date, _ := time.Parse(time.RFC3339, "2022-06-07T11:00:10.356Z")
+	date := time.Now().UTC()
 	return message.PayloadStatusMessage{
 		Service:     "puptoo",
 		Source:      "test-source",
