@@ -2,12 +2,12 @@
 apiVersion: v1
 kind: Template
 metadata:
-  name: payload-tracker
+  name: payload-tracker-go
 objects:
 - apiVersion: cloud.redhat.com/v1alpha1
   kind: ClowdApp
   metadata:
-    name: payload-tracker
+    name: payload-tracker-go
   spec:
     optionalDependencies:
     - storage-broker
