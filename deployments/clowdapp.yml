@@ -262,7 +262,7 @@ objects:
       echo "Creating schema_migrations table..."
       psql -c "CREATE TABLE schema_migrations (version bigint NOT NULL, dirty boolean NOT NULL);"
 
-      psql -c "INSERT INTO schema_migrations (1, f);"
+      psql -c "INSERT INTO schema_migrations VALUES (1, false);"
 
 
 parameters:
