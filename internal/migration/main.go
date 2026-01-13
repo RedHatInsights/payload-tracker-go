@@ -38,8 +38,7 @@ func main() {
 		Use:   "upgrade",
 		Short: "Upgrade to a later version",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			performDbMigration(databaseConn, logging.Log, "file://migrations", "up")
-			return nil
+			return performDbMigration(databaseConn, logging.Log, "file://migrations", "up")
 		},
 	}
 
@@ -47,8 +46,7 @@ func main() {
 		Use:   "downgrade",
 		Short: "Revert to a previous version",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			performDbMigration(databaseConn, logging.Log, "file://migrations", "down")
-			return nil
+			return performDbMigration(databaseConn, logging.Log, "file://migrations", "down")
 		},
 	}
 
