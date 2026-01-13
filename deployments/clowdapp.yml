@@ -159,6 +159,56 @@ objects:
           requests:
             cpu: ${VACUUM_CPU_REQUEST}
             memory: ${VACUUM_MEMORY_REQUEST}
+    - name: init-db-migrations
+      podSpec:
+        image: registry.redhat.io/rhel9/postgresql-16:9.7
+        volumes:
+          - name: payload-tracker-go-init-db-migrations
+            configMap:
+              name: payload-tracker-go-init-db-migrations
+        volumeMounts:
+          - name:  payload-tracker-go-init-db-migrations
+            mountPath: /payload-tracker-go-init-db-migrations
+        command: [ 'sh', '/payload-tracker-go-init-db-migrations/initialize.sh' ]
+        env:
+          - name: PGHOST
+            valueFrom:
+              secretKeyRef:
+                name: payload-tracker-db-creds
+                key: ${DB_SECRET_HOSTNAME_KEY}
+          - name: PGDATABASE
+            valueFrom:
+              secretKeyRef:
+                name: payload-tracker-db-creds
+                key: ${DB_SECRET_DBNAME_KEY}
+          - name: PGUSER
+            valueFrom:
+              secretKeyRef:
+                name: payload-tracker-db-creds
+                key: ${DB_SECRET_USERNAME_KEY}
+          - name: PGPASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: payload-tracker-db-creds
+                key: ${DB_SECRET_PASSWORD_KEY}
+        resources:
+          limits:
+            cpu: 300m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+
+
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: ClowdJobInvocation
+  metadata:
+    name: init-db-migrations-1
+  spec:
+    appName: payload-tracker
+    jobs:
+      - init-db-migrations
+
 
 - apiVersion: v1
   kind: ConfigMap
@@ -195,6 +245,20 @@ objects:
 
       echo "Vacuuming payloads"
       psql -c "VACUUM ANALYZE payloads;"
+
+
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: payload-tracker-go-init-db-migrations
+  data:
+    initialize.sh: |
+      #!/bin/bash
+
+      echo "Creating schema_migrations table..."
+      psql -c "CREATE TABLE schema_migrations (version bigint NOT NULL, dirty boolean NOT NULL);"
+
+      psql -c "INSERT INTO schema_migrations VALUES (1, false);"
 
 
 parameters:
