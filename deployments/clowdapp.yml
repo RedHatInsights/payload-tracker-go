@@ -18,6 +18,7 @@ objects:
     envName: ${ENV_NAME}
     database:
       name: payloadtracker
+      version: 16
     kafkaTopics:
     - replicas: 3
       partitions: 20
@@ -32,6 +33,7 @@ objects:
         initContainers:
           - command:
             - ./pt-migration
+            - upgrade
             image: ${IMAGE}:${IMAGE_TAG}
             inheritEnv: true    
         minReadySeconds: 15
@@ -159,6 +161,7 @@ objects:
           requests:
             cpu: ${VACUUM_CPU_REQUEST}
             memory: ${VACUUM_MEMORY_REQUEST}
+
 
 - apiVersion: v1
   kind: ConfigMap
