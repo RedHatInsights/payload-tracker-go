@@ -160,7 +160,6 @@ objects:
             cpu: ${VACUUM_CPU_REQUEST}
             memory: ${VACUUM_MEMORY_REQUEST}
 
-
 - apiVersion: v1
   kind: ConfigMap
   metadata:
