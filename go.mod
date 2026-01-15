@@ -14,7 +14,7 @@ require (
 	github.com/prometheus/client_golang v1.21.1
 	github.com/redhatinsights/app-common-go v1.6.8
 	github.com/redhatinsights/platform-go-middlewares/v2 v2.0.0-beta.2
-	github.com/sirupsen/logrus v1.9.3
+	github.com/sirupsen/logrus v1.9.4
 	github.com/spf13/viper v1.20.1
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.25.12
