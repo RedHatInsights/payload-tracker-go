@@ -7,7 +7,7 @@ require (
 	github.com/confluentinc/confluent-kafka-go/v2 v2.12.0
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/go-chi/httprate v0.15.0
-	github.com/golang-migrate/migrate/v4 v4.18.3
+	github.com/golang-migrate/migrate/v4 v4.19.1
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/lib/pq v1.10.9
@@ -29,8 +29,6 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
@@ -39,9 +37,12 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/klauspost/compress v1.18.2 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
 	github.com/magiconair/properties v1.8.10 // indirect
-	github.com/moby/sys/userns v0.1.0 // indirect
+	github.com/moby/go-archive v0.2.0 // indirect
+	github.com/moby/sys/atomicwriter v0.1.0 // indirect
+	github.com/moby/sys/user v0.4.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nxadm/tail v1.4.11 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
@@ -54,7 +55,6 @@ require (
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
-	go.uber.org/atomic v1.9.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.45.0 // indirect
