@@ -1,6 +1,6 @@
 module github.com/redhatinsights/payload-tracker-go
 
-go 1.24.13
+go 1.25.0
 
 require (
 	github.com/aws/aws-sdk-go v1.55.7
@@ -60,7 +60,7 @@ require (
 	golang.org/x/crypto v0.45.0 // indirect
 	golang.org/x/exp v0.0.0-20251009144603-d2f985daa21b // indirect
 	golang.org/x/net v0.47.0 // indirect
-	golang.org/x/sync v0.18.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/text v0.31.0 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
