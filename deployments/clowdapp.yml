@@ -275,7 +275,7 @@ parameters:
 - description: Image
   name: IMAGE
   required: true
-  value: quay.io/cloudservices/payload-tracker-go
+  value: quay.io/redhat-services-prod/hcc-integrations-tenant/payload-tracker
 - description: Image tag
   name: IMAGE_TAG
   required: true
