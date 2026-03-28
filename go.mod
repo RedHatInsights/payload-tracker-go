@@ -3,7 +3,7 @@ module github.com/redhatinsights/payload-tracker-go
 go 1.24.4
 
 require (
-	github.com/aws/aws-sdk-go v1.55.7
+	github.com/aws/aws-sdk-go v1.55.8
 	github.com/confluentinc/confluent-kafka-go/v2 v2.12.0
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/go-chi/httprate v0.15.0
@@ -15,8 +15,8 @@ require (
 	github.com/onsi/gomega v1.38.2
 	github.com/prometheus/client_golang v1.23.2
 	github.com/redhatinsights/app-common-go v1.6.8
-	github.com/redhatinsights/platform-go-middlewares/v2 v2.0.0-beta.2
-	github.com/sirupsen/logrus v1.9.3
+	github.com/redhatinsights/platform-go-middlewares/v2 v2.1.0
+	github.com/sirupsen/logrus v1.9.4
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.21.0
 	gorm.io/driver/postgres v1.6.0
