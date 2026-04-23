@@ -39,6 +39,7 @@ func (h *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config
 		} else {
 			l.Log.Error("ERROR: Unmarshaling Payload Status Event: ", err)
 		}
+		endpoints.IncMessageProcessErrors()
 		return
 	}
 
@@ -55,6 +56,7 @@ func (h *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config
 	upsertResult, payloadId := queries.UpsertPayloadByRequestId(h.db, payloadStatus.RequestID, payload)
 	if upsertResult.Error != nil {
 		l.Log.Error("ERROR Payload table upsert failed: ", upsertResult.Error)
+		endpoints.IncMessageProcessErrors()
 		return
 	}
 	sanitizedPayloadStatus.PayloadId = payloadId
@@ -71,6 +73,7 @@ func (h *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config
 		statusResult, newStatus := queries.CreateStatusTableEntry(h.db, payloadStatus.Status)
 		if statusResult.Error != nil {
 			l.Log.Error("Error Creating Statuses Table Entry ERROR: ", statusResult.Error)
+			endpoints.IncMessageProcessErrors()
 			return
 		}
 
@@ -83,6 +86,7 @@ func (h *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config
 		serviceResult, newService := queries.CreateServiceTableEntry(h.db, payloadStatus.Service)
 		if serviceResult.Error != nil {
 			l.Log.Error("Error Creating Service Table Entry ERROR: ", serviceResult.Error)
+			endpoints.IncMessageProcessErrors()
 			return
 		}
 
@@ -99,6 +103,7 @@ func (h *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config
 			result, newSource := queries.CreateSourceTableEntry(h.db, payloadStatus.Source)
 			if result.Error != nil {
 				l.Log.Error("Error Creating Sources Table Entry ERROR: ", result.Error)
+				endpoints.IncMessageProcessErrors()
 				return
 			}
 
@@ -129,6 +134,11 @@ func (h *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config
 
 		l.Log.WithFields(logrus.Fields{"attempts": attempts}).Debug("Failed to insert sanitized PayloadStatus with ERROR: ", err)
 		attempts += 1
+	}
+
+	if attempts >= retries && retries > 0 {
+		l.Log.Error("ERROR: All retries exhausted for PayloadStatus insert")
+		endpoints.IncMessageProcessErrors()
 	}
 }
 
