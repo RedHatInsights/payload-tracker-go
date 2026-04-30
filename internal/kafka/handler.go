@@ -39,12 +39,12 @@ func (h *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config
 		} else {
 			l.Log.Error("ERROR: Unmarshaling Payload Status Event: ", err)
 		}
-		endpoints.IncMessageProcessErrors()
+		endpoints.IncInvalidConsumerRequestIDs()
 		return
 	}
 
 	if !validateRequestID(cfg.RequestConfig.ValidateRequestIDLength, payloadStatus.RequestID) {
-		endpoints.IncMessageProcessErrors()
+		endpoints.IncInvalidConsumerRequestIDs()
 		return
 	}
 
@@ -146,7 +146,6 @@ func (h *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config
 func validateRequestID(requestIDLength int, requestID string) bool {
 	if requestIDLength != 0 {
 		if len(requestID) != requestIDLength {
-			endpoints.IncInvalidConsumerRequestIDs()
 			return false
 		}
 	}
