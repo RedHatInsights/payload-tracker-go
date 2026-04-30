@@ -44,6 +44,7 @@ func (h *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config
 	}
 
 	if !validateRequestID(cfg.RequestConfig.ValidateRequestIDLength, payloadStatus.RequestID) {
+		endpoints.IncMessageProcessErrors()
 		return
 	}
 
