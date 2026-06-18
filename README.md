@@ -1,117 +1,122 @@
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [REST API Endpoints](#rest-api-endpoints)
-- [Message Formats](#message-formats)
-- [Development](#development)
-    - [Prerequisites](#prerequisites)
-    - [Launching the Service](#launching-the-service)
-    - [Local Development with Payload Tracker UI](#local-development-with-payload-tracker-ui)
-    - [Running Tests](#running-tests)
 # Payload Tracker
 
+A Go service that tracks Red Hat Insights payloads through the Platform, providing centralized status tracking via REST API and Kafka message consumption.
+
+**Built with**: Go 1.26.3, PostgreSQL, Kafka, Chi router, GORM, deployed on OpenShift via Clowder
+
 ## Overview
-The Payload Tracker is a centralized location for tracking payloads through the Platform. Finding the status (current, or past) of a payload is difficult as logs are spread amongst various services and locations. Furthermore, Prometheus is meant purely for an aggregation of metrics and not for individualized transactions or tracking.
 
-The Payload Tracker aims to provide a mechanism to query for a `request_id,` `inventory_id,` or `system_uuid` (physical machine-id) and see the current, last or previous X statuses of this upload through the platform. In the future, hopefully it will allow for more robust filtering based off of `service,` `account,` and `status.`
+The Payload Tracker provides a centralized location for tracking payloads through the Platform. Finding the status (current or past) of a payload is difficult as logs are spread amongst various services and locations. This service allows querying by `request_id`, `inventory_id`, or `system_uuid` to see current, last, or previous statuses of an upload through the platform.
 
-The ultimate goal of this service is to say that the upload made it through X services and was successful, or that the upload made it through X services was a failure and why it was a failure.
+### Architecture
 
-## Architecture
-Payload Tracker is a service that lives in `platform-<env>`. This service has its own database representative of the current payload status in the platform. There are REST API endpoints that give access to the payload status. This service listens to messages on the Kafka MQ topic `platform.payload-status.` There is now a front-end UI for this service located in the same `platform-<env>`. It is respectively titled "payload-tracker-frontend."
+Payload Tracker consists of two binaries built from a single codebase:
+- **`pt-api`** — REST API server providing payload status queries
+- **`pt-consumer`** — Kafka consumer listening to `platform.payload-status` topic
+
+Both share a PostgreSQL database with daily-partitioned status tables. The service runs on OpenShift via Clowder (ClowdApp) and uses Konflux/Tekton for CI/CD.
+
+### Project Structure
+
+- `cmd/payload-tracker-api/` and `cmd/payload-tracker-consumer/` - Main entry points for the two binaries
+- `internal/` - Application code (endpoints, kafka consumer, models, config, queries)
+- `api/` - OpenAPI specification (`api.spec.yaml`)
+- `build/` - Container build files
+- `migrations/` - Database schema migrations
+- `deployments/` - Clowder deployment manifests
+- `.tekton/` - Konflux CI/CD pipeline definitions
+- `dashboards/` - Grafana dashboard definitions
+
+## Documentation
+
+- [AGENTS.md](AGENTS.md) - Architectural constraints, build/test instructions, cross-cutting conventions
+- [docs/](docs/) - Domain-specific guidelines:
+  - API contracts, async/messaging, code organization
+  - Configuration, data validation, database patterns
+  - Dependency management, deployment, error handling
+  - Go web frameworks (Chi), integration patterns
+  - Logging/observability, performance, security, testing
 
 ## REST API Endpoints
-Please see the Swagger Spec for API Endpoints. The API Swagger Spec is located in `api/api.spec.yaml`.
 
+See the OpenAPI specification in `api/api.spec.yaml` for complete API documentation.
+
+Key endpoints:
+- `GET /api/v1/payloads` - List all payloads with filtering and pagination
+- `GET /api/v1/payloads/{request_id}` - Get payload status by request ID
+- `GET /api/v1/statuses` - List all statuses with filtering
+- `GET /api/v1/payloads/{request_id}/archiveLink` - Get archive download link (requires RBAC role)
 
 ## Message Formats
-Simply send a message on the ‘platform.payload-status’ for your given Kafka MQ Broker in the appropriate environment. Currently, the following fields are required:
 
-    org_id
-    service
-    request_id
-    status
-    date
+Send messages to the `platform.payload-status` Kafka topic. Required fields:
 
-```
-{ 	
-    'service': 'The services name processing the payload',
-    'source': 'This is indicative of a third party rule hit analysis. (not Insights Client)',
-    'account': 'The RH associated account',
-    'org_id': 'The RH associated org id',
-    'request_id': 'The ID of the payload (This should be a UUID)',
-    'inventory_id': 'The ID of the entity in terms of the inventory (This should be a UUID)',
-    'system_id': 'The ID of the entity in terms of the actual system (This should be a UUID)',
-    'status': 'received|processing|success|error|etc',
-    'status_msg': 'Information relating to the above status, should more verbiage be needed (in the event of an error)',
-    'date': 'Timestamp for the message relating to the status above. (This should be in RFC3339 UTC format: "2022-03-17T16:56:10Z")'
+```json
+{
+    "service": "The service name processing the payload",
+    "org_id": "The RH associated org id",
+    "request_id": "The ID of the payload (UUID format)",
+    "status": "received|processing|success|error",
+    "date": "Timestamp in RFC3339 UTC format (e.g., '2022-03-17T16:56:10Z')"
 }
 ```
-The following statuses are required:
-```
-‘received‘ 
-‘success/error‘ # success OR error
-```
+
+Optional fields: `source`, `account`, `inventory_id`, `system_id`, `status_msg`
+
+Required statuses: `received`, `processing`, `success`
 
 ## Development
-#### Prerequisites
-```
-docker
-docker-compose
-Golang >= 1.15
+
+### Prerequisites
+
+- Go >= 1.26.3
+- Docker and Docker Compose
+- PostgreSQL (via Docker or local)
+- Kafka (via Docker or local)
+
+### Launching the Service
+
+```bash
+# Start local infrastructure (Postgres, Kafka, Zookeeper)
+docker compose up payload-tracker-db zookeeper kafka -d
+
+# Run database migrations and seed data
+make run-migration
+make run-seed
+
+# Build all binaries
+make build-all
+
+# Run the API and consumer (local dev mode)
+REQUESTOR_IMPL=mock ./pt-api
+./pt-consumer
 ```
 
-#### Launching the Service
-Launch DB, Zookeeper and Kafka
-```
-$> docker compose up payload-tracker-db
-$> docker compose up zookeeper
-$> docker compose up kafka
-```
-Migrate and seed the DB
-```
-$> make run-migration
-$> make run-seed
-```
-Compile the source code for API and Consumer into a go binary:
-```
-$> make build-all
-```
-Launch the application
+### Local Development with Payload Tracker UI
 
-The mock requestor implementation allows you to get payload URLS from the local
-machine
-```
-$> REQUESTOR_IMPL=mock ./pt-api
-$> ./pt-consumer
-```
-The API should now be available on TCP port 8080
-```
-$> curl http://localhost:8080/api/v1/
-$> lubdub
+The frontend UI is available at https://github.com/RedHatInsights/payload-tracker-frontend
+
+Follow the frontend repository's README for setup instructions.
+
+### Running Tests
+
+```bash
+# All tests (requires running PostgreSQL with migrations applied)
+make test                         # runs: go test -p 1 -v ./...
+
+# Unit tests only (no database required)
+go test -v ./internal/endpoints/
+
+# Lint
+make lint                         # runs: gofmt -l . && gofmt -s -w .
 ```
 
-#### Local Development with Payload Tracker UI
-Follow steps to run Payload Tracker UI (Dev Setup)
-https://github.com/RedHatInsights/payload-tracker-frontend#dev-setup
-Compile the source code for the API and Consumer into go binary:
-```
-$> make build-all
-```
-Launch the application in DEV mode
-```
-$> ENVIRONMENT=DEV REQUESTOR_IMPL=mock ./pt-api
-$> ./pt-consumer
-```
-The API should now be available on port 8080
-```
-$> curl http://localhost:8080/app/payload-tracker/api/v1/
-$> lubdub
-```
+Tests use Ginkgo v1 and Gomega. The `-p 1` flag serializes test packages to prevent concurrent DB access conflicts. CI runs against a PostgreSQL service container with credentials `crc`/`crc`/`crc`.
 
-## Running Tests
-Use `go tests` to test the application
-```
-$> go test ./...
-```
+## Contributing
 
-The tests also use a PostgreSQL database to run some tests. When testing locally, a PostgreSQL server needs to be up and running. On github, this is handled by a github actions workflow: [here](https://github.com/RedHatInsights/payload-tracker-go/blob/master/.github/workflows/pr.yml).
+See [AGENTS.md](AGENTS.md) for architectural constraints and development conventions.
+
+## License
+
+This project is available as open source under the terms of the Apache License 2.0.
