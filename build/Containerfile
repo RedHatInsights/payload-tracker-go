@@ -10,7 +10,7 @@ COPY go.mod go.mod
 COPY go.sum go.sum
 COPY migrations migrations
 
-ARG GOTOOLCHAIN=go1.26.3+auto
+ARG GOTOOLCHAIN=go1.26.4+auto
 
 USER 0
 
