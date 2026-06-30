@@ -39,7 +39,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
+	github.com/klauspost/cpuid/v2 v2.4.0 // indirect
 	github.com/magiconair/properties v1.8.10 // indirect
 	github.com/moby/sys/userns v0.1.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
@@ -61,7 +61,7 @@ require (
 	golang.org/x/exp v0.0.0-20251009144603-d2f985daa21b // indirect
 	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/sync v0.18.0 // indirect
-	golang.org/x/sys v0.38.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.31.0 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
