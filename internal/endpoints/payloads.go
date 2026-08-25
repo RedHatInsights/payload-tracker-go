@@ -171,7 +171,7 @@ func PayloadArchiveLink(requestArchiveLink func(context.Context, string) (*struc
 			return
 		}
 
-		l.Log.Infof("Link generated for payload %s from identity %s: %s", reqID, r.Header.Get("x-rh-identity"), string(dataJson))
+		l.Log.Infof("Archive link generated for payload %s (identity %s)", reqID, hashIdentity(r.Header.Get("x-rh-identity")))
 		writeResponse(w, http.StatusOK, string(dataJson))
 	}
 }
