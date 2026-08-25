@@ -2,9 +2,12 @@ package endpoints
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -90,6 +93,16 @@ func getErrorBody(message string, status int) string {
 	return string(errBodyJson)
 }
 
+// hashIdentity returns a non-reversible short reference for an identity header
+// so denied/audit log lines can be correlated without leaking associate PII.
+func hashIdentity(identityHeader string) string {
+	if identityHeader == "" {
+		return "none"
+	}
+	sum := sha256.Sum256([]byte(identityHeader))
+	return fmt.Sprintf("sha256:%s", hex.EncodeToString(sum[:])[:16])
+}
+
 // Check for value in a slice
 func stringInSlice(a string, list []string) bool {
 	for _, b := range list {
@@ -151,9 +164,8 @@ func checkForRole(r *http.Request, role string) (int, error) {
 
 	if !stringInSlice(role, identityHeaderData.Identity.Associate.Roles) {
 		l.Log.WithFields(logrus.Fields{
-			"role":              role,
-			"roles_from_header": identityHeaderData.Identity.Associate.Roles,
-			"identity_header":   identityHeader,
+			"role":          role,
+			"identity_hash": hashIdentity(identityHeader),
 		}).Infof("Unable to find required role")
 		return http.StatusForbidden, errors.New("You do not have the required permissions to access this resource")
 	}
