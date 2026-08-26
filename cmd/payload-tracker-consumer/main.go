@@ -12,6 +12,7 @@ import (
 	"github.com/redhatinsights/payload-tracker-go/internal/endpoints"
 	"github.com/redhatinsights/payload-tracker-go/internal/kafka"
 	"github.com/redhatinsights/payload-tracker-go/internal/logging"
+	"github.com/redhatinsights/payload-tracker-go/internal/securitylog"
 )
 
 func lubdub(w http.ResponseWriter, r *http.Request) {
@@ -53,15 +54,19 @@ func main() {
 	consumer, err := kafka.NewConsumer(ctx, cfg, cfg.KafkaConfig.KafkaTopic)
 
 	if err != nil {
+		securitylog.LogLifecycle("STARTUP", "failure", "pt-consumer")
 		logging.Log.Fatal("ERROR! ", err)
 	}
 
+	securitylog.LogLifecycle("STARTUP", "success", "pt-consumer")
+
 	go func() {
 
-		if err := msrv.ListenAndServe(); err != nil {
-			panic(err)
+		if err := msrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logging.Log.Error("Metrics server error: ", err)
 		}
 	}()
 
 	kafka.NewConsumerEventLoop(ctx, cfg, consumer, db.DB)
+	securitylog.LogLifecycle("SHUTDOWN", "success", "pt-consumer")
 }

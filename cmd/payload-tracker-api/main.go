@@ -1,7 +1,11 @@
 package main
 
 import (
+	"context"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -12,6 +16,7 @@ import (
 	"github.com/redhatinsights/payload-tracker-go/internal/db"
 	"github.com/redhatinsights/payload-tracker-go/internal/endpoints"
 	"github.com/redhatinsights/payload-tracker-go/internal/logging"
+	"github.com/redhatinsights/payload-tracker-go/internal/securitylog"
 )
 
 func lubdub(w http.ResponseWriter, r *http.Request) {
@@ -79,14 +84,35 @@ func main() {
 		Handler: mr,
 	}
 
+	securitylog.LogLifecycle("STARTUP", "success", "pt-api")
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
+
 	go func() {
 
-		if err := msrv.ListenAndServe(); err != nil {
-			panic(err)
+		if err := msrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logging.Log.Error("Metrics server error: ", err)
 		}
 	}()
 
-	if err := srv.ListenAndServe(); err != nil {
-		panic(err)
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			securitylog.LogLifecycle("SHUTDOWN", "failure", "pt-api")
+			logging.Log.Fatal("API server error: ", err)
+		}
+	}()
+
+	<-stop
+	logging.Log.Info("Shutting down pt-api...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		securitylog.LogLifecycle("SHUTDOWN", "failure", "pt-api")
+		logging.Log.Error("API server shutdown error: ", err)
+	} else {
+		securitylog.LogLifecycle("SHUTDOWN", "success", "pt-api")
 	}
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/redhatinsights/payload-tracker-go/internal/logging"
 	l "github.com/redhatinsights/payload-tracker-go/internal/logging"
 	"github.com/redhatinsights/payload-tracker-go/internal/queries"
+	"github.com/redhatinsights/payload-tracker-go/internal/securitylog"
 	"github.com/redhatinsights/payload-tracker-go/internal/structs"
 )
 
@@ -171,6 +172,8 @@ func PayloadArchiveLink(requestArchiveLink func(context.Context, string) (*struc
 			return
 		}
 
+		principal := securitylog.PrincipalFromRequest(r)
+		securitylog.Log("READ", "archive_link", reqID, "success", principal)
 		l.Log.Infof("Archive link generated for payload %s (identity %s)", reqID, hashIdentity(r.Header.Get("x-rh-identity")))
 		writeResponse(w, http.StatusOK, string(dataJson))
 	}
