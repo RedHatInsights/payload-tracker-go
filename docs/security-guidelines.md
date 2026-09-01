@@ -30,7 +30,7 @@ if err != nil {
 
 ## Database SSL/TLS Configuration
 
-- PostgreSQL connections use `sslmode=disable` by default and switch to `sslmode=require` when `config.DatabaseConfig.RDSCa` is non-empty. This logic lives in `internal/db/db.go` in both `DbConnect` and `DbSqlConnect`.
+- PostgreSQL connections use `sslmode=disable` by default and switch to `sslmode=verify-full` (with `sslrootcert` set to the CA path) when `config.DatabaseConfig.RDSCa` is non-empty, so the server certificate and hostname are actually verified. This logic lives in `internal/db/db.go`'s shared `buildDSN` helper, used by both `DbConnect` and `DbSqlConnect`. `buildDSN` also verifies the CA file exists on disk before connecting.
 - The RDS CA path is provisioned by `clowder.LoadedConfig.RdsCa()` when `clowder.LoadedConfig.Database.RdsCa != nil`. See `internal/config/config.go` lines 251-258. The app panics if CA writing fails -- this is intentional to prevent unencrypted database connections in production.
 
 ## SSL Certificate Directory

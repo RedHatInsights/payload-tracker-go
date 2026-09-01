@@ -36,8 +36,8 @@
 
 ## Connection and GORM Configuration
 
-- `internal/db/db.go` exposes a package-level `DB *gorm.DB` singleton initialized by `DbConnect`. The DSN is built from `config.DatabaseCfg` fields.
-- SSL mode is `disable` by default; it switches to `require` when `RDSCa` is set (Clowder-managed RDS environments).
+- `internal/db/db.go` exposes a package-level `DB *gorm.DB` singleton initialized by `DbConnect`. The DSN is built by the shared `buildDSN` helper from `config.DatabaseCfg` fields.
+- SSL mode is `disable` by default; it switches to `verify-full` with `sslrootcert` set to the CA path when `RDSCa` is set (Clowder-managed RDS environments), so the server certificate is actually verified.
 - GORM is initialized with default `gorm.Config{}` (no custom logger, no special settings). Pass `*gorm.DB` to query functions; do not create additional connections.
 - A separate `DbSqlConnect` function returns a raw `*sql.DB` for use by `golang-migrate` only.
 

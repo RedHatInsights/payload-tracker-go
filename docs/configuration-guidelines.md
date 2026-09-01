@@ -29,7 +29,7 @@
 ## Database Configuration
 
 - Local defaults: user=`crc`, password=`crc`, dbname=`crc`, host=`0.0.0.0`, port=`5432`. These match the `compose.yml` postgres service.
-- SSL mode is derived at connection time in `internal/db/db.go`: `sslmode=disable` unless `RDSCa` is set (Clowder-provisioned), then `sslmode=require`.
+- SSL mode is derived at connection time in `internal/db/db.go`: `sslmode=disable` unless `RDSCa` is set (Clowder-provisioned), then `sslmode=verify-full` with `sslrootcert` set to the CA path.
 - `db.retries` (default `3`) controls how many times the consumer retries a failed `InsertPayloadStatus` before giving up.
 
 ## Kafka Configuration
