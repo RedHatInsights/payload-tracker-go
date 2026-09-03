@@ -84,7 +84,7 @@ func main() {
 		Handler: mr,
 	}
 
-	securitylog.LogLifecycle("STARTUP", "success", "pt-api")
+	securitylog.LogLifecycle("STARTUP", "success", "payload-tracker-api")
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
@@ -98,7 +98,7 @@ func main() {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			securitylog.LogLifecycle("SHUTDOWN", "failure", "pt-api")
+			securitylog.LogLifecycle("SHUTDOWN", "failure", "payload-tracker-api")
 			logging.Log.Fatal("API server error: ", err)
 		}
 	}()
@@ -110,9 +110,9 @@ func main() {
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		securitylog.LogLifecycle("SHUTDOWN", "failure", "pt-api")
+		securitylog.LogLifecycle("SHUTDOWN", "failure", "payload-tracker-api")
 		logging.Log.Error("API server shutdown error: ", err)
 	} else {
-		securitylog.LogLifecycle("SHUTDOWN", "success", "pt-api")
+		securitylog.LogLifecycle("SHUTDOWN", "success", "payload-tracker-api")
 	}
 }

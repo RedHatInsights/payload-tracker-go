@@ -233,7 +233,7 @@ func TestLogAuthzFailure(t *testing.T) {
 func TestLogLifecycle(t *testing.T) {
 	_, getFields := captureOutput(t)
 
-	LogLifecycle("STARTUP", "success", "pt-api")
+	LogLifecycle("STARTUP", "success", "payload-tracker-api")
 
 	f := getFields()
 	if f["security_event"] != true {
@@ -245,7 +245,7 @@ func TestLogLifecycle(t *testing.T) {
 	if f["resource_type"] != "service" {
 		t.Errorf("expected resource_type=service, got %v", f["resource_type"])
 	}
-	if f["resource_id"] != "pt-api" {
+	if f["resource_id"] != "payload-tracker-api" {
 		t.Errorf("expected resource_id=pt-api, got %v", f["resource_id"])
 	}
 	if f["outcome"] != "success" {

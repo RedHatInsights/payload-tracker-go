@@ -1,10 +1,9 @@
 package securitylog
 
 import (
-	"encoding/base64"
-	"encoding/json"
 	"net/http"
 
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 	"github.com/sirupsen/logrus"
 
 	l "github.com/redhatinsights/payload-tracker-go/internal/logging"
@@ -17,39 +16,13 @@ type Principal struct {
 	Type   string `json:"type"`
 }
 
-// identityPayload is the minimal x-rh-identity structure needed to extract
-// principal information for security logging.
-type identityPayload struct {
-	Identity struct {
-		OrgID   string `json:"org_id"`
-		Account string `json:"account_number"`
-		User    *struct {
-			UserID string `json:"user_id"`
-		} `json:"user,omitempty"`
-		Associate *struct {
-			Email string `json:"email"`
-		} `json:"associate,omitempty"`
-		ServiceAccount *struct {
-			ClientID string `json:"client_id"`
-		} `json:"service_account,omitempty"`
-		Type string `json:"type"`
-	} `json:"identity"`
-}
-
-// PrincipalFromRequest extracts the principal from the x-rh-identity header.
+// PrincipalFromRequest extracts the principal from the x-rh-identity header
+// using the platform-go-middlewares identity package.
 func PrincipalFromRequest(r *http.Request) Principal {
 	header := r.Header.Get("x-rh-identity")
-	if header == "" {
-		return Principal{Type: "anonymous"}
-	}
 
-	decoded, err := base64.StdEncoding.DecodeString(header)
+	id, err := identity.DecodeIdentity(header)
 	if err != nil {
-		return Principal{Type: "anonymous"}
-	}
-
-	var id identityPayload
-	if err := json.Unmarshal(decoded, &id); err != nil {
 		return Principal{Type: "anonymous"}
 	}
 
@@ -69,8 +42,8 @@ func PrincipalFromRequest(r *http.Request) Principal {
 		if p.Type == "" {
 			p.Type = "Associate"
 		}
-	case id.Identity.ServiceAccount != nil && id.Identity.ServiceAccount.ClientID != "":
-		p.UserID = id.Identity.ServiceAccount.ClientID
+	case id.Identity.ServiceAccount != nil && id.Identity.ServiceAccount.ClientId != "":
+		p.UserID = id.Identity.ServiceAccount.ClientId
 		if p.Type == "" {
 			p.Type = "ServiceAccount"
 		}
@@ -81,7 +54,7 @@ func PrincipalFromRequest(r *http.Request) Principal {
 	}
 
 	if p.OrgID == "" {
-		p.OrgID = id.Identity.Account
+		p.OrgID = id.Identity.AccountNumber
 	}
 
 	return p

@@ -54,11 +54,11 @@ func main() {
 	consumer, err := kafka.NewConsumer(ctx, cfg, cfg.KafkaConfig.KafkaTopic)
 
 	if err != nil {
-		securitylog.LogLifecycle("STARTUP", "failure", "pt-consumer")
+		securitylog.LogLifecycle("STARTUP", "failure", "payload-tracker-consumer")
 		logging.Log.Fatal("ERROR! ", err)
 	}
 
-	securitylog.LogLifecycle("STARTUP", "success", "pt-consumer")
+	securitylog.LogLifecycle("STARTUP", "success", "payload-tracker-consumer")
 
 	go func() {
 
@@ -68,5 +68,5 @@ func main() {
 	}()
 
 	kafka.NewConsumerEventLoop(ctx, cfg, consumer, db.DB)
-	securitylog.LogLifecycle("SHUTDOWN", "success", "pt-consumer")
+	securitylog.LogLifecycle("SHUTDOWN", "success", "payload-tracker-consumer")
 }
