@@ -17,6 +17,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/redhatinsights/payload-tracker-go/internal/db"
 	l "github.com/redhatinsights/payload-tracker-go/internal/logging"
+	"github.com/redhatinsights/payload-tracker-go/internal/securitylog"
 	"github.com/redhatinsights/payload-tracker-go/internal/structs"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -135,7 +136,10 @@ func validTimestamps(q structs.Query, all bool) bool {
 // Check for a specified role in the user's identity header, returns (200, nil) if the role is found
 func checkForRole(r *http.Request, role string) (int, error) {
 	identityHeader := r.Header.Get("x-rh-identity")
+	principal := securitylog.PrincipalFromRequest(r)
+
 	if identityHeader == "" {
+		securitylog.LogAuthFailure("missing identity header", "archive_link", "", principal)
 		return http.StatusUnauthorized, errors.New("Missing Identity Header")
 	}
 
@@ -152,12 +156,14 @@ func checkForRole(r *http.Request, role string) (int, error) {
 	decoded, err := base64.StdEncoding.DecodeString(identityHeader)
 	if err != nil {
 		l.Log.Error("Error decoding identity header", "error", err)
+		securitylog.LogAuthFailure("invalid base64 identity header", "archive_link", "", principal)
 		return http.StatusUnauthorized, err
 	}
 
 	err = json.Unmarshal(decoded, &identityHeaderData)
 	if err != nil {
 		l.Log.Error("Error unmarshalling identity header", "error", err)
+		securitylog.LogAuthFailure("invalid JSON identity header", "archive_link", "", principal)
 		return http.StatusUnauthorized, err
 
 	}
@@ -167,6 +173,7 @@ func checkForRole(r *http.Request, role string) (int, error) {
 			"role":          role,
 			"identity_hash": hashIdentity(identityHeader),
 		}).Infof("Unable to find required role")
+		securitylog.LogAuthzFailure("required role not found: "+role, "archive_link", "", principal)
 		return http.StatusForbidden, errors.New("You do not have the required permissions to access this resource")
 	}
 
