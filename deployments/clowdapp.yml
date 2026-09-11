@@ -161,6 +161,54 @@ objects:
           requests:
             cpu: ${VACUUM_CPU_REQUEST}
             memory: ${VACUUM_MEMORY_REQUEST}
+    - name: create-partition
+      schedule: ${CREATE_PARTITION_SCHEDULE}
+      suspend: ${{CREATE_PARTITION_SUSPEND}}
+      podSpec:
+        image: registry.redhat.io/rhel9/postgresql-16:9.7
+        imagePullPolicy: Always
+        restartPolicy: Never
+        volumes:
+          - name: payload-tracker-go-create-partition-volume
+            configMap:
+              name: payload-tracker-go-create-partition-config
+        volumeMounts:
+          - name: payload-tracker-go-create-partition-volume
+            mountPath: /payload-tracker-go-create-partition
+        command: [ 'sh', '/payload-tracker-go-create-partition/create-partition.sh' ]
+        env:
+          # TARGET_DATE (YYYY-MM-DD) selects the partition to create. Leave empty
+          # to default to tomorrow. On-demand invocations (e.g. an app-interface
+          # automated-action) override this via the Job env to backfill a date.
+          - name: TARGET_DATE
+            value: ${TARGET_DATE}
+          - name: PGHOST
+            valueFrom:
+              secretKeyRef:
+                name: payload-tracker-db-creds
+                key: ${DB_SECRET_HOSTNAME_KEY}
+          - name: PGDATABASE
+            valueFrom:
+              secretKeyRef:
+                name: payload-tracker-db-creds
+                key: ${DB_SECRET_DBNAME_KEY}
+          - name: PGUSER
+            valueFrom:
+              secretKeyRef:
+                name: payload-tracker-db-creds
+                key: ${DB_SECRET_USERNAME_KEY}
+          - name: PGPASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: payload-tracker-db-creds
+                key: ${DB_SECRET_PASSWORD_KEY}
+        resources:
+          limits:
+            cpu: ${VACUUM_CPU_LIMIT}
+            memory: ${VACUUM_MEMORY_LIMIT}
+          requests:
+            cpu: ${VACUUM_CPU_REQUEST}
+            memory: ${VACUUM_MEMORY_REQUEST}
 
 
 - apiVersion: v1
@@ -198,6 +246,41 @@ objects:
 
       echo "Vacuuming payloads"
       psql -c "VACUUM ANALYZE payloads;"
+
+
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: payload-tracker-go-create-partition-config
+  data:
+    create-partition.sh: |
+      #!/bin/bash
+
+      MAX_NUMBER_OF_RETRIES=${MAX_NUMBER_OF_RETRIES:-3}
+      SLEEP_TIME=${SLEEP_TIME:-10}
+
+      # TARGET_DATE (YYYY-MM-DD) is the day the partition should cover. When it is
+      # not provided, default to tomorrow -- matching the vacuum job's behaviour.
+      if [ -z "$TARGET_DATE" ]; then
+        START="NOW()::DATE + INTERVAL '1 DAY'"
+        STOP="NOW()::DATE + INTERVAL '2 DAY'"
+      else
+        START="'$TARGET_DATE'::DATE"
+        STOP="'$TARGET_DATE'::DATE + INTERVAL '1 DAY'"
+      fi
+
+      echo "MAX_NUMBER_OF_RETRIES: $MAX_NUMBER_OF_RETRIES"
+      echo "SLEEP_TIME: $SLEEP_TIME"
+      echo "TARGET_DATE: ${TARGET_DATE:-<tomorrow>}"
+
+      for i in $(seq 1 ${MAX_NUMBER_OF_RETRIES})
+      do
+        echo "Creating partition"
+
+        # create_partition is idempotent (CREATE TABLE / indexes IF NOT EXISTS).
+        # No drop or vacuum here -- this job only creates.
+        psql -c "SELECT create_partition($START, $STOP);" && break || sleep $SLEEP_TIME
+      done
 
 
 parameters:
@@ -286,6 +369,18 @@ parameters:
   value: 'true'
 - name: CLEANER_SCHEDULE
   value: "00 17 * * *"
+- description: Suspend the create-partition cronjob. It is intended to be triggered
+    on-demand (e.g. by an app-interface automated-action), not run on a schedule.
+  name: CREATE_PARTITION_SUSPEND
+  value: 'true'
+- description: Schedule for the create-partition cronjob. Only used if
+    CREATE_PARTITION_SUSPEND is set to false.
+  name: CREATE_PARTITION_SCHEDULE
+  value: "00 17 * * *"
+- description: Target date (YYYY-MM-DD) for the partition to create. Leave empty to
+    default to tomorrow. Overridden per-invocation when triggered on-demand.
+  name: TARGET_DATE
+  value: ''
 - name: DB_SECRET_DBNAME_KEY
   description: Key of the database name field in the payload-tracker-db-creds secret
   value: db.name
