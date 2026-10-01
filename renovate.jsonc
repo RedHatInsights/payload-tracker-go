@@ -59,7 +59,8 @@
       "groupName": "Go modules"
     },
     {
-      // x/exp has no tagged releases, so every update is a digest bump (never patch/minor
+      // x/exp is Go's permanently experimental, no-compatibility-promise repo: by design it
+      // never gets tagged releases, so every update is a digest bump (never patch/minor
       // above). It's also only pulled in transitively by test deps of confluent-kafka-go,
       // never imported by our own code.
       "matchManagers": ["gomod"],
