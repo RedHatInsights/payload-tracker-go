@@ -6,14 +6,14 @@ require (
 	github.com/aws/aws-sdk-go v1.55.8
 	github.com/confluentinc/confluent-kafka-go/v2 v2.16.0
 	github.com/go-chi/chi/v5 v5.3.2
-	github.com/go-chi/httprate v0.16.0
+	github.com/go-chi/httprate v0.16.1
 	github.com/golang-migrate/migrate/v4 v4.20.1
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/lib/pq v1.12.3
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.44.0
-	github.com/prometheus/client_golang v1.24.1
+	github.com/prometheus/client_golang v1.25.0
 	github.com/redhatinsights/app-common-go v1.7.0
 	github.com/redhatinsights/platform-go-middlewares/v2 v2.1.0
 	github.com/sirupsen/logrus v1.10.2
@@ -51,7 +51,7 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/zeebo/xxh3 v1.1.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/net v0.59.0 // indirect
+	golang.org/x/net v0.60.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
