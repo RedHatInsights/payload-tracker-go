@@ -67,6 +67,7 @@ func main() {
 	mr.Handle("/metrics", promhttp.Handler())
 
 	sub.With(endpoints.ResponseMetricsMiddleware).Get("/", lubdub)
+	sub.With(endpoints.ResponseMetricsMiddleware).Get("/openapi.json", endpoints.OpenAPISpec)
 	sub.With(endpoints.ResponseMetricsMiddleware).Get("/payloads", endpoints.Payloads)
 	sub.With(endpoints.ResponseMetricsMiddleware).Get("/payloads/{request_id}", endpoints.RequestIdPayloads)
 	sub.With(endpoints.ResponseMetricsMiddleware).Get("/payloads/{request_id}/archiveLink", payloadArchiveLinkHandler)
