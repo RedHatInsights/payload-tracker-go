@@ -1,0 +1,564 @@
+swagger: '2.0'
+info:
+  title: Insights Platform Payload Tracker API
+  description: A REST API to track payloads in the Insights Platform.
+  version: v1
+basePath: /v1
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /payloads:
+    get:
+      description: ''
+      parameters:
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          type: integer
+          default: 0
+        - name: page_size
+          in: query
+          description: Size of the page
+          required: false
+          type: integer
+          default: 10
+        - name: sort_by
+          in: query
+          description: Attribute to sort results by
+          required: false
+          type: string
+          default: created_at
+          enum: [account, org_id, inventory_id, system_id, created_at]
+        - name: sort_dir
+          in: query
+          description: Direction to sort
+          required: false
+          type: string
+          default: desc
+          enum: [asc, desc]
+        - name: account
+          in: query
+          required: false
+          description: filter for account
+          type: string
+        - name: org_id
+          in: query
+          required: false
+          description: filter for org_id
+          type: string
+        - name: inventory_id
+          in: query
+          required: false
+          description: filter for inventory_id
+          type: string
+          format: uuid
+        - name: system_id
+          in: query
+          required: false
+          type: string
+          format: uuid
+        - name: created_at_lt
+          in: query
+          required: false
+          type: string
+          format: date-time
+        - name: created_at_lte
+          in: query
+          required: false
+          type: string
+          format: date-time
+        - name: created_at_gt
+          in: query
+          required: false
+          type: string
+          format: date-time
+        - name: created_at_gte
+          in: query
+          required: false
+          type: string
+          format: date-time
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: object
+            required:
+              - count
+              - elapsed
+              - data
+            properties:
+              count:
+                type: integer
+                description: Total number of payloads with filters only
+              elapsed:
+                type: number
+                description: Total elapsed time in seconds of API request
+              data:
+                type: array
+                items:
+                  $ref: '#/definitions/PayloadRetrieve'
+                description: List of payloads based on the filters, page size and offset
+        '404':
+          $ref: '#/responses/NotFound'
+  /payloads/{request_id}:
+    get:
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: 'Get single payload successful response'
+          schema:
+            type: object
+            required:
+              - data
+              - duration
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/definitions/PayloadRetrieveByID'
+                description: List of payloads based on the filters, page size and offset
+              duration:
+                type: object
+                items:
+                  $ref: '#/definitions/DurationsRetrieve'
+                description: Object with each service as a key and timedelta as an object
+        '404':
+            $ref: '#/responses/NotFound'
+    parameters:
+      - name: request_id
+        in: path
+        description: A unique value identifying this payload.
+        required: true
+        type: string
+        format: uuid
+      - name: sort_by
+        in: query
+        description: Attribute to sort results by
+        required: false
+        type: string
+        default: date
+        enum: [service, source, status, status_msg, date, created_at]
+      - name: sort_dir
+        in: query
+        description: Direction to sort
+        required: false
+        type: string
+        default: asc
+        enum: [asc, desc]
+      - name: verbosity
+        in: query
+        type: integer
+        default: 0
+        enum: [0, 1, 2]
+        description: Parameter to control verbosity of returned data object
+        required: false
+  /payloads/{request_id}/archiveLink:
+    get:
+      description: Get the download URL for a payload's archive
+      parameters:
+        - name: request_id
+          in: path
+          description: A unique value identifying this payload.
+          required: true
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                type: object
+                required:
+                  - url
+                properties:
+                  url:
+                    type: string
+                    description: URL to download the payload
+                    format: url
+        '400':
+          $ref: '#/responses/BadRequest'
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+  /payloads/{request_id}/kibanaLink:
+    get:
+      description: Get the URL for a payload's Kibana dashboard
+      parameters:
+        - name: request_id
+          in: path
+          description: A unique value identifying this payload.
+          required: true
+          type: string
+          format: uuid
+        - name: service
+          in: query
+          description: Service to get archive link for
+          required: false
+          type: string
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                type: object
+                required:
+                  - url
+                properties:
+                  url:
+                    type: string
+                    description: URL to the payload's Kibana dashboard
+                    format: url
+        '400':
+          $ref: '#/responses/BadRequest'
+        '403':
+          $ref: '#/responses/Forbidden'
+        '404':
+          $ref: '#/responses/NotFound'
+        '500':
+          $ref: '#/responses/InternalServerError'
+
+  /roles/archiveLink:
+    get:
+      description: Check if the user has the required LDAP role in their Identity Header to request archive download links
+      responses:
+        '200':
+          description: 'User has the required LDAP role for the downloading archives'
+          schema:
+            type: object
+            required:
+              - allowed
+            properties:
+              allowed:
+                type: boolean
+                description: True if the user has the required LDAP role
+        '401':
+          $ref: '#/responses/Unauthorized'
+        '403': 
+          $ref: '#/responses/Forbidden'
+
+  /statuses:
+    get:
+      description: 'Get individual payload statuses for payloads.'
+      parameters:
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          type: integer
+          default: 0
+        - name: page_size
+          in: query
+          description: Size of the page
+          required: false
+          type: integer
+          default: 10
+        - name: sort_by
+          in: query
+          description: Attribute to sort results by
+          required: false
+          type: string
+          default: date
+          enum: [service, source, request_id, status, status_msg, date, created_at]
+        - name: sort_dir
+          in: query
+          description: Direction to sort
+          required: false
+          type: string
+          default: desc
+          enum: [asc, desc]
+        - name: service
+          in: query
+          required: false
+          description: filter for service
+          type: string
+        - name: source
+          in: query
+          required: false
+          type: string
+        - name: status
+          in: query
+          description: filter for status
+          required: false
+          type: string
+        - name: status_msg
+          in: query
+          required: false
+          type: string
+        - name: date_lt
+          in: query
+          required: false
+          type: string
+          format: date-time
+        - name: date_lte
+          in: query
+          required: false
+          type: string
+          format: date-time
+        - name: date_gt
+          in: query
+          required: false
+          type: string
+          format: date-time
+        - name: date_gte
+          in: query
+          required: false
+          type: string
+          format: date-time
+        - name: created_at_lt
+          in: query
+          required: false
+          type: string
+          format: date-time
+        - name: created_at_lte
+          in: query
+          required: false
+          type: string
+          format: date-time
+        - name: created_at_gt
+          in: query
+          required: false
+          type: string
+          format: date-time
+        - name: created_at_gte
+          in: query
+          required: false
+          type: string
+          format: date-time
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: object
+            required:
+              - count
+              - elapsed
+              - data
+            properties:
+              count:
+                type: integer
+                description: Total number of statuses with filters only
+              elapsed:
+                type: number
+                description: Total elapsed time in seconds of API request
+              data:
+                type: array
+                items:
+                  $ref: '#/definitions/StatusRetrieve'
+                description: List of statuses based on the filters, page size and offset
+  /health:
+    get:
+      description: 'runs liveness checks for the api and service and returns 200 or 404'
+      responses:
+        '202':
+          description: 'liveness checks successful'
+          schema:
+            $ref: '#/responses/TestPassed'
+        '404':
+          description: 'liveness checks failed'
+          schema:
+            $ref: '#/responses/TestFailed'
+  /stats:
+    get:
+      description: ''
+      parameters:
+        - name: stat
+          in: query
+          description: Stat to use
+          required: false
+          type: string
+          default: SuccessRate
+          enum: [SuccessRate]
+      responses:
+        '200':
+          description: 'successfully returned requested stats'
+          schema:
+            $ref: '#/definitions/StatsRetrieve'
+        '404':
+          $ref: '#/responses/NotFound'
+responses:
+  BadRequest:
+    description: Bad request
+    schema:
+      $ref: '#/definitions/Error'
+  NotFound:
+    description: The specified resource was not found
+    schema:
+      $ref: '#/definitions/Error'
+  Unauthorized:
+    description: The user is not authorized to access this resource
+    schema:
+      $ref: '#/definitions/Error'
+  Forbidden:
+    description: The user does not have the permissions to access this resource
+    schema:
+      $ref: '#/definitions/Error'
+  TestFailed:
+    description: 'The tests run were unsuccessful'
+    schema:
+      $ref: '#/definitions/Error'
+  TestPassed:
+    description: 'The tests run were successful'
+    schema:
+      $ref: '#/definitions/Success'
+  InternalServerError:
+    description: An error occured within the service or in the services it replies upon
+    schema:
+      $ref: '#/definitions/Error'
+definitions:
+  Error:
+    type: object
+    properties:
+      message:
+        type: string
+    required:
+      - message
+  Success:
+    type: object
+    properties:
+      message:
+        type: string
+    required:
+      - message
+  PayloadRetrieveByID:
+    required:
+      - service
+      - status
+    type: object
+    properties:
+      id:
+        title: Id
+        type: integer
+      service:
+        title: Service
+        type: string
+      source:
+        title: Source
+        type: string
+      account:
+        title: Account
+        type: string
+      org_id:
+        title: Org ID
+        description: Identifies the organization that the given resource belongs to
+        type: string
+      request_id:
+        title: Request ID
+        type: string
+        minLength: 1
+        format: uuid
+      inventory_id:
+        title: Inventory ID
+        type: string
+        format: uuid
+      system_id:
+        title: System ID
+        type: string
+        format: uuid
+      status:
+        title: Status
+        type: string
+      status_msg:
+        title: Status Message
+        type: string
+      date:
+        title: Status Date
+        type: string
+        format: date-time
+        readOnly: true
+      created_at:
+        title: Created at
+        type: string
+        format: date-time
+        readOnly: true
+  PayloadRetrieve:
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+      request_id:
+        title: Request ID
+        type: string
+        minLength: 1
+        format: uuid
+      account:
+        title: Account
+        type: string
+      org_id:
+        title: Org ID
+        type: string
+      inventory_id:
+        title: Inventory ID
+        type: string
+        format: uuid
+      system_id:
+        title: System ID
+        type: string
+        format: uuid
+      created_at:
+        title: Created at
+        type: string
+        format: date-time
+        readOnly: true
+  StatusRetrieve:
+    type: object
+    properties:
+      id:
+        title: Id
+        type: string
+      service:
+        title: Service
+        type: string
+      source:
+        title: Source
+        type: string
+      request_id:
+        title: Request ID
+        type: string
+        minLength: 1
+        format: uuid
+      status:
+        title: Status
+        type: string
+      status_msg:
+        title: Status Message
+        type: string
+      date:
+        title: Status Date
+        type: string
+        format: date-time
+        readOnly: true
+      created_at:
+        title: Created at
+        type: string
+        format: date-time
+        readOnly: true
+  DurationsRetrieve:
+    type: object
+    properties:
+      service:
+        type: string
+      timedelta:
+        type: string
+  StatsRetrieve:
+    required:
+      - message
+    type: object
+    properties:
+      message:
+        type: string

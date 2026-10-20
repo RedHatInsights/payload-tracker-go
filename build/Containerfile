@@ -1,0 +1,43 @@
+################################
+# STEP 1 build executable binaries
+################################
+FROM registry.access.redhat.com/hi/go:latest-fips-builder@sha256:6d1a0db4ba335b6ccdb8dac7e73125c39989ac3f5186b6e6c6bb2f9ceec0c832 AS builder
+
+USER 0
+
+WORKDIR /workspace
+
+# Cache deps before copying source so that we do not need to re-download for every build
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY api api
+COPY cmd cmd
+COPY internal internal
+COPY tools tools
+COPY migrations migrations
+
+RUN go build -ldflags "-w -s" -o pt-api cmd/payload-tracker-api/main.go && \
+    go build -ldflags "-w -s" -o pt-consumer cmd/payload-tracker-consumer/main.go && \
+    go build -ldflags "-w -s" -o pt-migration internal/migration/main.go && \
+    go build -ldflags "-w -s" -o pt-seeder tools/db-seeder/main.go
+
+############################
+# STEP 2 build a small image
+############################
+FROM registry.access.redhat.com/hi/go:latest-fips@sha256:374c74570357b1079f5fea4b909deeec85bd5e7b02e204beab893db65d2e2f08
+
+WORKDIR /
+
+COPY --from=builder /workspace/pt-api ./pt-api
+COPY --from=builder /workspace/pt-consumer ./pt-consumer
+COPY --from=builder /workspace/pt-migration ./pt-migration
+COPY --from=builder /workspace/migrations /migrations/
+COPY --from=builder /workspace/pt-seeder ./pt-seeder
+COPY tools ./tools
+
+USER 1001
+
+# There is no command here becuase this image can be used for
+# both the api and consumer. The command to run should be in the
+# deployment config.

@@ -1,0 +1,36 @@
+---
+name: PR Check
+
+on:
+  - pull_request
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_DB: crc
+          POSTGRES_USER: crc
+          POSTGRES_PASSWORD: crc
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+    - name: Install Go
+      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      with:
+        go-version-file: go.mod
+    - name: Migrate DB
+      run: make run-migration
+    - name: Check Build
+      run: make build-all
+    - name: Run Tests
+      run: go test ./...

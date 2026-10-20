@@ -1,0 +1,155 @@
+{
+    "services":[
+        {
+            "name": "advisor"
+        },
+        {
+            "name": "compliance"
+        },
+        {
+            "name": "ingress"
+        },
+        {
+            "name": "inventory"
+        },
+        {
+            "name": "puptoo"
+        }
+    ],
+    "sources": [
+        {
+            "name": "insights-client"
+        },
+        {
+            "name": "inventory"
+        },
+        {
+            "name": "compliance-consumer"
+        },
+        {
+            "name": "test-source"
+        },
+        {
+            "name": "foobar"
+        }
+    ],
+    "statuses": [
+        {
+            "name": "error"
+        },
+        {
+            "name": "failed"
+        },
+        {
+            "name": "processed"
+        },
+        {
+            "name": "processing_error"
+        },
+        {
+            "name": "processing_success"
+        },
+        {
+            "name": "received"
+        },
+        {
+            "name": "success"
+        },
+        {
+            "name": "processing"
+        },
+        {
+            "name": "validated"
+        },
+        {
+            "name": "test_status"
+        }
+    ],
+    "payloads":[
+        {
+            "request_id": "91ebdd7c01b34efc9cc9a1af8d1ff53d",
+            "account": null,
+            "inventory_id": null,
+            "system_id": null,
+            "org_id": null
+        },
+        {
+            "request_id": "f61cbfd7177846279ab179a0b098952e",
+            "account": "test",
+            "inventory_id": "30ecee980cae42bca0c20921e9bec7c6",
+            "system_id": "2fd670284ef54af68c9d0aa4632163c2",
+            "org_id": "12345"
+        },
+        {
+            "request_id": "d30a7eef2f03433999f6de3b368b48c6",
+            "account": "test",
+            "inventory_id": "0e047615d835412db15aa5f8135a4197",
+            "system_id": "cc9441b2780a424999af0f0df334bda8",
+            "org_id": "12345"
+        },
+        {
+            "request_id": "150bed4601c24ea9be73db9b20acb635",
+            "account": "foobar",
+            "inventory_id": "cb91e19b7eb04750b48bc52ec482f669",
+            "system_id": "b51d65b352ba498fafe3bcf02751f549",
+            "org_id": "12345"
+        },
+        {
+            "request_id": "33b727497c3940589fc5276e739235c6",
+            "account": "foobar",
+            "inventory_id": "1f5da556f2ad45f09623b53b137d0c94",
+            "system_id": "f150f50b1e1b4fa9a55a5596dd43632c",
+            "org_id": "12345"
+        }
+    ],
+    "payload_statuses":[
+        {
+            "payload_id": 1,
+            "service_id": 2,
+            "source_id": 1,
+            "status_id": 5,
+            "status_msg": null,
+            "date": "2021-08-04T11:45:26.371Z"
+        },
+        {
+            "payload_id": 4,
+            "service_id": 5,
+            "source_id": 2,
+            "status_id": 1,
+            "status_msg": "performing db operations",
+            "date": "2021-08-04T11:45:26.371Z"
+        },
+        {
+            "payload_id": 4,
+            "service_id": 4,
+            "source_id": 2,
+            "status_id": 2,
+            "status_msg": "generating reports",
+            "date": "2021-08-04T11:45:26.391Z"
+        },
+        {
+            "payload_id": 4,
+            "service_id": 5,
+            "source_id": 2,
+            "status_id": 4,
+            "status_msg": "done",
+            "date": "2021-08-04T11:45:26.381Z"
+        },
+        {
+            "payload_id": 5,
+            "service_id": 2,
+            "source_id": 1,
+            "status_id": 3,
+            "status_msg": "performing db operations",
+            "date": "2021-08-04T11:45:26.371Z"
+        },
+        {
+            "payload_id": 3,
+            "service_id": 1,
+            "source_id": 5,
+            "status_id": 4,
+            "status_msg": "generating reports",
+            "date": "2021-08-04T11:45:26.371Z"
+        }
+    ]
+}

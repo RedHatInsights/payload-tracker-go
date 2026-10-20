@@ -1,0 +1,408 @@
+---
+apiVersion: v1
+kind: Template
+metadata:
+  name: payload-tracker
+objects:
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: ClowdApp
+  metadata:
+    name: payload-tracker
+  spec:
+    optionalDependencies:
+    - storage-broker
+    - ingress
+    - rbac
+    testing:
+      iqePlugin: payload-tracker
+    envName: ${ENV_NAME}
+    database:
+      name: payloadtracker
+      version: 16
+    kafkaTopics:
+    - replicas: 3
+      partitions: 20
+      topicName: platform.payload-status
+    deployments:
+    - name: api
+      webServices:
+        public:
+          enabled: True
+      minReplicas: ${{API_REPLICAS}}
+      podSpec:
+        initContainers:
+          - command:
+            - ./pt-migration
+            - upgrade
+            image: ${IMAGE}:${IMAGE_TAG}
+            inheritEnv: true    
+        minReadySeconds: 15
+        progressDeadlineSeconds: 600
+        image: ${IMAGE}:${IMAGE_TAG}
+        command: 
+          - ./pt-api
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /health
+            port: 8000
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /health
+            port: 8000
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: ${CPU_LIMIT}
+            memory: ${MEMORY_LIMIT}
+          requests:
+            cpu: ${CPU_REQUEST}
+            memory: ${MEMORY_REQUEST}
+        env:
+          - name: LOG_LEVEL
+            value: ${LOGLEVEL}
+          - name: STORAGEBROKERURL
+            value: ${STORAGE_BROKER_URL}
+          - name: KIBANA_URL
+            value: ${KIBANA_URL}
+          - name: KIBANA_INDEX
+            value: ${KIBANA_INDEX}
+          - name: KIBANA_SERVICE_FIELD
+            value: ${KIBANA_SERVICE_FIELD}
+          - name: SSL_CERT_DIR
+            value: ${SSL_CERT_DIR}
+    - name: consumer
+      minReplicas: ${{CONSUMER_REPLICAS}}
+      podSpec:  
+        minReadySeconds: 15
+        progressDeadlineSeconds: 600
+        image: ${IMAGE}:${IMAGE_TAG}
+        command: 
+          - ./pt-consumer
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /live
+            port: 9000
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /ready
+            port: 9000
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: ${CONSUMER_CPU_LIMIT}
+            memory: ${CONSUMER_MEMORY_LIMIT}
+          requests:
+            cpu: ${CONSUMER_CPU_REQUEST}
+            memory: ${CONSUMER_MEMORY_REQUEST}
+        env:
+          - name: LOG_LEVEL
+            value: ${LOGLEVEL}
+          - name: DEBUG_LOG_STATUS_JSON
+            value: ${DEBUG_LOG_STATUS_JSON}
+    jobs:
+    - name: vacuum
+      schedule: ${CLEANER_SCHEDULE}
+      suspend: ${{CLEANER_SUSPEND}}
+      podSpec:
+        image: registry.redhat.io/rhel9/postgresql-16:9.7
+        imagePullPolicy: Always
+        restartPolicy: Never
+        volumes:
+          - name: payload-tracker-go-db-cleaner-volume
+            configMap:
+              name: payload-tracker-go-db-cleaner-config
+        volumeMounts:
+          - name: payload-tracker-go-db-cleaner-volume
+            mountPath: /payload-tracker-go-db-cleaner
+        command: [ 'sh', '/payload-tracker-go-db-cleaner/clean.sh' ]
+        env:
+          - name: PGHOST
+            valueFrom:
+              secretKeyRef:
+                name: payload-tracker-db-creds
+                key: ${DB_SECRET_HOSTNAME_KEY}
+          - name: PGDATABASE
+            valueFrom:
+              secretKeyRef:
+                name: payload-tracker-db-creds
+                key: ${DB_SECRET_DBNAME_KEY}
+          - name: PGUSER
+            valueFrom:
+              secretKeyRef:
+                name: payload-tracker-db-creds
+                key: ${DB_SECRET_USERNAME_KEY}
+          - name: PGPASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: payload-tracker-db-creds
+                key: ${DB_SECRET_PASSWORD_KEY}
+        resources:
+          limits:
+            cpu: ${VACUUM_CPU_LIMIT}
+            memory: ${VACUUM_MEMORY_LIMIT}
+          requests:
+            cpu: ${VACUUM_CPU_REQUEST}
+            memory: ${VACUUM_MEMORY_REQUEST}
+    - name: create-partition
+      schedule: ${CREATE_PARTITION_SCHEDULE}
+      suspend: ${{CREATE_PARTITION_SUSPEND}}
+      podSpec:
+        image: registry.redhat.io/rhel9/postgresql-16:9.7
+        imagePullPolicy: Always
+        restartPolicy: Never
+        volumes:
+          - name: payload-tracker-go-create-partition-volume
+            configMap:
+              name: payload-tracker-go-create-partition-config
+        volumeMounts:
+          - name: payload-tracker-go-create-partition-volume
+            mountPath: /payload-tracker-go-create-partition
+        command: [ 'sh', '/payload-tracker-go-create-partition/create-partition.sh' ]
+        env:
+          # TARGET_DATE (YYYY-MM-DD) selects the partition to create. Leave empty
+          # to default to tomorrow. On-demand invocations (e.g. an app-interface
+          # automated-action) override this via the Job env to backfill a date.
+          - name: TARGET_DATE
+            value: ${TARGET_DATE}
+          - name: PGHOST
+            valueFrom:
+              secretKeyRef:
+                name: payload-tracker-db-creds
+                key: ${DB_SECRET_HOSTNAME_KEY}
+          - name: PGDATABASE
+            valueFrom:
+              secretKeyRef:
+                name: payload-tracker-db-creds
+                key: ${DB_SECRET_DBNAME_KEY}
+          - name: PGUSER
+            valueFrom:
+              secretKeyRef:
+                name: payload-tracker-db-creds
+                key: ${DB_SECRET_USERNAME_KEY}
+          - name: PGPASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: payload-tracker-db-creds
+                key: ${DB_SECRET_PASSWORD_KEY}
+        resources:
+          limits:
+            cpu: ${VACUUM_CPU_LIMIT}
+            memory: ${VACUUM_MEMORY_LIMIT}
+          requests:
+            cpu: ${VACUUM_CPU_REQUEST}
+            memory: ${VACUUM_MEMORY_REQUEST}
+
+
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: payload-tracker-go-db-cleaner-config
+  data:
+    clean.sh: |
+      #!/bin/bash
+      
+      RETENTION_DAYS=${RETENTION_DAYS:-7}
+      MAX_NUMBER_OF_RETRIES=${MAX_NUMBER_OF_RETRIES:-3}
+      SLEEP_TIME=${SLEEP_TIME:-10}
+      
+      echo "RETENTION_DAYS: $RETENTION_DAYS"
+      echo "MAX_NUMBER_OF_RETRIES: $MAX_NUMBER_OF_RETRIES"
+      echo "SLEEP_TIME: $SLEEP_TIME"
+      
+      #psql -c "DELETE FROM payload_statuses WHERE created_at < (NOW() - interval '$RETENTION_DAYS days');"
+      #psql -c "VACUUM ANALYZE payload_statuses;"
+     
+      for i in $(seq 1 ${MAX_NUMBER_OF_RETRIES})
+      do
+        echo "Creating partition"
+      
+        # Try to create the partition ...if it works, jump out of the retry logic
+        psql -c "SELECT create_partition(NOW()::DATE + INTERVAL '1 DAY', NOW()::DATE + INTERVAL '2 DAY');" && break || sleep $SLEEP_TIME
+      done
+      
+      echo "Deleting partition"
+      psql -c "SELECT drop_partition(NOW()::DATE - INTERVAL '$RETENTION_DAYS DAY', NOW()::DATE - (($RETENTION_DAYS - 1) || ' DAY')::INTERVAL);"
+
+      echo "Deleting payloads"
+      psql -c "DELETE FROM payloads WHERE created_at < (NOW() - interval '$RETENTION_DAYS days');"
+
+      echo "Vacuuming payloads"
+      psql -c "VACUUM ANALYZE payloads;"
+
+
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: payload-tracker-go-create-partition-config
+  data:
+    create-partition.sh: |
+      #!/bin/bash
+
+      MAX_NUMBER_OF_RETRIES=${MAX_NUMBER_OF_RETRIES:-3}
+      SLEEP_TIME=${SLEEP_TIME:-10}
+
+      # TARGET_DATE (YYYY-MM-DD) is the day the partition should cover. When it is
+      # not provided, default to tomorrow -- matching the vacuum job's behaviour.
+      if [ -z "$TARGET_DATE" ]; then
+        START="NOW()::DATE + INTERVAL '1 DAY'"
+        STOP="NOW()::DATE + INTERVAL '2 DAY'"
+      else
+        START="'$TARGET_DATE'::DATE"
+        STOP="'$TARGET_DATE'::DATE + INTERVAL '1 DAY'"
+      fi
+
+      echo "MAX_NUMBER_OF_RETRIES: $MAX_NUMBER_OF_RETRIES"
+      echo "SLEEP_TIME: $SLEEP_TIME"
+      echo "TARGET_DATE: ${TARGET_DATE:-<tomorrow>}"
+
+      for i in $(seq 1 ${MAX_NUMBER_OF_RETRIES})
+      do
+        echo "Creating partition"
+
+        # create_partition is idempotent (CREATE TABLE / indexes IF NOT EXISTS).
+        # No drop or vacuum here -- this job only creates.
+        psql -c "SELECT create_partition($START, $STOP);" && break || sleep $SLEEP_TIME
+      done
+
+
+parameters:
+- description: Initial amount of memory the payload-tracker container will request.
+  displayName: Memory Request
+  name: MEMORY_REQUEST
+  required: true
+  value: 256Mi
+- description: Maximum amount of memory for the payload-tracker.
+  displayName: Memory Limit
+  name: MEMORY_LIMIT
+  required: true
+  value: 512Mi
+- description: Initial amount of cpu the payload-tracker will request.
+  displayName: CPU Request
+  name: CPU_REQUEST
+  required: true
+  value: 200m
+- description: Maximum amount of cpu the payload-tracker can use.
+  displayName: CPU Limit
+  name: CPU_LIMIT
+  required: true
+  value: 500m
+- description: Initial amount of memory the payload-tracker consumer container will request.
+  displayName: Memory Request
+  name: CONSUMER_MEMORY_REQUEST
+  required: true
+  value: 256Mi
+- description: Maximum amount of memory for the payload-tracker consumer.
+  displayName: Memory Limit
+  name: CONSUMER_MEMORY_LIMIT
+  required: true
+  value: 512Mi
+- description: Initial amount of cpu the payload-tracker consumer will request.
+  displayName: CPU Request
+  name: CONSUMER_CPU_REQUEST
+  required: true
+  value: 200m
+- description: Maximum amount of cpu the payload-tracker consumer can use.
+  displayName: CPU Limit
+  name: CONSUMER_CPU_LIMIT
+  required: true
+  value: 500m
+- description: Initial amount of memory the vacuum job will request.
+  displayName: Memory Request
+  name: VACUUM_MEMORY_REQUEST
+  required: true
+  value: 256Mi
+- description: Maximum amount of memory for the vacuum job.
+  displayName: Memory Limit
+  name: VACUUM_MEMORY_LIMIT
+  required: true
+  value: 512Mi
+- description: Initial amount of cpu the vacuum job will request.
+  displayName: CPU Request
+  name: VACUUM_CPU_REQUEST
+  required: true
+  value: 200m
+- description: Maximum amount of cpu the vacuum job can use.
+  displayName: CPU Limit
+  name: VACUUM_CPU_LIMIT
+  required: true
+  value: 500m
+- description: The log level to use for logging
+  displayName: The log level to use for logging
+  name: LOGLEVEL
+  required: true
+  value: DEBUG
+- description: The number of replicas to use for the payload-tracker
+  name: API_REPLICAS
+  value: '3'
+- description: The number of replicas to use for the payload-tracker consumer
+  name: CONSUMER_REPLICAS
+  value: '3'
+- description: Image
+  name: IMAGE
+  required: true
+  value: quay.io/redhat-services-prod/hcc-integrations-tenant/payload-tracker
+- description: Image tag
+  name: IMAGE_TAG
+  required: true
+- name: ENV_NAME
+  value: payload-tracker-api
+  required: true
+- name: CLEANER_SUSPEND
+  value: 'true'
+- name: CLEANER_SCHEDULE
+  value: "00 17 * * *"
+- description: Suspend the create-partition cronjob. It is intended to be triggered
+    on-demand (e.g. by an app-interface automated-action), not run on a schedule.
+  name: CREATE_PARTITION_SUSPEND
+  value: 'true'
+- description: Schedule for the create-partition cronjob. Only used if
+    CREATE_PARTITION_SUSPEND is set to false.
+  name: CREATE_PARTITION_SCHEDULE
+  value: "00 17 * * *"
+- description: Target date (YYYY-MM-DD) for the partition to create. Leave empty to
+    default to tomorrow. Overridden per-invocation when triggered on-demand.
+  name: TARGET_DATE
+  value: ''
+- name: DB_SECRET_DBNAME_KEY
+  description: Key of the database name field in the payload-tracker-db-creds secret
+  value: db.name
+- name: DB_SECRET_HOSTNAME_KEY
+  description: Key of the hostname field in the payload-tracker-db-creds secret
+  value: db.host
+- name: DB_SECRET_PASSWORD_KEY
+  description: Key of the password field in payload-tracker-db-creds secret
+  value: db.password
+- name: DB_SECRET_USERNAME_KEY
+  description: Key of the username field in the payload-tracker-db-creds secret
+  value: db.user
+- name: STORAGE_BROKER_URL
+  value: "http://storage-broker-processor:8000/archive/url"
+- name: KIBANA_URL
+  value: https://kibana.apps.crcs02ue1.urby.p1.openshiftapps.com/app/kibana#/discover
+- name: KIBANA_INDEX
+  value: 4b37e920-1ade-11ec-b3d0-a39435352faa
+- name: KIBANA_SERVICE_FIELD
+  value: app
+- name: DEBUG_LOG_STATUS_JSON
+  value: 'false'
+- name: SSL_CERT_DIR
+  value: '/etc/ssl/certs:/etc/pki/tls/certs:/system/etc/security/cacerts:/cdapp/certs'
+

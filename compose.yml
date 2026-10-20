@@ -1,0 +1,51 @@
+version: '3.1'
+services:
+    # comment out payload-tracker-api and payload-tracker-consumer stanza to disable them
+    payload-tracker-api:
+        image: payload-tracker-go
+        ports:
+            - "8080:8080"
+        environment:
+            DB_HOST: "payload-tracker-db"
+        command:
+            - /pt-api
+        depends_on:
+            - payload-tracker-db
+    payload-tracker-consumer:
+        image: payload-tracker-go
+        environment:
+            DB_HOST: "payload-tracker-db"
+            KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
+        command:
+            - /pt-consumer
+        depends_on:
+            - payload-tracker-db
+            - kafka
+    payload-tracker-db:
+        image: postgres
+        restart: always
+        environment:
+            POSTGRES_PASSWORD: crc
+            POSTGRES_USER: crc
+            POSTGRES_DB: crc
+        ports:
+            - "5432:5432"
+    zookeeper:
+        image: confluentinc/cp-zookeeper
+        environment:
+            - ZOOKEEPER_CLIENT_PORT=32181
+            - ZOOKEEPER_SERVER_ID=1
+    kafka:
+        # TODO: migrate from Zookeeper to KRaft
+        image: confluentinc/cp-kafka:7.9.2
+        ports:
+            - '29092:29092'
+        depends_on:
+            - zookeeper
+        environment:
+            # - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:29092
+            - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:29092
+            - KAFKA_BROKER_ID=1
+            - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+            - KAFKA_ZOOKEEPER_CONNECT=zookeeper:32181
+            - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true

@@ -1,0 +1,327 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: payload-tracker-go
+objects:
+- apiVersion: v1
+  imagePullSecrets:
+  - name: quay-cloudservices-pull
+  kind: ServiceAccount
+  metadata:
+    annotations:
+      serviceaccounts.openshift.io/oauth-redirectreference.primary: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"payload-tracker"}}'
+    name: payload-tracker-go
+  secrets:
+  - name: quay-cloudservices-pull
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    labels:
+      app: payload-tracker-go
+    name: payload-tracker-go
+  spec:
+    minReadySeconds: 15
+    replicas: ${{MIN_REPLICAS}}
+    revisionHistoryLimit: 9
+    selector:
+      matchLabels:
+        app: payload-tracker-go
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+      spec:
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                    - payload-tracker-go
+                topologyKey: failure-domain.beta.kubernetes.io/zone
+              weight: 100
+            - podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                    - payload-tracker-go
+                topologyKey: kubernetes.io/hostname
+              weight: 99
+        containers:
+        - env:
+          - name: LOG_LEVEL
+            value: ${LOG_LEVEL}
+          - name: DEBUG
+            value: ${DEBUG}
+          - name: PUBLICPORT
+            value: ${PUBLICPORT}
+          - name: DB_NAME
+            valueFrom:
+              secretKeyRef:
+                key: db.name
+                name: payload-tracker-db-creds
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                key: db.user
+                name: payload-tracker-db-creds
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: db.password
+                name: payload-tracker-db-creds
+          - name: DB_HOST
+            valueFrom:
+              secretKeyRef:
+                key: db.host
+                name: payload-tracker-db-creds
+          - name: DB_PORT
+            valueFrom:
+              secretKeyRef:
+                key: db.port
+                name: payload-tracker-db-creds
+          - name: BOOTSTRAP_SERVERS
+            value: ${KAFKA_BOOTSTRAP_HOST}:${KAFKA_BOOTSTRAP_PORT}
+          - name: PAYLOAD_TRACKER_TOPIC
+            value: ${PAYLOAD_TRACKER_TOPIC}
+          - name: CW_AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: aws_access_key_id
+                name: cloudwatch
+          - name: CW_AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: aws_secret_access_key
+                name: cloudwatch
+          - name: CWREGION
+            valueFrom:
+              secretKeyRef:
+                key: aws_region
+                name: cloudwatch
+          - name: LOGGROUP
+            valueFrom:
+              secretKeyRef:
+                key: log_group_name
+                name: cloudwatch
+          - name: CW_LOG_GROUP
+            value: ${CW_LOG_GROUP}
+          image: quay.io/cloudservices/payload-tracker-go:${IMAGE_TAG}
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /v1/health
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 60
+          name: payload-tracker-go
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /v1/health
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 60
+          resources:
+            limits:
+              cpu: ${CPU_LIMIT}
+              memory: ${MEMORY_LIMIT}
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /opt/certs/
+            name: kafka-cacert
+            readOnly: true
+        dnsPolicy: ClusterFirst
+        imagePullSecrets:
+        - name: quay-cloudservices-pull
+        - name: rh-registry-pull
+        initContainers:
+        - command:
+          - /bin/bash
+          - -c
+          - go build -o pt-migration internal/migration/main.go
+          - ./pt-migration
+          env:
+          - name: LOG_LEVEL
+            value: ${LOG_LEVEL}
+          - name: DEBUG
+            value: ${DEBUG}
+          - name: PUBLICPORT
+            value: ${PUBLICPORT}
+          - name: DB_NAME
+            valueFrom:
+              secretKeyRef:
+                key: db.name
+                name: payload-tracker-db-creds
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                key: db.user
+                name: payload-tracker-db-creds
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: db.password
+                name: payload-tracker-db-creds
+          - name: DB_HOST
+            valueFrom:
+              secretKeyRef:
+                key: db.host
+                name: payload-tracker-db-creds
+          - name: DB_PORT
+            valueFrom:
+              secretKeyRef:
+                key: db.port
+                name: payload-tracker-db-creds
+          - name: BOOTSTRAP_SERVERS
+            value: ${KAFKA_BOOTSTRAP_HOST}:${KAFKA_BOOTSTRAP_PORT}
+          - name: PAYLOAD_TRACKER_TOPIC
+            value: ${PAYLOAD_TRACKER_TOPIC}
+          - name: CW_AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: aws_access_key_id
+                name: cloudwatch
+          - name: CW_AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: aws_secret_access_key
+                name: cloudwatch
+          - name: CWREGION
+            valueFrom:
+              secretKeyRef:
+                key: aws_region
+                name: cloudwatch
+          - name: LOGGROUP
+            valueFrom:
+              secretKeyRef:
+                key: log_group_name
+                name: cloudwatch
+          - name: CW_LOG_STREAM
+            value: ${CW_LOG_STREAM}
+          - name: KAFKA_SECURITY_PROTOCOL
+            value: ${KAFKA_SECURITY_PROTOCOL}
+          - name: KAFKA_SSL_CAFILE
+            value: /opt/certs/kafka-cacert
+          - name: KAFKA_SASL_MECHANISM
+            value: ${KAFKA_SASL_MECHANISM}
+          - name: KAFKA_SASL_USERNAME
+            valueFrom:
+              secretKeyRef:
+                key: username
+                name: kafka-credentials
+          - name: KAFKA_SASL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: password
+                name: kafka-credentials
+          image: quay.io/cloudservices/payload-tracker-go:${IMAGE_TAG}
+          imagePullPolicy: IfNotPresent
+          name: payload-tracker-init
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          resources:
+            limits:
+              cpu: ${CPU_LIMIT}
+              memory: ${MEMORY_LIMIT}
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /opt/certs/
+            name: kafka-cacert
+            readOnly: true
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: payload-tracker-go
+        serviceAccountName: payload-tracker-go
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: kafka-cacert
+          secret:
+            secretName: kafka-ca
+- apiVersion: autoscaling/v1
+  kind: HorizontalPodAutoscaler
+  metadata:
+    labels:
+      app: payload-tracker-go
+    name: payload-tracker-go
+  spec:
+    maxReplicas: ${{MAX_REPLICAS}}
+    minReplicas: ${{MIN_REPLICAS}}
+    scaleTargetRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: payload-tracker-go
+    targetCPUUtilizationPercentage: 81
+parameters:
+- name: LOG_LEVEL
+  value: INFO
+- name: DEBUG
+  value: 'False'
+- name: PUBLICPORT
+  value: '8080'
+- name: DB_POOL_SIZE
+  value: '30'
+- name: DB_MAX_OVERFLOW
+  value: '100'
+- name: PAYLOAD_TRACKER_TOPIC
+  value: platform.payload-status
+- name: KAFKA_BOOTSTRAP_HOST
+  value: mq-kafka
+- name: KAFKA_BOOTSTRAP_PORT
+  value: '29092'
+- description: Cpu limit of service
+  name: CPU_LIMIT
+  value: 500m
+- description: memory limit of service
+  name: MEMORY_LIMIT
+  value: 512Mi
+- description: Maximum Replica count for deployment
+  name: MAX_REPLICAS
+  value: '8'
+- description: Minimum Replica count for deployment
+  name: MIN_REPLICAS
+  value: '8'
+- description: How long to let a deployment rollout go before failing.
+  name: UPDATE_TIMEOUT
+  value: '600'
+- description: AWS CloudWatch log stream
+  name: CW_LOG_GROUP
+  value: payload-tracker-go-dev
+- description: Istio Sidecar Exclude Outbound IP Ranges
+  name: EXCLUDE_CIDR
+- description: Inject Istio Sidecar
+  name: SIDECAR_INJECT
+  value: 'false'
+- description: The kafka security protocol
+  name: KAFKA_SECURITY_PROTOCOL
+  value: PLAINTEXT
+- description: Kafka SASL MECHANISM
+  name: KAFKA_SASL_MECHANISM
+  value: ''
+- description: Image tag
+  name: IMAGE_TAG
+  required: true
