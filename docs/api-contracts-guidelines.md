@@ -2,7 +2,7 @@
 
 ## Spec and Versioning
 
-- The API spec is a Swagger 2.0 file at `api/api.spec.yaml`. Update it whenever adding or changing endpoints, parameters, or response schemas.
+- The API spec is an OpenAPI 3.x file at `api/api.spec.yaml`. Update it whenever adding or changing endpoints, parameters, or response schemas.
 - The API is versioned as `v1` and mounted at `/api/v1/` (production) or `/app/payload-tracker/api/v1/` (when `ENVIRONMENT=DEV`). Route registration lives in `cmd/payload-tracker-api/main.go`.
 - This is a read-only (GET-only) REST API. There are no POST/PUT/PATCH/DELETE endpoints.
 
