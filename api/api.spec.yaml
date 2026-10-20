@@ -6,17 +6,6 @@ info:
 servers:
   - url: /v1
 paths:
-  /openapi.json:
-    get:
-      operationId: getOpenApiSpec
-      description: Download this OpenAPI 3.x specification document as JSON.
-      responses:
-        '200':
-          description: The OpenAPI specification document
-          content:
-            application/json:
-              schema:
-                type: object
   /payloads:
     get:
       operationId: getPayloads
