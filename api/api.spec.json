@@ -190,10 +190,10 @@
                     },
                     "duration": {
                       "type": "object",
-                      "items": {
-                        "$ref": "#/components/schemas/DurationsRetrieve"
+                      "additionalProperties": {
+                        "type": "string"
                       },
-                      "description": "Object with each service as a key and timedelta as an object"
+                      "description": "Object with each service as a key and timedelta as a string value"
                     }
                   }
                 }
