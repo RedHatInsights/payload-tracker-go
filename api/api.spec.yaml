@@ -420,13 +420,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/responses/TestPassed'
+                $ref: '#/components/schemas/Success'
         '404':
           description: 'liveness checks failed'
           content:
             application/json:
               schema:
-                $ref: '#/components/responses/TestFailed'
+                $ref: '#/components/schemas/Error'
   /stats:
     get:
       operationId: getStats

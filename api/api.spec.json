@@ -599,7 +599,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/responses/TestPassed"
+                  "$ref": "#/components/schemas/Success"
                 }
               }
             }
@@ -609,7 +609,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/responses/TestFailed"
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
