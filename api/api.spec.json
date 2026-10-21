@@ -889,17 +889,6 @@
           }
         }
       },
-      "DurationsRetrieve": {
-        "type": "object",
-        "properties": {
-          "service": {
-            "type": "string"
-          },
-          "timedelta": {
-            "type": "string"
-          }
-        }
-      },
       "StatsRetrieve": {
         "required": ["message"],
         "type": "object",

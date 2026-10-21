@@ -622,13 +622,6 @@ components:
           type: string
           format: date-time
           readOnly: true
-    DurationsRetrieve:
-      type: object
-      properties:
-        service:
-          type: string
-        timedelta:
-          type: string
     StatsRetrieve:
       required:
         - message
