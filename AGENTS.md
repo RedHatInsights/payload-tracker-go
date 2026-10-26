@@ -52,7 +52,7 @@ Tests use Ginkgo v1 and Gomega. The `-p 1` flag serializes test packages to prev
 
 ### PR Expectations
 - PRs follow the template in `.github/pull_request_template.md`: What/Why/How/Testing sections plus a Secure Coding Checklist.
-- When adding a new API endpoint: add the handler, register the route with `ResponseMetricsMiddleware`, update `api/api.spec.yaml`, add response structs, and write Ginkgo tests.
+- When adding a new API endpoint: add the handler, register the route with `ResponseMetricsMiddleware`, update `api/api.spec.yaml` and `api/api.spec.json`, add response structs, and write Ginkgo tests.
 - When adding a new Kafka message field: update `PayloadStatusMessage`, add to `models/db`, handle in `handler.go`, and apply `strings.ToLower()` if it is a categorical lookup key.
 
 ## Common Pitfalls

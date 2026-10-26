@@ -205,7 +205,7 @@ paths:
                       url:
                         type: string
                         description: URL to download the payload
-                        format: url
+                        format: uri
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -250,7 +250,7 @@ paths:
                       url:
                         type: string
                         description: URL to the payload's Kibana dashboard
-                        format: url
+                        format: uri
         '400':
           $ref: '#/components/responses/BadRequest'
         '403':
@@ -497,8 +497,12 @@ components:
     Error:
       type: object
       properties:
+        title:
+          type: string
         message:
           type: string
+        status:
+          type: integer
       required:
         - message
     Success:
