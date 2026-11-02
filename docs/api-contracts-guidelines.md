@@ -2,7 +2,7 @@
 
 ## Spec and Versioning
 
-- The API spec is a Swagger 2.0 file at `api/api.spec.yaml`. Update it whenever adding or changing endpoints, parameters, or response schemas.
+- The API spec is an OpenAPI 3.x file at `api/api.spec.yaml`, with a JSON twin at `api/api.spec.json` kept in sync by hand. Update both whenever adding or changing endpoints, parameters, or response schemas.
 - The API is versioned as `v1` and mounted at `/api/v1/` (production) or `/app/payload-tracker/api/v1/` (when `ENVIRONMENT=DEV`). Route registration lives in `cmd/payload-tracker-api/main.go`.
 - This is a read-only (GET-only) REST API. There are no POST/PUT/PATCH/DELETE endpoints.
 
@@ -71,7 +71,7 @@
 
 - Add the handler function in the appropriate file under `internal/endpoints/`.
 - Register the route in `cmd/payload-tracker-api/main.go` on the `sub` router with `ResponseMetricsMiddleware`.
-- Add the endpoint to `api/api.spec.yaml` with parameter definitions, response schemas, and error references.
+- Add the endpoint to `api/api.spec.yaml` **and** `api/api.spec.json` with parameter definitions, response schemas, and error references.
 - Add corresponding response structs to `internal/structs/api_structs.go`.
 - Write Ginkgo/Gomega tests in `internal/endpoints/` using `httptest.NewRecorder` and `test.MakeTestRequest()` from `internal/utils/test/helpers.go`. Mock database calls by reassigning the package-level function variables (e.g. `endpoints.RetrievePayloads = mockedFn`).
 
@@ -83,6 +83,15 @@ go test -p 1 -v ./...
 
 # Check that api.spec.yaml is valid YAML
 python3 -c "import yaml; yaml.safe_load(open('api/api.spec.yaml'))" 2>&1
+
+# Verify api.spec.json is a faithful JSON twin of api.spec.yaml (no drift between the two)
+python3 -c "
+import json, yaml
+yaml_spec = yaml.safe_load(open('api/api.spec.yaml'))
+json_spec = json.load(open('api/api.spec.json'))
+assert yaml_spec == json_spec, 'api.spec.yaml and api.spec.json have drifted apart'
+print('api.spec.yaml and api.spec.json match')
+"
 
 # Verify sort_by allowlists in utils.go match the spec enums
 grep -n 'validAllSortBy\|validIDSortBy\|validStatusesSortBy\|validSortDir' internal/endpoints/utils.go
