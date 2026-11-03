@@ -40,10 +40,10 @@ require (
 	github.com/klauspost/cpuid/v2 v2.4.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nxadm/tail v1.4.11 // indirect
-	github.com/pandatix/go-abnf v0.5.3 // indirect
+	github.com/pandatix/go-abnf v0.5.4 // indirect
 	github.com/pelletier/go-toml/v2 v2.4.3 // indirect
 	github.com/prometheus/client_model v0.6.3 // indirect
-	github.com/prometheus/common v0.73.0 // indirect
+	github.com/prometheus/common v0.73.1 // indirect
 	github.com/prometheus/procfs v0.23.0 // indirect
 	github.com/sagikazarmark/locafero v0.12.0 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
