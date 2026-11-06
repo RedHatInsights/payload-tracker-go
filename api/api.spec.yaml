@@ -113,6 +113,10 @@ paths:
                     items:
                       $ref: '#/components/schemas/PayloadRetrieve'
                     description: List of payloads based on the filters, page size and offset
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
   /payloads/{request_id}:
@@ -253,6 +257,8 @@ paths:
                         format: uri
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
         '404':
@@ -410,6 +416,10 @@ paths:
                     items:
                       $ref: '#/components/schemas/StatusRetrieve'
                     description: List of statuses based on the filters, page size and offset
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /health:
     get:
       operationId: getHealth
