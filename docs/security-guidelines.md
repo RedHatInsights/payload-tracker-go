@@ -2,10 +2,13 @@
 
 ## Identity Header Authentication (x-rh-identity)
 
-- Read the `x-rh-identity` header via `r.Header.Get("x-rh-identity")` -- this is the sole authentication mechanism for protected API endpoints.
-- Decode the header value with `base64.StdEncoding.DecodeString`, then `json.Unmarshal` into the nested struct `Identity > Associate > Roles` (JSON field name `"Role"`, not `"Roles"`).
-- Return `http.StatusUnauthorized` (401) when the header is missing or cannot be decoded/unmarshalled. Return `http.StatusForbidden` (403) when the required role is absent.
-- Implement role checks through the `checkForRole(r *http.Request, role string) (int, error)` function in `internal/endpoints/utils.go`. Do not duplicate this logic; call `checkForRole` from every handler that requires authorization.
+- Payload Tracker is an internal tool fronted by Turnpike. The data routes `/payloads`, `/payloads/{request_id}/archiveLink`, `/payloads/{request_id}/kibanaLink`, `/roles/archiveLink`, and `/statuses` are registered inside a `sub.Group` in `cmd/payload-tracker-api/main.go` that applies `endpoints.EnforceAssociateIdentity`. New data routes must be added to this group.
+- Exception: `/payloads/{request_id}` is not identity-enforced because the ingress service's `/track/{request_id}` endpoint calls it server-to-server without forwarding `x-rh-identity` and performs its own org_id authorization. Its exposure relies on the namespace `networkPoliciesAllow` lists in app-interface. Do not move other routes out of the enforced group.
+- `EnforceAssociateIdentity` (`internal/endpoints/identity.go`) decodes the header with `identity.DecodeIdentity` from `platform-go-middlewares/v2` and requires `identity.type == "Associate"` with a non-nil `associate` block (the identity Turnpike issues for SAML-authenticated associates). Customer `User`, `System`, and `ServiceAccount` identities are rejected even if they carry an `associate` block.
+- Return `http.StatusUnauthorized` (401) when the header is missing or cannot be decoded/unmarshalled. Return `http.StatusForbidden` (403) when the identity is not an Associate or the required role is absent.
+- Results are intentionally not scoped by the caller's `org_id`: associates need cross-org visibility. Do not add org scoping without product sign-off.
+- `x-rh-identity` is not signed. These checks prevent unauthenticated or customer-identity access but rely on Turnpike being the only network path to the API port; keep that in mind when changing ingress or NetworkPolicy.
+- Implement role checks through the `checkForRole(r *http.Request, role string) (int, error)` function in `internal/endpoints/utils.go`, which reuses the same Associate validation. Do not duplicate this logic; call `checkForRole` from every handler that requires authorization.
 
 ## Role-Based Access Control for Archive Downloads
 
@@ -63,8 +66,8 @@ if err != nil {
 # Run the existing test suite (includes identity header authentication scenarios)
 make test
 
-# Verify that role-check test coverage exists for both endpoints
-grep -n "x-rh-identity\|checkForRole\|StatusUnauthorized\|StatusForbidden" internal/endpoints/roles_test.go internal/endpoints/payloads_test.go
+# Verify that identity and role-check test coverage exists
+grep -n "x-rh-identity\|checkForRole\|StatusUnauthorized\|StatusForbidden" internal/endpoints/identity_test.go internal/endpoints/roles_test.go internal/endpoints/payloads_test.go
 
 # Verify the Kafka consumer conditionally applies SASL config
 grep -A5 "SASLMechanism" internal/kafka/kafka.go
