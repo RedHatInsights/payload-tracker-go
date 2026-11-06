@@ -67,12 +67,23 @@ func main() {
 	mr.Handle("/metrics", promhttp.Handler())
 
 	sub.With(endpoints.ResponseMetricsMiddleware).Get("/", lubdub)
-	sub.With(endpoints.ResponseMetricsMiddleware).Get("/payloads", endpoints.Payloads)
+
+	// Called server-to-server, without an x-rh-identity header, by the ingress
+	// service's /track endpoint, which performs its own org_id authorization.
+	// Exposure of this route is limited by the namespace NetworkPolicies.
 	sub.With(endpoints.ResponseMetricsMiddleware).Get("/payloads/{request_id}", endpoints.RequestIdPayloads)
-	sub.With(endpoints.ResponseMetricsMiddleware).Get("/payloads/{request_id}/archiveLink", payloadArchiveLinkHandler)
-	sub.With(endpoints.ResponseMetricsMiddleware).Get("/payloads/{request_id}/kibanaLink", endpoints.PayloadKibanaLink)
-	sub.With(endpoints.ResponseMetricsMiddleware).Get("/roles/archiveLink", endpoints.RolesArchiveLink)
-	sub.With(endpoints.ResponseMetricsMiddleware).Get("/statuses", endpoints.Statuses)
+
+	// All other data routes require a Turnpike-issued Associate x-rh-identity header.
+	sub.Group(func(authed chi.Router) {
+		authed.Use(endpoints.ResponseMetricsMiddleware)
+		authed.Use(endpoints.EnforceAssociateIdentity)
+
+		authed.Get("/payloads", endpoints.Payloads)
+		authed.Get("/payloads/{request_id}/archiveLink", payloadArchiveLinkHandler)
+		authed.Get("/payloads/{request_id}/kibanaLink", endpoints.PayloadKibanaLink)
+		authed.Get("/roles/archiveLink", endpoints.RolesArchiveLink)
+		authed.Get("/statuses", endpoints.Statuses)
+	})
 
 	srv := http.Server{
 		Addr:    ":" + cfg.PublicPort,
