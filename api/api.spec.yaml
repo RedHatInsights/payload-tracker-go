@@ -113,8 +113,10 @@ paths:
                     items:
                       $ref: '#/components/schemas/PayloadRetrieve'
                     description: List of payloads based on the filters, page size and offset
-        '404':
-          $ref: '#/components/responses/NotFound'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /payloads/{request_id}:
     get:
       operationId: getPayloadByRequestId
@@ -141,8 +143,12 @@ paths:
                     additionalProperties:
                       type: string
                     description: Object with each service as a key and timedelta as a string value
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     parameters:
       - name: request_id
         in: path
@@ -214,6 +220,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /payloads/{request_id}/kibanaLink:
     get:
       operationId: getPayloadKibanaLink
@@ -253,10 +261,6 @@ paths:
                         format: uri
         '400':
           $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -410,45 +414,10 @@ paths:
                     items:
                       $ref: '#/components/schemas/StatusRetrieve'
                     description: List of statuses based on the filters, page size and offset
-  /health:
-    get:
-      operationId: getHealth
-      description: 'runs liveness checks for the api and service and returns 200 or 404'
-      responses:
-        '202':
-          description: 'liveness checks successful'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Success'
-        '404':
-          description: 'liveness checks failed'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /stats:
-    get:
-      operationId: getStats
-      description: ''
-      parameters:
-        - name: stat
-          in: query
-          description: Stat to use
-          required: false
-          schema:
-            type: string
-            default: SuccessRate
-            enum: [SuccessRate]
-      responses:
-        '200':
-          description: 'successfully returned requested stats'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StatsRetrieve'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 components:
   responses:
     BadRequest:
@@ -475,18 +444,6 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-    TestFailed:
-      description: 'The tests run were unsuccessful'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    TestPassed:
-      description: 'The tests run were successful'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Success'
     InternalServerError:
       description: An error occured within the service or in the services it replies upon
       content:
@@ -503,13 +460,6 @@ components:
           type: string
         status:
           type: integer
-      required:
-        - message
-    Success:
-      type: object
-      properties:
-        message:
-          type: string
       required:
         - message
     PayloadRetrieveByID:
@@ -626,10 +576,3 @@ components:
           type: string
           format: date-time
           readOnly: true
-    StatsRetrieve:
-      required:
-        - message
-      type: object
-      properties:
-        message:
-          type: string
