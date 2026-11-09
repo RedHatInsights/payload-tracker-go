@@ -30,7 +30,7 @@
 
 ## Pagination Defaults
 
-- `initQuery()` in `internal/endpoints/utils.go` sets `Page` to 0 and `PageSize` to 10 by default. Both are parsed from query params via `strconv.Atoi()`, and the parse error is propagated to the caller as a 400 response.
+- `initQuery()` in `internal/endpoints/utils.go` sets `Page` to 0 and `PageSize` to `structs.DefaultPageSize` (10) by default. Both are parsed from query params via `strconv.Atoi()`. A non-integer or negative `page`, or a `page_size` outside 1 to `structs.MaxPageSize` (1000), returns a 400 response.
 
 ## Kafka Message Schema Enforcement
 

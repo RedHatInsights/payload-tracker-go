@@ -36,7 +36,7 @@ func initQuery(r *http.Request) (structs.Query, error) {
 
 	q := structs.Query{
 		Page:         0,
-		PageSize:     10,
+		PageSize:     structs.DefaultPageSize,
 		SortBy:       "date",
 		SortDir:      "desc",
 		InventoryID:  r.URL.Query().Get("inventory_id"),
@@ -58,8 +58,6 @@ func initQuery(r *http.Request) (structs.Query, error) {
 		DateGTE:   r.URL.Query().Get("date_gte"),
 	}
 
-	var err error
-
 	if r.URL.Query().Get("sort_by") != "" || stringInSlice(r.URL.Query().Get("sort_by"), validSortBy) {
 		q.SortBy = r.URL.Query().Get("sort_by")
 	}
@@ -68,15 +66,23 @@ func initQuery(r *http.Request) (structs.Query, error) {
 		q.SortDir = r.URL.Query().Get("sort_dir")
 	}
 
-	if r.URL.Query().Get("page") != "" {
-		q.Page, err = strconv.Atoi(r.URL.Query().Get("page"))
+	if page := r.URL.Query().Get("page"); page != "" {
+		p, err := strconv.Atoi(page)
+		if err != nil || p < 0 {
+			return q, errors.New("page must be a non-negative integer")
+		}
+		q.Page = p
 	}
 
-	if r.URL.Query().Get("page_size") != "" {
-		q.PageSize, err = strconv.Atoi(r.URL.Query().Get("page_size"))
+	if pageSize := r.URL.Query().Get("page_size"); pageSize != "" {
+		ps, err := strconv.Atoi(pageSize)
+		if err != nil || ps < 1 || ps > structs.MaxPageSize {
+			return q, fmt.Errorf("page_size must be an integer between 1 and %d", structs.MaxPageSize)
+		}
+		q.PageSize = ps
 	}
 
-	return q, err
+	return q, nil
 }
 
 func getDb() *gorm.DB {

@@ -87,6 +87,23 @@ func chainTimeConditions(dbColumn string, apiQuery structs.Query, dbQuery *gorm.
 	return dbQuery
 }
 
+// paginate applies LIMIT/OFFSET with a hard ceiling of structs.MaxPageSize rows,
+// regardless of caller input. A non-positive pageSize would otherwise make GORM
+// drop the LIMIT clause entirely and return the whole table.
+func paginate(page int, pageSize int) func(*gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if pageSize < 1 {
+			pageSize = structs.DefaultPageSize
+		} else if pageSize > structs.MaxPageSize {
+			pageSize = structs.MaxPageSize
+		}
+		if page < 0 {
+			page = 0
+		}
+		return db.Limit(pageSize).Offset(pageSize * page)
+	}
+}
+
 var RetrievePayloads = func(dbQuery *gorm.DB, page int, pageSize int, apiQuery structs.Query) (int64, []models.Payloads) {
 	var count int64
 	var payloads []models.Payloads
@@ -110,7 +127,7 @@ var RetrievePayloads = func(dbQuery *gorm.DB, page int, pageSize int, apiQuery s
 	orderString := fmt.Sprintf("%s %s", apiQuery.SortBy, apiQuery.SortDir)
 
 	//dbQuery.Model(&payloads).Count(&count)
-	dbQuery.Order(orderString).Limit(pageSize).Offset(pageSize * page).Find(&payloads)
+	dbQuery.Order(orderString).Scopes(paginate(page, pageSize)).Find(&payloads)
 
 	return count, payloads
 }
@@ -159,7 +176,7 @@ var RetrieveStatuses = func(dbQuery *gorm.DB, apiQuery structs.Query) (int64, []
 
 	orderString := fmt.Sprintf("%s %s", apiQuery.SortBy, apiQuery.SortDir)
 	//dbQuery.Model(&payloads).Count(&count)
-	dbQuery.Order(orderString).Limit(pageSize).Offset(pageSize * page).Scan(&payloads)
+	dbQuery.Order(orderString).Scopes(paginate(page, pageSize)).Scan(&payloads)
 
 	return count, payloads
 }
