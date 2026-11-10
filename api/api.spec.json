@@ -161,8 +161,11 @@
               }
             }
           },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
           }
         }
       }
@@ -200,8 +203,14 @@
               }
             }
           },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
           }
         }
       },
@@ -303,6 +312,9 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
           }
         }
       }
@@ -359,12 +371,6 @@
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
-          },
-          "403": {
-            "$ref": "#/components/responses/Forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
           },
           "500": {
             "$ref": "#/components/responses/InternalServerError"
@@ -585,68 +591,12 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/health": {
-      "get": {
-        "operationId": "getHealth",
-        "description": "runs liveness checks for the api and service and returns 200 or 404",
-        "responses": {
-          "202": {
-            "description": "liveness checks successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Success"
-                }
-              }
-            }
           },
-          "404": {
-            "description": "liveness checks failed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/stats": {
-      "get": {
-        "operationId": "getStats",
-        "description": "",
-        "parameters": [
-          {
-            "name": "stat",
-            "in": "query",
-            "description": "Stat to use",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "SuccessRate",
-              "enum": ["SuccessRate"]
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "successfully returned requested stats",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StatsRetrieve"
-                }
-              }
-            }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
           },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
           }
         }
       }
@@ -694,26 +644,6 @@
           }
         }
       },
-      "TestFailed": {
-        "description": "The tests run were unsuccessful",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            }
-          }
-        }
-      },
-      "TestPassed": {
-        "description": "The tests run were successful",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Success"
-            }
-          }
-        }
-      },
       "InternalServerError": {
         "description": "An error occured within the service or in the services it replies upon",
         "content": {
@@ -737,15 +667,6 @@
           },
           "status": {
             "type": "integer"
-          }
-        },
-        "required": ["message"]
-      },
-      "Success": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string"
           }
         },
         "required": ["message"]
@@ -892,15 +813,6 @@
             "type": "string",
             "format": "date-time",
             "readOnly": true
-          }
-        }
-      },
-      "StatsRetrieve": {
-        "required": ["message"],
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string"
           }
         }
       }
