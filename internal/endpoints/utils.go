@@ -3,7 +3,6 @@ package endpoints
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -133,47 +132,19 @@ func validTimestamps(q structs.Query, all bool) bool {
 	return true
 }
 
-// Check for a specified role in the user's identity header, returns (200, nil) if the role is found
+// Check for a specified role in the user's Associate identity header, returns (200, nil) if the role is found
 func checkForRole(r *http.Request, role string) (int, error) {
-	identityHeader := r.Header.Get("x-rh-identity")
-	principal := securitylog.PrincipalFromRequest(r)
-
-	if identityHeader == "" {
-		securitylog.LogAuthFailure("missing identity header", "archive_link", "", principal)
-		return http.StatusUnauthorized, errors.New("Missing Identity Header")
-	}
-
-	type IdentityHeader struct {
-		Identity struct {
-			Associate struct {
-				Roles []string `json:"Role"`
-			} `json:"associate"`
-		} `json:"identity"`
-	}
-
-	var identityHeaderData IdentityHeader
-	// base64 decode the header
-	decoded, err := base64.StdEncoding.DecodeString(identityHeader)
+	id, statusCode, err := decodeAssociateIdentity(r, "archive_link")
 	if err != nil {
-		l.Log.Error("Error decoding identity header", "error", err)
-		securitylog.LogAuthFailure("invalid base64 identity header", "archive_link", "", principal)
-		return http.StatusUnauthorized, err
+		return statusCode, err
 	}
 
-	err = json.Unmarshal(decoded, &identityHeaderData)
-	if err != nil {
-		l.Log.Error("Error unmarshalling identity header", "error", err)
-		securitylog.LogAuthFailure("invalid JSON identity header", "archive_link", "", principal)
-		return http.StatusUnauthorized, err
-
-	}
-
-	if !stringInSlice(role, identityHeaderData.Identity.Associate.Roles) {
+	if !stringInSlice(role, id.Identity.Associate.Role) {
 		l.Log.WithFields(logrus.Fields{
 			"role":          role,
-			"identity_hash": hashIdentity(identityHeader),
+			"identity_hash": hashIdentity(r.Header.Get("x-rh-identity")),
 		}).Infof("Unable to find required role")
-		securitylog.LogAuthzFailure("required role not found: "+role, "archive_link", "", principal)
+		securitylog.LogAuthzFailure("required role not found: "+role, "archive_link", "", securitylog.PrincipalFromRequest(r))
 		return http.StatusForbidden, errors.New("You do not have the required permissions to access this resource")
 	}
 
