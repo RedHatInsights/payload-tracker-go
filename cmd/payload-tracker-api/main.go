@@ -73,10 +73,10 @@ func main() {
 	// Exposure of this route is limited by the namespace NetworkPolicies.
 	sub.With(endpoints.ResponseMetricsMiddleware).Get("/payloads/{request_id}", endpoints.RequestIdPayloads)
 
-	// All other data routes require a Turnpike-issued Associate x-rh-identity header.
+	// All other data routes require a Turnpike-issued (Associate or X509) x-rh-identity header.
 	sub.Group(func(authed chi.Router) {
 		authed.Use(endpoints.ResponseMetricsMiddleware)
-		authed.Use(endpoints.EnforceAssociateIdentity)
+		authed.Use(endpoints.EnforceTurnpikeIdentity)
 
 		authed.Get("/payloads", endpoints.Payloads)
 		authed.Get("/payloads/{request_id}/archiveLink", payloadArchiveLinkHandler)

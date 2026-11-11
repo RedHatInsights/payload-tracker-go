@@ -9,23 +9,24 @@ import (
 	"github.com/redhatinsights/payload-tracker-go/internal/securitylog"
 )
 
-// associateIdentityType is the x-rh-identity type set by Turnpike for
-// SAML-authenticated Red Hat associates.
-const associateIdentityType = "Associate"
+// Identity types issued by Turnpike: "Associate" for SAML-authenticated Red Hat
+// associates and "X509" for mTLS client-certificate authentication.
+const (
+	associateIdentityType = "Associate"
+	x509IdentityType      = "X509"
+)
 
 var (
 	errMissingIdentity      = errors.New("Missing Identity Header")
 	errInvalidIdentity      = errors.New("Invalid Identity Header")
+	errNotTurnpikeIdentity  = errors.New("This resource is only available through Turnpike")
 	errNotAssociateIdentity = errors.New("This resource is only available to Red Hat associates")
 )
 
-// decodeAssociateIdentity decodes the x-rh-identity header and requires it to be
-// an Associate identity as issued by Turnpike. It returns the decoded identity,
-// or an HTTP status code and error describing why the request must be rejected.
-//
-// Payload Tracker is an internal tool: associates are allowed to read data for
-// any org, so results are intentionally not scoped by the caller's org_id.
-func decodeAssociateIdentity(r *http.Request, resourceType string) (identity.XRHID, int, error) {
+// decodeIdentity decodes the x-rh-identity header. It returns the decoded
+// identity, or an HTTP status code and error describing why the request must be
+// rejected.
+func decodeIdentity(r *http.Request, resourceType string) (identity.XRHID, int, error) {
 	identityHeader := r.Header.Get("x-rh-identity")
 	principal := securitylog.PrincipalFromRequest(r)
 
@@ -40,20 +41,59 @@ func decodeAssociateIdentity(r *http.Request, resourceType string) (identity.XRH
 		return identity.XRHID{}, http.StatusUnauthorized, errInvalidIdentity
 	}
 
-	if id.Identity.Type != associateIdentityType || id.Identity.Associate == nil {
-		securitylog.LogAuthzFailure("identity type not allowed: "+id.Identity.Type, resourceType, "", principal)
+	return id, http.StatusOK, nil
+}
+
+func isAssociateIdentity(id identity.XRHID) bool {
+	return id.Identity.Type == associateIdentityType && id.Identity.Associate != nil
+}
+
+func isX509Identity(id identity.XRHID) bool {
+	return id.Identity.Type == x509IdentityType && id.Identity.X509 != nil && id.Identity.X509.SubjectDN != ""
+}
+
+// decodeTurnpikeIdentity requires the x-rh-identity header to be an Associate
+// or X509 identity, the two types Turnpike issues for the payload-tracker route.
+//
+// Payload Tracker is an internal tool: these callers are allowed to read data
+// for any org, so results are intentionally not scoped by org_id.
+func decodeTurnpikeIdentity(r *http.Request, resourceType string) (identity.XRHID, int, error) {
+	id, statusCode, err := decodeIdentity(r, resourceType)
+	if err != nil {
+		return id, statusCode, err
+	}
+
+	if !isAssociateIdentity(id) && !isX509Identity(id) {
+		securitylog.LogAuthzFailure("identity type not allowed: "+id.Identity.Type, resourceType, "", securitylog.PrincipalFromRequest(r))
+		return identity.XRHID{}, http.StatusForbidden, errNotTurnpikeIdentity
+	}
+
+	return id, http.StatusOK, nil
+}
+
+// decodeAssociateIdentity requires the x-rh-identity header to be an Associate
+// identity. Used where LDAP roles (identity.associate.Role) are checked.
+func decodeAssociateIdentity(r *http.Request, resourceType string) (identity.XRHID, int, error) {
+	id, statusCode, err := decodeIdentity(r, resourceType)
+	if err != nil {
+		return id, statusCode, err
+	}
+
+	if !isAssociateIdentity(id) {
+		securitylog.LogAuthzFailure("identity type not allowed: "+id.Identity.Type, resourceType, "", securitylog.PrincipalFromRequest(r))
 		return identity.XRHID{}, http.StatusForbidden, errNotAssociateIdentity
 	}
 
 	return id, http.StatusOK, nil
 }
 
-// EnforceAssociateIdentity is a middleware that rejects requests that do not
-// carry a valid Turnpike-issued Associate x-rh-identity header. On success the
-// decoded identity is placed in the request context (see identity.GetIdentity).
-func EnforceAssociateIdentity(next http.Handler) http.Handler {
+// EnforceTurnpikeIdentity is a middleware that rejects requests that do not
+// carry a valid Turnpike-issued (Associate or X509) x-rh-identity header. On
+// success the decoded identity is placed in the request context (see
+// identity.GetIdentity).
+func EnforceTurnpikeIdentity(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		id, statusCode, err := decodeAssociateIdentity(r, "api")
+		id, statusCode, err := decodeTurnpikeIdentity(r, "api")
 		if err != nil {
 			writeResponse(w, statusCode, getErrorBody(err.Error(), statusCode))
 			return
