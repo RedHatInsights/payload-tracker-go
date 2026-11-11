@@ -18,13 +18,16 @@ paths:
           schema:
             type: integer
             default: 0
+            minimum: 0
         - name: page_size
           in: query
-          description: Size of the page
+          description: Size of the page. Values outside 1-1000 are rejected with 400.
           required: false
           schema:
             type: integer
             default: 10
+            minimum: 1
+            maximum: 1000
         - name: sort_by
           in: query
           description: Attribute to sort results by
@@ -113,6 +116,8 @@ paths:
                     items:
                       $ref: '#/components/schemas/PayloadRetrieve'
                     description: List of payloads based on the filters, page size and offset
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
   /payloads/{request_id}:
@@ -294,13 +299,16 @@ paths:
           schema:
             type: integer
             default: 0
+            minimum: 0
         - name: page_size
           in: query
-          description: Size of the page
+          description: Size of the page. Values outside 1-1000 are rejected with 400.
           required: false
           schema:
             type: integer
             default: 10
+            minimum: 1
+            maximum: 1000
         - name: sort_by
           in: query
           description: Attribute to sort results by
@@ -410,6 +418,8 @@ paths:
                     items:
                       $ref: '#/components/schemas/StatusRetrieve'
                     description: List of statuses based on the filters, page size and offset
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /health:
     get:
       operationId: getHealth

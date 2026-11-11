@@ -27,7 +27,7 @@
 
 ## Pagination
 
-- Pagination uses `page` (0-indexed, default 0) and `page_size` (default 10) query parameters. Offset is calculated as `page_size * page` in the query layer.
+- Pagination uses `page` (0-indexed, default 0) and `page_size` (default `structs.DefaultPageSize` = 10, maximum `structs.MaxPageSize` = 1000) query parameters. Offset is calculated as `page_size * page` in the query layer by the `paginate` GORM scope in `internal/queries/queries_api.go`, which also enforces the hard LIMIT ceiling. Never call `.Limit()` with caller input directly: GORM treats a negative limit as "no LIMIT" and returns the whole table.
 - Parsed via `initQuery()` in `internal/endpoints/utils.go` into `structs.Query`.
 
 ## Sorting

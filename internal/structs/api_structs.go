@@ -6,6 +6,14 @@ import (
 	"github.com/redhatinsights/payload-tracker-go/internal/models"
 )
 
+const (
+	// DefaultPageSize is the page size used when the page_size query parameter is omitted.
+	DefaultPageSize = 10
+	// MaxPageSize is the largest page_size a caller may request. It bounds the
+	// number of rows a single API request can pull from the database.
+	MaxPageSize = 1000
+)
+
 // Query is a struct for holding query params
 type Query struct {
 	Page         int

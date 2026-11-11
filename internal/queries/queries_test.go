@@ -1,6 +1,8 @@
 package queries
 
 import (
+	"gorm.io/gorm"
+
 	models "github.com/redhatinsights/payload-tracker-go/internal/models/db"
 	"github.com/redhatinsights/payload-tracker-go/internal/utils/test"
 
@@ -39,6 +41,35 @@ func getUUID() string {
 
 var _ = Describe("Queries", func() {
 	db := test.WithDatabase()
+
+	It("Always applies a bounded LIMIT when paginating", func() {
+		// dryRun returns the SQL and bound vars produced for a dry-run query.
+		dryRun := func(page, pageSize int) (string, []interface{}) {
+			var payloads []models.Payloads
+			stmt := db().Session(&gorm.Session{DryRun: true}).Scopes(paginate(page, pageSize)).Find(&payloads).Statement
+			return stmt.SQL.String(), stmt.Vars
+		}
+
+		sql, vars := dryRun(0, -1)
+		Expect(sql).To(ContainSubstring("LIMIT"))
+		Expect(vars).To(Equal([]interface{}{10}))
+
+		sql, vars = dryRun(0, 0)
+		Expect(sql).To(ContainSubstring("LIMIT"))
+		Expect(vars).To(Equal([]interface{}{10}))
+
+		sql, vars = dryRun(0, 1000000)
+		Expect(sql).To(ContainSubstring("LIMIT"))
+		Expect(vars).To(Equal([]interface{}{1000}))
+
+		sql, vars = dryRun(-5, 50)
+		Expect(sql).ToNot(ContainSubstring("OFFSET"))
+		Expect(vars).To(Equal([]interface{}{50}))
+
+		sql, vars = dryRun(2, 50)
+		Expect(sql).To(ContainSubstring("LIMIT $1 OFFSET $2"))
+		Expect(vars).To(Equal([]interface{}{50, 100}))
+	})
 
 	It("Retrieves request id payload", func() {
 		requestId := getUUID()
