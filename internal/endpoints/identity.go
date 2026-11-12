@@ -87,6 +87,37 @@ func decodeAssociateIdentity(r *http.Request, resourceType string) (identity.XRH
 	return id, http.StatusOK, nil
 }
 
+// EnforceValidIdentity is a middleware that requires a well-formed
+// x-rh-identity header of any type that passes the platform base policy
+// (identity.DecodeAndCheckIdentity: an org_id is required unless the type is
+// Associate or X509). It is used on /payloads/{request_id}, which the ingress
+// service's customer-facing /track endpoint calls with the caller's forwarded
+// identity; ingress performs the org_id authorization. On success the decoded
+// identity is placed in the request context.
+func EnforceValidIdentity(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		identityHeader := r.Header.Get("x-rh-identity")
+		principal := securitylog.PrincipalFromRequest(r)
+
+		if identityHeader == "" {
+			securitylog.LogAuthFailure("missing identity header", "payload", "", principal)
+			writeResponse(w, http.StatusUnauthorized, getErrorBody(errMissingIdentity.Error(), http.StatusUnauthorized))
+			return
+		}
+
+		id, err := identity.DecodeAndCheckIdentity(identityHeader)
+		if err != nil {
+			securitylog.LogAuthFailure("invalid identity header: "+err.Error(), "payload", "", principal)
+			writeResponse(w, http.StatusUnauthorized, getErrorBody(errInvalidIdentity.Error(), http.StatusUnauthorized))
+			return
+		}
+
+		ctx := identity.WithIdentity(r.Context(), id)
+		ctx = identity.WithRawIdentity(ctx, identityHeader)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
 // EnforceTurnpikeIdentity is a middleware that rejects requests that do not
 // carry a valid Turnpike-issued (Associate or X509) x-rh-identity header. On
 // success the decoded identity is placed in the request context (see

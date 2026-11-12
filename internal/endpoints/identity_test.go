@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 
@@ -128,4 +129,68 @@ var _ = Describe("Archive link role check", func() {
 		http.HandlerFunc(endpoints.RolesArchiveLink).ServeHTTP(rr, req)
 		Expect(rr.Code).To(Equal(http.StatusForbidden))
 	})
+})
+
+var _ = Describe("EnforceValidIdentity", func() {
+	var (
+		handler    http.Handler
+		rr         *httptest.ResponseRecorder
+		nextCalled bool
+	)
+
+	BeforeEach(func() {
+		nextCalled = false
+		rr = httptest.NewRecorder()
+		handler = endpoints.EnforceValidIdentity(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			nextCalled = true
+			Expect(identity.GetRawIdentity(r.Context())).ToNot(BeEmpty())
+			w.WriteHeader(http.StatusOK)
+		}))
+	})
+
+	serve := func(header string) {
+		req, err := test.MakeTestRequest("/api/v1/payloads/3e3f56e6-42a2-4800-8811-cce123b2c0f2", map[string]interface{}{"verbosity": 0})
+		Expect(err).To(BeNil())
+		if header != "" {
+			req.Header.Set("x-rh-identity", header)
+		}
+		handler.ServeHTTP(rr, req)
+	}
+
+	It("Should return 401 when the identity header is missing", func() {
+		serve("")
+		Expect(rr.Code).To(Equal(http.StatusUnauthorized))
+		Expect(nextCalled).To(BeFalse())
+	})
+
+	It("Should return 401 when the identity header is not valid base64", func() {
+		serve("not-valid-base64!!!")
+		Expect(rr.Code).To(Equal(http.StatusUnauthorized))
+		Expect(nextCalled).To(BeFalse())
+	})
+
+	It("Should return 401 for a User identity without an org_id", func() {
+		serve(encodeIdentity(`{"identity":{"type":"User","user":{"username":"cust"}}}`))
+		Expect(rr.Code).To(Equal(http.StatusUnauthorized))
+		Expect(nextCalled).To(BeFalse())
+	})
+
+	It("Should return 401 for an identity without a type", func() {
+		serve(encodeIdentity(`{"identity":{"org_id":"12345"}}`))
+		Expect(rr.Code).To(Equal(http.StatusUnauthorized))
+		Expect(nextCalled).To(BeFalse())
+	})
+
+	DescribeTable("Should accept identities forwarded by ingress",
+		func(raw string) {
+			serve(encodeIdentity(raw))
+			Expect(rr.Code).To(Equal(http.StatusOK))
+			Expect(nextCalled).To(BeTrue())
+		},
+		Entry("customer User", `{"identity":{"type":"User","org_id":"12345","user":{"username":"cust"}}}`),
+		Entry("System cert", `{"identity":{"type":"System","org_id":"12345","system":{"cn":"abc"}}}`),
+		Entry("ServiceAccount", `{"identity":{"type":"ServiceAccount","org_id":"12345","service_account":{"client_id":"x"}}}`),
+		Entry("Associate", `{"identity":{"type":"Associate","associate":{"Role":[]}}}`),
+		Entry("X509", `{"identity":{"type":"X509","x509":{"subject_dn":"/CN=qe","issuer_dn":"/CN=ca"}}}`),
+	)
 })

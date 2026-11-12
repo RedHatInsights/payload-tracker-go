@@ -68,10 +68,10 @@ func main() {
 
 	sub.With(endpoints.ResponseMetricsMiddleware).Get("/", lubdub)
 
-	// Called server-to-server, without an x-rh-identity header, by the ingress
-	// service's /track endpoint, which performs its own org_id authorization.
-	// Exposure of this route is limited by the namespace NetworkPolicies.
-	sub.With(endpoints.ResponseMetricsMiddleware).Get("/payloads/{request_id}", endpoints.RequestIdPayloads)
+	// Called server-to-server by the ingress service's customer-facing /track
+	// endpoint, which forwards the caller's x-rh-identity and performs the
+	// org_id authorization itself. Any valid identity type is accepted here.
+	sub.With(endpoints.ResponseMetricsMiddleware, endpoints.EnforceValidIdentity).Get("/payloads/{request_id}", endpoints.RequestIdPayloads)
 
 	// All other data routes require a Turnpike-issued (Associate or X509) x-rh-identity header.
 	sub.Group(func(authed chi.Router) {
