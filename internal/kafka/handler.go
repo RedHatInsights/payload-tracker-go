@@ -126,19 +126,26 @@ func (h *handler) onMessage(ctx context.Context, msg *kafka.Message, cfg *config
 	endpoints.IncMessagesProcessed()
 
 	retries, attempts := cfg.DatabaseConfig.DBRetries, 0
+	var insertErr error
 	for retries > attempts {
-		err := queries.InsertPayloadStatus(h.db, sanitizedPayloadStatus).Error
+		insertErr = queries.InsertPayloadStatus(h.db, sanitizedPayloadStatus).Error
 
-		if err == nil {
+		if insertErr == nil {
 			break
 		}
 
-		l.Log.WithFields(logrus.Fields{"attempts": attempts}).Debug("Failed to insert sanitized PayloadStatus with ERROR: ", err)
+		l.Log.WithFields(logrus.Fields{"attempts": attempts}).Debug("Failed to insert sanitized PayloadStatus with ERROR: ", insertErr)
 		attempts += 1
 	}
 
 	if attempts >= retries && retries > 0 {
-		l.Log.Error("ERROR: All retries exhausted for PayloadStatus insert")
+		l.Log.WithFields(logrus.Fields{
+			"request_id": payloadStatus.RequestID,
+			"service":    payloadStatus.Service,
+			"status":     payloadStatus.Status,
+			"date":       sanitizedPayloadStatus.Date.Format(time.RFC3339Nano),
+			"error":      insertErr,
+		}).Error("ERROR: All retries exhausted for PayloadStatus insert")
 		endpoints.IncMessageProcessErrors()
 	}
 }
