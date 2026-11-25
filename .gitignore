@@ -17,3 +17,6 @@ main
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# fullsend lint/run cache
+/.fullsend/.fullsend-cache/
