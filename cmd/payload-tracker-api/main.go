@@ -67,12 +67,23 @@ func main() {
 	mr.Handle("/metrics", promhttp.Handler())
 
 	sub.With(endpoints.ResponseMetricsMiddleware).Get("/", lubdub)
-	sub.With(endpoints.ResponseMetricsMiddleware).Get("/payloads", endpoints.Payloads)
-	sub.With(endpoints.ResponseMetricsMiddleware).Get("/payloads/{request_id}", endpoints.RequestIdPayloads)
-	sub.With(endpoints.ResponseMetricsMiddleware).Get("/payloads/{request_id}/archiveLink", payloadArchiveLinkHandler)
-	sub.With(endpoints.ResponseMetricsMiddleware).Get("/payloads/{request_id}/kibanaLink", endpoints.PayloadKibanaLink)
-	sub.With(endpoints.ResponseMetricsMiddleware).Get("/roles/archiveLink", endpoints.RolesArchiveLink)
-	sub.With(endpoints.ResponseMetricsMiddleware).Get("/statuses", endpoints.Statuses)
+
+	// Called server-to-server by the ingress service's customer-facing /track
+	// endpoint, which forwards the caller's x-rh-identity and performs the
+	// org_id authorization itself. Any valid identity type is accepted here.
+	sub.With(endpoints.ResponseMetricsMiddleware, endpoints.EnforceValidIdentity).Get("/payloads/{request_id}", endpoints.RequestIdPayloads)
+
+	// All other data routes require a Turnpike-issued (Associate or X509) x-rh-identity header.
+	sub.Group(func(authed chi.Router) {
+		authed.Use(endpoints.ResponseMetricsMiddleware)
+		authed.Use(endpoints.EnforceTurnpikeIdentity)
+
+		authed.Get("/payloads", endpoints.Payloads)
+		authed.Get("/payloads/{request_id}/archiveLink", payloadArchiveLinkHandler)
+		authed.Get("/payloads/{request_id}/kibanaLink", endpoints.PayloadKibanaLink)
+		authed.Get("/roles/archiveLink", endpoints.RolesArchiveLink)
+		authed.Get("/statuses", endpoints.Statuses)
+	})
 
 	srv := http.Server{
 		Addr:    ":" + cfg.PublicPort,

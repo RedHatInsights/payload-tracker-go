@@ -118,6 +118,10 @@ paths:
                     description: List of payloads based on the filters, page size and offset
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
   /payloads/{request_id}:
@@ -146,6 +150,8 @@ paths:
                     additionalProperties:
                       type: string
                     description: Object with each service as a key and timedelta as a string value
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
     parameters:
@@ -258,6 +264,8 @@ paths:
                         format: uri
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
         '404':
@@ -420,6 +428,10 @@ paths:
                     description: List of statuses based on the filters, page size and offset
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /health:
     get:
       operationId: getHealth
